@@ -2,12 +2,11 @@ name = "workout-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
+workers_dev = true
+
 [[kv_namespaces]]
-binding = "KV"
-id = "YOUR_KV_ID"
-preview_id = "YOUR_KV_PREVIEW_ID"
+binding = "workout_KV"
+id = "3e40683700fc4e36a4a27c91b5242476"
+preview_id = "75cff9c2147c480eb96df49b02e46052"
 
 [vars]
-# Эти переменные лучше задать через `wrangler secret put` а не хардкодить
-# SECRET_KEY = "..."
-# RESET_TOKEN = "..."
