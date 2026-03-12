@@ -1,12 +1,15 @@
 import { Env, json } from "../index";
-import { getUserId } from "../auth";
 import { DEFAULT_PROGRAM } from "../lib/defaults";
 import { parseLogText } from "../lib/parser";
 import { Program } from "../lib/types";
 
-export async function handleLog(request: Request, env: Env): Promise<Response> {
+export async function handleLog(
+  request: Request,
+  env: Env,
+  auth: { userId: string; username: string }
+): Promise<Response> {
   const url = new URL(request.url);
-  const userId = await getUserId(request);
+  const { userId } = auth;
 
   // GET /log/:date
   if (request.method === "GET") {

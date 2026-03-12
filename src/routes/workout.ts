@@ -1,11 +1,14 @@
 import { Env, json } from "../index";
-import { getUserId } from "../auth";
 import { DEFAULT_PROGRAM } from "../lib/defaults";
 import { getTodayWorkout } from "../lib/schedule";
 import { Program, UserState } from "../lib/types";
 
-export async function handleWorkout(request: Request, env: Env): Promise<Response> {
-  const userId = await getUserId(request);
+export async function handleWorkout(
+  _request: Request,
+  env: Env,
+  auth: { userId: string; username: string }
+): Promise<Response> {
+  const { userId } = auth;
 
   const programRaw = await env.KV.get(`program:${userId}`);
   const program: Program = programRaw ? JSON.parse(programRaw) : DEFAULT_PROGRAM;

@@ -1,16 +1,19 @@
 import { Env, json } from "../index";
-import { getUserId } from "../auth";
 import { DEFAULT_PROGRAM } from "../lib/defaults";
 import { runProgression } from "../lib/progression";
 import { Program, UserState } from "../lib/types";
 
-export async function handleProgression(request: Request, env: Env): Promise<Response> {
-  const userId = await getUserId(request);
+export async function handleProgression(
+  _request: Request,
+  env: Env,
+  auth: { userId: string; username: string }
+): Promise<Response> {
+  const { userId } = auth;
 
   const programRaw = await env.KV.get(`program:${userId}`);
   const program: Program = programRaw
     ? JSON.parse(programRaw)
-    : structuredClone(DEFAULT_PROGRAM); // клонируем чтобы не мутировать дефолт
+    : structuredClone(DEFAULT_PROGRAM);
 
   const stateRaw = await env.KV.get(`state:${userId}`);
   if (!stateRaw) {
@@ -26,16 +29,8 @@ export async function handleProgression(request: Request, env: Env): Promise<Res
     (uid, days) => fetchLogs(uid, days, env)
   );
 
-  // Сохраняем обновлённый state
   await env.KV.put(`state:${userId}`, JSON.stringify(newState));
-
-  // Если программа мутировала (изменился max) — сохраняем и её
-  if (programRaw) {
-    await env.KV.put(`program:${userId}`, JSON.stringify(program));
-  } else {
-    // Дефолтная программа — теперь сохраняем как пользовательскую
-    await env.KV.put(`program:${userId}`, JSON.stringify(program));
-  }
+  await env.KV.put(`program:${userId}`, JSON.stringify(program));
 
   return json({
     ok: true,
@@ -44,7 +39,6 @@ export async function handleProgression(request: Request, env: Env): Promise<Res
   });
 }
 
-// Загружает логи за последние N дней
 async function fetchLogs(
   userId: string,
   days: number,
@@ -59,9 +53,7 @@ async function fetchLogs(
     const dateStr = date.toISOString().split("T")[0];
 
     const raw = await env.KV.get(`log:${userId}:${dateStr}`);
-    if (raw) {
-      logs.push(JSON.parse(raw));
-    }
+    if (raw) logs.push(JSON.parse(raw));
   }
 
   return logs;
