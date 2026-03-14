@@ -26,11 +26,13 @@ export async function handleAuth(request: Request, env: Env): Promise<Response> 
   const { username, password } = body;
 
   if (!username || !password) {
-    return json({ error: "username and password are required" }, 400);
+    return json({ error: "Username and password are required" }, 400);
   }
 
   if (username.length < 3 || password.length < 6) {
-    return json({ error: "username min 3 chars, password min 6 chars" }, 400);
+    return json({
+      error: "Username must be at least 3 characters, password must be at least 6 characters",
+    }, 400);
   }
 
   // ─── Register ──────────────────────────────────────────────
@@ -40,9 +42,9 @@ export async function handleAuth(request: Request, env: Env): Promise<Response> 
       return json({ error: "Username already taken" }, 409);
     }
 
-    const salt       = generateSalt();
+    const salt = generateSalt();
     const passwordHash = await hashPassword(password, salt);
-    const secretKey  = generateSecretKey();
+    const secretKey = generateSecretKey();
 
     const user: User = { username, passwordHash, salt, secretKey };
     await env.KV.put(`user:${username}`, JSON.stringify(user));

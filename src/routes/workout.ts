@@ -37,7 +37,7 @@ export async function handleWorkout(
   const result = getTodayWorkout(program, state.sets);
 
   if (!("name" in result)) {
-    return json({ type: "rest", message: "Сегодня выходной 🛋️" });
+    return json({ type: "rest", message: "Today is a rest day 🛋️" });
   }
 
   return json({
