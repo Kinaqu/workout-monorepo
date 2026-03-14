@@ -2,7 +2,7 @@ import { api, getToken } from './api.js';
 
 // Check auth
 if (!getToken()) {
-  window.location.href = 'login.html';
+  window.location.href = '/login';
 }
 
 // State
