@@ -13,8 +13,12 @@ export async function handleProgram(
   // GET /program
   if (request.method === "GET") {
     const raw = await env.KV.get(`program:${userId}`);
-    if (!raw) return json(DEFAULT_PROGRAM);
-    return json(JSON.parse(raw));
+    const program: Program = raw ? JSON.parse(raw) : DEFAULT_PROGRAM;
+
+    const stateRaw = await env.KV.get(`state:${userId}`);
+    const state: UserState | null = stateRaw ? JSON.parse(stateRaw) : null;
+
+    return json({ ...program, userSets: state?.sets ?? {} });
   }
 
   // POST /program/reset
@@ -23,10 +27,8 @@ export async function handleProgram(
     if (!resetToken || resetToken !== env.RESET_TOKEN) {
       return json({ error: "Invalid reset token" }, 403);
     }
-
     await env.KV.delete(`program:${userId}`);
     await resetState(userId, DEFAULT_PROGRAM, env);
-
     return json({ ok: true, message: "Program reset to default" });
   }
 
@@ -45,7 +47,6 @@ export async function handleProgram(
 
     await env.KV.put(`program:${userId}`, JSON.stringify(body));
     await resetState(userId, body, env);
-
     return json({ ok: true, message: "Program saved" });
   }
 
