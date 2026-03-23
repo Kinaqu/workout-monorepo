@@ -415,9 +415,8 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .exercise-helper {
+  min-height: 20px;
   margin-bottom: 18px;
-  color: var(--text-secondary);
-  font-size: 14px;
 }
 
 .sets-container {
@@ -459,6 +458,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 #save-workout-btn {
+  color: #fff;
   box-shadow: 0 14px 24px rgba(187, 134, 252, 0.18);
 }
 
@@ -511,8 +511,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .exercise-footer-hint {
-  color: var(--text-secondary);
-  font-size: 13px;
+  min-height: 18px;
 }
 
 .exercise-complete-btn {

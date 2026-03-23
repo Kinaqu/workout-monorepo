@@ -99,9 +99,7 @@ async function loadToday() {
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
-      helper.textContent = index === data.exercises.length - 1
-        ? 'Confirm the final exercise, then save the workout.'
-        : 'Fill in the fields and tap the check button to move on.';
+      helper.textContent = '';
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
@@ -112,7 +110,7 @@ async function loadToday() {
       card.appendChild(setsContainer);
 
       const footer = el('div', 'exercise-card-footer');
-      const footerHint = el('div', 'exercise-footer-hint', index === data.exercises.length - 1 ? 'Last exercise' : 'Ready for next');
+      const footerHint = el('div', 'exercise-footer-hint', '');
       const confirmBtn = el('button', 'exercise-complete-btn', '✓');
       confirmBtn.type = 'button';
       confirmBtn.setAttribute('aria-label', index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise');
