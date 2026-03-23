@@ -256,24 +256,32 @@ async function loadHistory(date) {
     }
 
     content.classList.remove('hidden');
-    document.getElementById('history-workout-type').textContent = `Workout: ${data.workout_type}`;
+    document.getElementById('history-workout-type').textContent = data.workout_type;
 
     const exercisesContainer = document.getElementById('history-exercises');
     exercisesContainer.innerHTML = '';
 
     if (data.exercises && data.exercises.length > 0) {
-      data.exercises.forEach(ex => {
-        const card = el('div', 'card');
-        card.appendChild(el('div', 'card-title', ex.id));
-        const setsText = ex.sets.map((s, i) => `Set ${i + 1}: ${s}`).join(', ');
-        card.appendChild(el('div', '', setsText));
+      data.exercises.forEach((ex, index) => {
+        const card = el('article', 'card history-exercise-card');
+
+        const header = el('div', 'history-exercise-header');
+        header.appendChild(el('div', 'history-exercise-index', `#${index + 1}`));
+        header.appendChild(el('div', 'card-title', ex.id));
+        card.appendChild(header);
+
+        const chips = el('div', 'history-set-chips');
+        ex.sets.forEach((setValue, setIndex) => {
+          chips.appendChild(el('div', 'history-set-chip', `Set ${setIndex + 1}: ${setValue}`));
+        });
+        card.appendChild(chips);
         exercisesContainer.appendChild(card);
       });
     } else {
-      exercisesContainer.innerHTML = '<div class="card">No exercises</div>';
+      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises</div>';
     }
 
-    document.getElementById('history-note').textContent = data.note || 'No notes';
+    document.getElementById('history-note').textContent = data.note || 'No notes added for this workout.';
 
   } catch (err) {
     loader.classList.add('hidden');
@@ -309,9 +317,9 @@ async function loadProgram() {
         ['thursday', 'Thu'], ['friday', 'Fri'], ['saturday', 'Sat'], ['sunday', 'Sun']
       ];
       days.forEach(([key, label]) => {
-        const row = el('div', 'flex justify-between mb-2 border-b pb-1');
-        row.appendChild(el('span', 'font-bold', label));
-        row.appendChild(el('span', '', data.schedule[key] || '—'));
+        const row = el('div', 'program-schedule-row');
+        row.appendChild(el('span', 'program-day', label));
+        row.appendChild(el('span', 'program-day-value', data.schedule[key] || 'Rest'));
         scheduleContainer.appendChild(row);
       });
     }
@@ -321,26 +329,34 @@ async function loadProgram() {
     workoutsContainer.innerHTML = '';
     if (data.workouts) {
       Object.entries(data.workouts).forEach(([type, workout]) => {
-        const card = el('div', 'card');
-        card.appendChild(el('div', 'card-title', workout.name || type));
+        const card = el('section', 'card program-workout-card');
+
+        const header = el('div', 'program-workout-header');
+        header.appendChild(el('div', 'card-title', workout.name || type));
+        header.appendChild(el('div', 'program-workout-type', type.toUpperCase()));
+        card.appendChild(header);
 
         if (workout.exercises && workout.exercises.length > 0) {
-          const ul = el('ul', 'mt-2 pl-4');
+          const list = el('div', 'program-exercise-list');
           workout.exercises.forEach(ex => {
-            const li = el('li', 'mb-2 text-sm');
+            const row = el('div', 'program-exercise-row');
+            const main = el('div', 'program-exercise-main');
+            main.appendChild(el('div', 'program-exercise-name', ex.name || ex.id));
 
             let target = '';
             if (ex.type === 'reps' && ex.reps) target = `${ex.reps.max} reps`;
             else if (ex.type === 'time' && ex.duration) target = `${ex.duration.max} sec`;
             else if (ex.type === 'cycles' && ex.cycles) target = `${ex.cycles.max} cycles`;
 
-            const currentSets = userSets[ex.id] ?? 1;
-            const setsDisplay = `${currentSets}/${ex.max_sets} sets`;
+            const detail = el('div', 'program-exercise-detail', target || 'Custom target');
+            main.appendChild(detail);
+            row.appendChild(main);
 
-            li.textContent = `${ex.name || ex.id} — ${setsDisplay} × ${target}`;
-            ul.appendChild(li);
+            const currentSets = userSets[ex.id] ?? 1;
+            row.appendChild(el('div', 'program-sets-pill', `${currentSets}/${ex.max_sets} sets`));
+            list.appendChild(row);
           });
-          card.appendChild(ul);
+          card.appendChild(list);
         } else {
           card.appendChild(el('div', 'text-secondary', 'No exercises'));
         }
