@@ -75,7 +75,6 @@ async function loadToday() {
     data.exercises.forEach((ex, index) => {
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = ex.id;
-      card.style.setProperty('--stack-index', index);
 
       let targetText = '';
       if (ex.type === 'reps' && ex.reps) targetText = `${ex.reps.max} reps`;
