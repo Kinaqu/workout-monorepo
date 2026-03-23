@@ -140,6 +140,37 @@ input:focus, textarea:focus {
   margin-bottom: 4px;
 }
 
+.nav-icon,
+.section-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--primary-color);
+}
+
+.section-title-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Tabs */
 .tab-content {
   display: none;
@@ -259,9 +290,20 @@ input[type=number] {
 }
 
 /* History date — full width, no overflow */
-#history-date {
+#tab-history,
+#history-content,
+#history-data {
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+}
+
+#history-date {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 html {
@@ -404,9 +446,8 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .exercise-helper {
+  min-height: 20px;
   margin-bottom: 18px;
-  color: var(--text-secondary);
-  font-size: 14px;
 }
 
 .sets-container {
@@ -448,6 +489,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 #save-workout-btn {
+  color: #fff;
   box-shadow: 0 14px 24px rgba(187, 134, 252, 0.18);
 }
 
@@ -500,8 +542,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .exercise-footer-hint {
-  color: var(--text-secondary);
-  font-size: 13px;
+  min-height: 18px;
 }
 
 .exercise-complete-btn {
