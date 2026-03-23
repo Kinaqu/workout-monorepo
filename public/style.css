@@ -599,22 +599,30 @@ body::-webkit-scrollbar-thumb:hover,
 
 
 .today-overview-card {
-  width: min(100%, 360px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   padding: 14px 16px;
   margin-bottom: 18px;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(30, 30, 34, 0.92), rgba(23, 23, 27, 0.96));
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
 }
 
 .today-overview-card .card-title {
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .today-overview-card .card-subtitle {
+  flex-shrink: 0;
   margin-bottom: 0;
-  color: #d4c7ea;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(187, 134, 252, 0.12);
+  color: #dbc7ff;
 }
 
 .history-summary-card,
@@ -772,7 +780,8 @@ body::-webkit-scrollbar-thumb:hover,
 
 @media (max-width: 640px) {
   .today-overview-card {
-    width: min(100%, 340px);
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .program-workout-header,
