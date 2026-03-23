@@ -1,20 +1,19 @@
 {
+  "id": "/",
   "name": "Workout Tracker",
   "short_name": "Workout",
-  "start_url": "/index.html",
+  "description": "Focused workout tracking with a clean mobile-first interface.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/workout/192/192",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://picsum.photos/seed/workout/512/512",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/icons/workout-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
