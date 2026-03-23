@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "Workout Tracker",
   "short_name": "Workout",
   "description": "Focused workout tracking with a clean mobile-first interface.",
-  "start_url": "/index.html",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
