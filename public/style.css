@@ -599,10 +599,10 @@ body::-webkit-scrollbar-thumb:hover,
 
 
 .today-overview-card {
-  width: fit-content;
-  max-width: 100%;
-  padding: 12px 14px;
+  width: min(100%, 360px);
+  padding: 14px 16px;
   margin-bottom: 18px;
+  border-radius: 18px;
   background: linear-gradient(180deg, rgba(30, 30, 34, 0.92), rgba(23, 23, 27, 0.96));
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
@@ -772,7 +772,7 @@ body::-webkit-scrollbar-thumb:hover,
 
 @media (max-width: 640px) {
   .today-overview-card {
-    width: 100%;
+    width: min(100%, 340px);
   }
 
   .program-workout-header,
