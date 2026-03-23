@@ -265,7 +265,7 @@ input[type=number] {
 }
 
 html {
-  scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.08);
+  scrollbar-color: rgba(187, 134, 252, 0.78) rgba(255, 255, 255, 0.05);
   scrollbar-width: thin;
 }
 
@@ -276,94 +276,137 @@ body::-webkit-scrollbar,
 
 body::-webkit-scrollbar-track,
 #today-exercises::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 999px;
 }
 
 body::-webkit-scrollbar-thumb,
 #today-exercises::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(180deg, rgba(187, 134, 252, 0.85), rgba(94, 234, 212, 0.72));
   border-radius: 999px;
-  border: 2px solid rgba(18, 18, 18, 0.9);
+  border: 2px solid rgba(18, 18, 18, 0.92);
 }
 
 body::-webkit-scrollbar-thumb:hover,
 #today-exercises::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #c79dff, #47f1dd);
+  background: linear-gradient(180deg, #d3b9ff, #8af8ea);
 }
 
 #today-content > .card:first-of-type {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, rgba(31, 31, 36, 0.96), rgba(21, 21, 24, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 #today-exercises {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  max-height: min(68vh, 720px);
-  overflow-y: auto;
-  padding: 8px 6px 28px;
-  margin: 0 -6px 24px;
-  scroll-snap-type: y mandatory;
-  scroll-padding-top: 8px;
+  --stack-depth: 2;
+  position: relative;
+  min-height: 420px;
+  margin: 0 0 20px;
+  padding-bottom: calc(var(--stack-depth) * 18px + 12px);
+}
+
+#today-exercises::before,
+#today-exercises::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  border-radius: 28px;
+  background: rgba(12, 12, 16, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+#today-exercises::before {
+  top: 20px;
+  bottom: 12px;
+  transform: translateY(14px) scale(0.988);
+  box-shadow: 0 22px 32px rgba(0, 0, 0, 0.16);
+}
+
+#today-exercises::after {
+  top: 20px;
+  bottom: 4px;
+  transform: translateY(28px) scale(0.975);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.14);
+}
+
+#today-exercises[style*='--stack-depth: 1']::before,
+#today-exercises[style*='--stack-depth: 2']::before,
+#today-exercises[style*='--stack-depth: 2']::after {
+  opacity: 1;
 }
 
 .exercise-card {
-  position: sticky;
-  top: 8px;
-  min-height: 280px;
-  padding: 18px;
+  position: relative;
+  z-index: 3;
   margin-bottom: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(44, 44, 52, 0.96), rgba(24, 24, 30, 0.98));
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
-  scroll-snap-align: start;
-  transform: translateY(calc(var(--stack-index, 0) * -1px));
+  min-height: 0;
+  padding: 24px 22px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(29, 29, 34, 0.98), rgba(20, 20, 24, 0.99));
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.2);
+  transform-origin: center top;
 }
 
-.exercise-card + .exercise-card {
-  margin-top: -220px;
+.exercise-card:not(.active) {
+  display: none;
 }
 
-.exercise-badge {
-  display: inline-flex;
+.exercise-progress {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(187, 134, 252, 0.16);
-  color: #d7bcff;
-  font-size: 12px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.exercise-progress-current {
+  color: var(--primary-color);
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+}
+
+.exercise-progress-label {
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .exercise-title {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  font-size: 24px;
+  line-height: 1.2;
 }
 
-.exercise-meta {
+.exercise-header-chips {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
-.exercise-goal {
-  margin-bottom: 0;
-}
-
-.exercise-sets-pill {
-  flex-shrink: 0;
+.exercise-chip {
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(3, 218, 198, 0.12);
-  color: var(--secondary-color);
+  background: rgba(255, 255, 255, 0.055);
+  color: #e4e4ea;
   font-size: 13px;
   font-weight: 600;
+}
+
+.exercise-chip-accent {
+  background: rgba(3, 218, 198, 0.14);
+  color: var(--secondary-color);
+}
+
+.exercise-helper {
+  margin-bottom: 18px;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 .sets-container {
@@ -373,22 +416,25 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .set-row {
-  align-items: stretch;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  margin-bottom: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.045);
 }
 
 .set-label {
-  width: 68px;
+  width: 56px;
   display: flex;
   align-items: center;
+  color: var(--text-secondary);
+  font-size: 13px;
   font-weight: 600;
 }
 
 .set-input {
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(8, 8, 12, 0.28);
   border-color: rgba(255, 255, 255, 0.08);
   border-radius: 12px;
 }
@@ -397,24 +443,115 @@ body::-webkit-scrollbar-thumb:hover,
   position: sticky;
   bottom: calc(76px + env(safe-area-inset-bottom));
   z-index: 5;
-  padding-top: 4px;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0), rgba(18, 18, 18, 0.94) 42%);
 }
 
 #save-workout-btn {
-  box-shadow: 0 14px 24px rgba(187, 134, 252, 0.24);
+  box-shadow: 0 14px 24px rgba(187, 134, 252, 0.18);
 }
 
 @media (max-width: 640px) {
   #today-exercises {
-    max-height: calc(100vh - 290px);
+    min-height: 390px;
+    padding-bottom: calc(var(--stack-depth) * 16px + 10px);
   }
 
-  .exercise-card + .exercise-card {
-    margin-top: -236px;
+  #today-exercises::before,
+  #today-exercises::after {
+    left: 10px;
+    right: 10px;
+    border-radius: 22px;
   }
 
-  .exercise-meta {
-    flex-direction: column;
-    align-items: flex-start;
+  .exercise-card {
+    padding: 20px 18px 18px;
+    border-radius: 22px;
   }
+
+  .exercise-title {
+    font-size: 21px;
+  }
+}
+
+
+.exercise-card.is-entering {
+  animation: exercise-card-enter 0.32s ease;
+}
+
+.exercise-card.is-leaving {
+  animation: exercise-card-leave 0.18s ease forwards;
+}
+
+.exercise-card.exercise-card-invalid {
+  animation: exercise-card-shake 0.38s ease;
+}
+
+.exercise-card.completed-pulse {
+  animation: exercise-card-pulse 0.32s ease;
+}
+
+.exercise-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.exercise-footer-hint {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.exercise-complete-btn {
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  min-height: 54px;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(180deg, #bb86fc, #8f5ef7);
+  box-shadow: 0 14px 24px rgba(143, 94, 247, 0.34);
+}
+
+.exercise-complete-btn:active {
+  transform: scale(0.96);
+}
+
+@keyframes exercise-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes exercise-card-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.985);
+  }
+}
+
+@keyframes exercise-card-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@keyframes exercise-card-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
 }
