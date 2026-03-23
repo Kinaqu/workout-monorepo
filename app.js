@@ -72,17 +72,24 @@ async function loadToday() {
       return;
     }
 
-    data.exercises.forEach(ex => {
-      const card = el('div', 'card exercise-card');
+    data.exercises.forEach((ex, index) => {
+      const card = el('section', 'card exercise-card');
       card.dataset.id = ex.id;
+      card.style.setProperty('--stack-index', index);
 
-      card.appendChild(el('div', 'card-title', ex.name || ex.id));
+      const badge = el('div', 'exercise-badge', `Exercise ${index + 1}`);
+      card.appendChild(badge);
+      card.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
 
       let targetText = '';
-      if (ex.type === 'reps' && ex.reps) targetText = `Goal: ${ex.reps.max} reps × ${ex.sets} sets`;
-      else if (ex.type === 'time' && ex.duration) targetText = `Goal: ${ex.duration.max} sec × ${ex.sets} sets`;
-      else if (ex.type === 'cycles' && ex.cycles) targetText = `Goal: ${ex.cycles.max} cycles × ${ex.sets} sets`;
-      card.appendChild(el('div', 'card-subtitle', targetText));
+      if (ex.type === 'reps' && ex.reps) targetText = `Target: up to ${ex.reps.max} reps`;
+      else if (ex.type === 'time' && ex.duration) targetText = `Target: up to ${ex.duration.max} sec`;
+      else if (ex.type === 'cycles' && ex.cycles) targetText = `Target: up to ${ex.cycles.max} cycles`;
+
+      const meta = el('div', 'exercise-meta');
+      meta.appendChild(el('div', 'card-subtitle exercise-goal', targetText));
+      meta.appendChild(el('div', 'exercise-sets-pill', `${ex.sets || 1} sets`));
+      card.appendChild(meta);
 
       const setsContainer = el('div', 'sets-container');
       for (let i = 0; i < (ex.sets || 1); i++) {
@@ -125,8 +132,7 @@ document.getElementById('save-workout-btn').addEventListener('click', async () =
       exercises.push({ id, sets });
     });
 
-    const note = document.getElementById('today-note').value;
-    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note });
+    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note: '' });
     alert('Workout saved!');
 
     const historyDate = document.getElementById('history-date').value;
