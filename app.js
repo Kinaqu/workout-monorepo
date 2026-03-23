@@ -5,6 +5,7 @@ if (!getToken()) {
 }
 
 let todayWorkoutType = null;
+let activeExerciseIndex = 0;
 
 const tabs = document.querySelectorAll('.tab-content');
 const navItems = document.querySelectorAll('.nav-item');
@@ -72,53 +73,49 @@ async function loadToday() {
       return;
     }
 
+    activeExerciseIndex = 0;
+
     data.exercises.forEach((ex, index) => {
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = ex.id;
+      card.dataset.index = String(index);
+      card.dataset.total = String(data.exercises.length);
 
       let targetText = '';
       if (ex.type === 'reps' && ex.reps) targetText = `${ex.reps.max} reps`;
       else if (ex.type === 'time' && ex.duration) targetText = `${ex.duration.max} sec`;
       else if (ex.type === 'cycles' && ex.cycles) targetText = `${ex.cycles.max} cycles`;
 
-      const header = el('button', 'exercise-card-toggle');
-      header.type = 'button';
-      header.setAttribute('aria-expanded', index === 0 ? 'true' : 'false');
+      const progress = el('div', 'exercise-progress');
+      progress.appendChild(el('span', 'exercise-progress-current', `${index + 1}/${data.exercises.length}`));
+      progress.appendChild(el('span', 'exercise-progress-label', 'Current exercise'));
+      card.appendChild(progress);
 
-      const headerMain = el('div', 'exercise-card-main');
-      const labelWrap = el('div', 'exercise-label-wrap');
-      labelWrap.appendChild(el('div', 'exercise-badge', `Exercise ${index + 1}`));
-      labelWrap.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
-      headerMain.appendChild(labelWrap);
+      card.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
 
       const chips = el('div', 'exercise-header-chips');
       if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
       chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${ex.sets || 1} sets`));
-      headerMain.appendChild(chips);
+      card.appendChild(chips);
 
-      header.appendChild(headerMain);
-      header.appendChild(el('div', 'exercise-expand-icon', '›'));
-      card.appendChild(header);
+      const helper = el('div', 'exercise-helper');
+      helper.textContent = index === data.exercises.length - 1
+        ? 'Finish the last inputs and save the workout.'
+        : 'Complete all fields to unlock the next exercise.';
+      card.appendChild(helper);
 
-      const contentWrap = el('div', 'exercise-card-content');
       const setsContainer = el('div', 'sets-container');
       for (let i = 0; i < (ex.sets || 1); i++) {
-        setsContainer.appendChild(createSetRow(i + 1, ex.type));
+        const row = createSetRow(i + 1, ex.type);
+        const input = row.querySelector('.set-input');
+        input.addEventListener('input', () => maybeAdvanceExercise(card));
+        setsContainer.appendChild(row);
       }
-      contentWrap.appendChild(setsContainer);
-      card.appendChild(contentWrap);
-
-      header.addEventListener('click', () => {
-        document.querySelectorAll('.exercise-card').forEach(item => {
-          const isActive = item === card;
-          item.classList.toggle('active', isActive);
-          const toggle = item.querySelector('.exercise-card-toggle');
-          if (toggle) toggle.setAttribute('aria-expanded', String(isActive));
-        });
-      });
-
+      card.appendChild(setsContainer);
       exercisesContainer.appendChild(card);
     });
+
+    syncExerciseStack();
 
   } catch (err) {
     loader.classList.add('hidden');
@@ -138,6 +135,45 @@ function createSetRow(index, type) {
 
   return row;
 }
+function setActiveExercise(nextIndex) {
+  const cards = Array.from(document.querySelectorAll('.exercise-card'));
+  activeExerciseIndex = Math.max(0, Math.min(nextIndex, cards.length - 1));
+
+  cards.forEach((card, index) => {
+    const isActive = index === activeExerciseIndex;
+    const isCompleted = index < activeExerciseIndex;
+    card.classList.toggle('active', isActive);
+    card.classList.toggle('completed', isCompleted);
+    card.classList.toggle('upcoming', index > activeExerciseIndex);
+    card.setAttribute('aria-hidden', String(!isActive));
+  });
+
+  syncExerciseStack();
+}
+
+function maybeAdvanceExercise(card) {
+  if (!card.classList.contains('active')) return;
+
+  const inputs = Array.from(card.querySelectorAll('.set-input'));
+  const isComplete = inputs.every(input => input.value.trim() !== '');
+  if (!isComplete) return;
+
+  const cards = Array.from(document.querySelectorAll('.exercise-card'));
+  const currentIndex = cards.indexOf(card);
+  if (currentIndex >= 0 && currentIndex < cards.length - 1) {
+    setActiveExercise(currentIndex + 1);
+  }
+}
+
+function syncExerciseStack() {
+  const container = document.getElementById('today-exercises');
+  if (!container) return;
+
+  const cards = Array.from(container.querySelectorAll('.exercise-card'));
+  const remaining = Math.max(cards.length - activeExerciseIndex - 1, 0);
+  container.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
+}
+
 
 document.getElementById('save-workout-btn').addEventListener('click', async () => {
   const btn = document.getElementById('save-workout-btn');
