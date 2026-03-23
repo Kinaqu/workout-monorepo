@@ -3,13 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sign Up - Workout App</title>
+  <title>Sign Up - Workout Tracker</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.svg">
+  <link rel="mask-icon" href="/favicon.svg" color="#6d28d9">
+  <meta name="theme-color" content="#121212">
 </head>
 <body>
   <div class="auth-container">
-    <h1>Sign Up</h1>
+    <div class="auth-brand">
+      <img class="auth-brand-logo" src="/icons/workout-logo.svg" alt="Workout Tracker logo" width="72" height="72">
+      <div class="auth-brand-text">
+        <span class="auth-brand-kicker">Workout Tracker</span>
+        <h1>Create account</h1>
+        <p>Start building your routine with the new Workout Tracker brand.</p>
+      </div>
+    </div>
     <div id="error-msg" class="error-message"></div>
     <form id="register-form">
       <input type="text" id="username" placeholder="Username" required autocomplete="username">
