@@ -72,23 +72,52 @@ async function loadToday() {
       return;
     }
 
-    data.exercises.forEach(ex => {
-      const card = el('div', 'card exercise-card');
+    data.exercises.forEach((ex, index) => {
+      const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = ex.id;
-
-      card.appendChild(el('div', 'card-title', ex.name || ex.id));
+      card.style.setProperty('--stack-index', index);
 
       let targetText = '';
-      if (ex.type === 'reps' && ex.reps) targetText = `Goal: ${ex.reps.max} reps × ${ex.sets} sets`;
-      else if (ex.type === 'time' && ex.duration) targetText = `Goal: ${ex.duration.max} sec × ${ex.sets} sets`;
-      else if (ex.type === 'cycles' && ex.cycles) targetText = `Goal: ${ex.cycles.max} cycles × ${ex.sets} sets`;
-      card.appendChild(el('div', 'card-subtitle', targetText));
+      if (ex.type === 'reps' && ex.reps) targetText = `${ex.reps.max} reps`;
+      else if (ex.type === 'time' && ex.duration) targetText = `${ex.duration.max} sec`;
+      else if (ex.type === 'cycles' && ex.cycles) targetText = `${ex.cycles.max} cycles`;
 
+      const header = el('button', 'exercise-card-toggle');
+      header.type = 'button';
+      header.setAttribute('aria-expanded', index === 0 ? 'true' : 'false');
+
+      const headerMain = el('div', 'exercise-card-main');
+      const labelWrap = el('div', 'exercise-label-wrap');
+      labelWrap.appendChild(el('div', 'exercise-badge', `Exercise ${index + 1}`));
+      labelWrap.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
+      headerMain.appendChild(labelWrap);
+
+      const chips = el('div', 'exercise-header-chips');
+      if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${ex.sets || 1} sets`));
+      headerMain.appendChild(chips);
+
+      header.appendChild(headerMain);
+      header.appendChild(el('div', 'exercise-expand-icon', '›'));
+      card.appendChild(header);
+
+      const contentWrap = el('div', 'exercise-card-content');
       const setsContainer = el('div', 'sets-container');
       for (let i = 0; i < (ex.sets || 1); i++) {
         setsContainer.appendChild(createSetRow(i + 1, ex.type));
       }
-      card.appendChild(setsContainer);
+      contentWrap.appendChild(setsContainer);
+      card.appendChild(contentWrap);
+
+      header.addEventListener('click', () => {
+        document.querySelectorAll('.exercise-card').forEach(item => {
+          const isActive = item === card;
+          item.classList.toggle('active', isActive);
+          const toggle = item.querySelector('.exercise-card-toggle');
+          if (toggle) toggle.setAttribute('aria-expanded', String(isActive));
+        });
+      });
+
       exercisesContainer.appendChild(card);
     });
 
@@ -125,8 +154,7 @@ document.getElementById('save-workout-btn').addEventListener('click', async () =
       exercises.push({ id, sets });
     });
 
-    const note = document.getElementById('today-note').value;
-    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note });
+    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note: '' });
     alert('Workout saved!');
 
     const historyDate = document.getElementById('history-date').value;
