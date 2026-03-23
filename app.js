@@ -100,18 +100,27 @@ async function loadToday() {
 
       const helper = el('div', 'exercise-helper');
       helper.textContent = index === data.exercises.length - 1
-        ? 'Finish the last inputs and save the workout.'
-        : 'Complete all fields to unlock the next exercise.';
+        ? 'Confirm the final exercise, then save the workout.'
+        : 'Fill in the fields and tap the check button to move on.';
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
       for (let i = 0; i < (ex.sets || 1); i++) {
         const row = createSetRow(i + 1, ex.type);
-        const input = row.querySelector('.set-input');
-        input.addEventListener('input', () => maybeAdvanceExercise(card));
         setsContainer.appendChild(row);
       }
       card.appendChild(setsContainer);
+
+      const footer = el('div', 'exercise-card-footer');
+      const footerHint = el('div', 'exercise-footer-hint', index === data.exercises.length - 1 ? 'Last exercise' : 'Ready for next');
+      const confirmBtn = el('button', 'exercise-complete-btn', '✓');
+      confirmBtn.type = 'button';
+      confirmBtn.setAttribute('aria-label', index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise');
+      confirmBtn.addEventListener('click', () => advanceExercise(card));
+      footer.appendChild(footerHint);
+      footer.appendChild(confirmBtn);
+      card.appendChild(footer);
+
       exercisesContainer.appendChild(card);
     });
 
@@ -145,23 +154,40 @@ function setActiveExercise(nextIndex) {
     card.classList.toggle('active', isActive);
     card.classList.toggle('completed', isCompleted);
     card.classList.toggle('upcoming', index > activeExerciseIndex);
+    card.classList.remove('is-entering');
+    card.classList.remove('is-leaving');
     card.setAttribute('aria-hidden', String(!isActive));
   });
+
+  const activeCard = cards[activeExerciseIndex];
+  if (activeCard) {
+    activeCard.classList.add('is-entering');
+    window.setTimeout(() => activeCard.classList.remove('is-entering'), 320);
+  }
 
   syncExerciseStack();
 }
 
-function maybeAdvanceExercise(card) {
+function advanceExercise(card) {
   if (!card.classList.contains('active')) return;
 
   const inputs = Array.from(card.querySelectorAll('.set-input'));
   const isComplete = inputs.every(input => input.value.trim() !== '');
-  if (!isComplete) return;
+  if (!isComplete) {
+    card.classList.add('exercise-card-invalid');
+    window.setTimeout(() => card.classList.remove('exercise-card-invalid'), 380);
+    return;
+  }
 
   const cards = Array.from(document.querySelectorAll('.exercise-card'));
   const currentIndex = cards.indexOf(card);
+  card.classList.add('is-leaving');
+
   if (currentIndex >= 0 && currentIndex < cards.length - 1) {
-    setActiveExercise(currentIndex + 1);
+    window.setTimeout(() => setActiveExercise(currentIndex + 1), 180);
+  } else {
+    card.classList.add('completed-pulse');
+    window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
   }
 }
 
