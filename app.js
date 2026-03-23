@@ -5,6 +5,7 @@ if (!getToken()) {
 }
 
 let todayWorkoutType = null;
+let activeExerciseIndex = 0;
 
 const tabs = document.querySelectorAll('.tab-content');
 const navItems = document.querySelectorAll('.nav-item');
@@ -72,25 +73,58 @@ async function loadToday() {
       return;
     }
 
-    data.exercises.forEach(ex => {
-      const card = el('div', 'card exercise-card');
-      card.dataset.id = ex.id;
+    activeExerciseIndex = 0;
 
-      card.appendChild(el('div', 'card-title', ex.name || ex.id));
+    data.exercises.forEach((ex, index) => {
+      const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
+      card.dataset.id = ex.id;
+      card.dataset.index = String(index);
+      card.dataset.total = String(data.exercises.length);
 
       let targetText = '';
-      if (ex.type === 'reps' && ex.reps) targetText = `Goal: ${ex.reps.max} reps × ${ex.sets} sets`;
-      else if (ex.type === 'time' && ex.duration) targetText = `Goal: ${ex.duration.max} sec × ${ex.sets} sets`;
-      else if (ex.type === 'cycles' && ex.cycles) targetText = `Goal: ${ex.cycles.max} cycles × ${ex.sets} sets`;
-      card.appendChild(el('div', 'card-subtitle', targetText));
+      if (ex.type === 'reps' && ex.reps) targetText = `${ex.reps.max} reps`;
+      else if (ex.type === 'time' && ex.duration) targetText = `${ex.duration.max} sec`;
+      else if (ex.type === 'cycles' && ex.cycles) targetText = `${ex.cycles.max} cycles`;
+
+      const progress = el('div', 'exercise-progress');
+      progress.appendChild(el('span', 'exercise-progress-current', `${index + 1}/${data.exercises.length}`));
+      progress.appendChild(el('span', 'exercise-progress-label', 'Current exercise'));
+      card.appendChild(progress);
+
+      card.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
+
+      const chips = el('div', 'exercise-header-chips');
+      if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${ex.sets || 1} sets`));
+      card.appendChild(chips);
+
+      const helper = el('div', 'exercise-helper');
+      helper.textContent = index === data.exercises.length - 1
+        ? 'Confirm the final exercise, then save the workout.'
+        : 'Fill in the fields and tap the check button to move on.';
+      card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
       for (let i = 0; i < (ex.sets || 1); i++) {
-        setsContainer.appendChild(createSetRow(i + 1, ex.type));
+        const row = createSetRow(i + 1, ex.type);
+        setsContainer.appendChild(row);
       }
       card.appendChild(setsContainer);
+
+      const footer = el('div', 'exercise-card-footer');
+      const footerHint = el('div', 'exercise-footer-hint', index === data.exercises.length - 1 ? 'Last exercise' : 'Ready for next');
+      const confirmBtn = el('button', 'exercise-complete-btn', '✓');
+      confirmBtn.type = 'button';
+      confirmBtn.setAttribute('aria-label', index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise');
+      confirmBtn.addEventListener('click', () => advanceExercise(card));
+      footer.appendChild(footerHint);
+      footer.appendChild(confirmBtn);
+      card.appendChild(footer);
+
       exercisesContainer.appendChild(card);
     });
+
+    syncExerciseStack();
 
   } catch (err) {
     loader.classList.add('hidden');
@@ -110,6 +144,62 @@ function createSetRow(index, type) {
 
   return row;
 }
+function setActiveExercise(nextIndex) {
+  const cards = Array.from(document.querySelectorAll('.exercise-card'));
+  activeExerciseIndex = Math.max(0, Math.min(nextIndex, cards.length - 1));
+
+  cards.forEach((card, index) => {
+    const isActive = index === activeExerciseIndex;
+    const isCompleted = index < activeExerciseIndex;
+    card.classList.toggle('active', isActive);
+    card.classList.toggle('completed', isCompleted);
+    card.classList.toggle('upcoming', index > activeExerciseIndex);
+    card.classList.remove('is-entering');
+    card.classList.remove('is-leaving');
+    card.setAttribute('aria-hidden', String(!isActive));
+  });
+
+  const activeCard = cards[activeExerciseIndex];
+  if (activeCard) {
+    activeCard.classList.add('is-entering');
+    window.setTimeout(() => activeCard.classList.remove('is-entering'), 320);
+  }
+
+  syncExerciseStack();
+}
+
+function advanceExercise(card) {
+  if (!card.classList.contains('active')) return;
+
+  const inputs = Array.from(card.querySelectorAll('.set-input'));
+  const isComplete = inputs.every(input => input.value.trim() !== '');
+  if (!isComplete) {
+    card.classList.add('exercise-card-invalid');
+    window.setTimeout(() => card.classList.remove('exercise-card-invalid'), 380);
+    return;
+  }
+
+  const cards = Array.from(document.querySelectorAll('.exercise-card'));
+  const currentIndex = cards.indexOf(card);
+  card.classList.add('is-leaving');
+
+  if (currentIndex >= 0 && currentIndex < cards.length - 1) {
+    window.setTimeout(() => setActiveExercise(currentIndex + 1), 180);
+  } else {
+    card.classList.add('completed-pulse');
+    window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
+  }
+}
+
+function syncExerciseStack() {
+  const container = document.getElementById('today-exercises');
+  if (!container) return;
+
+  const cards = Array.from(container.querySelectorAll('.exercise-card'));
+  const remaining = Math.max(cards.length - activeExerciseIndex - 1, 0);
+  container.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
+}
+
 
 document.getElementById('save-workout-btn').addEventListener('click', async () => {
   const btn = document.getElementById('save-workout-btn');
@@ -125,8 +215,7 @@ document.getElementById('save-workout-btn').addEventListener('click', async () =
       exercises.push({ id, sets });
     });
 
-    const note = document.getElementById('today-note').value;
-    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note });
+    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note: '' });
     alert('Workout saved!');
 
     const historyDate = document.getElementById('history-date').value;
