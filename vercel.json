@@ -28,7 +28,9 @@
       "dest": "/$1"
     },
     { "src": "/login", "dest": "/login.html" },
+    { "src": "/login/(.*)", "dest": "/login.html" },
     { "src": "/register", "dest": "/register.html" },
+    { "src": "/register/(.*)", "dest": "/register.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
