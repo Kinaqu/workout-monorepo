@@ -1,7 +1,9 @@
-import React, { StrictMode } from 'react';
+import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClerkLoaded, ClerkLoading, ClerkProvider, Show, SignUp, UserButton } from '@clerk/react';
+import { ClerkLoaded, ClerkProvider, Show, UserButton } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
+
+const LazySignUp = lazy(() => import('@clerk/react').then(module => ({ default: module.SignUp })));
 
 const clerkPublishableKey =
   import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
@@ -25,15 +27,25 @@ function MissingKeyNotice() {
   );
 }
 
+function AuthSkeleton({ label }) {
+  return (
+    <section className="card auth-loader-card" aria-live="polite" aria-busy="true">
+      <div className="auth-loader-title">Preparing {label}</div>
+      <div className="auth-loader-line" />
+      <div className="auth-loader-line auth-loader-line-short" />
+      <div className="auth-loader-button" />
+    </section>
+  );
+}
+
 function RegisterPage() {
   return (
     <main className="auth-container">
-      <ClerkLoading>
-        <section className="card auth-card text-center">Loading sign up…</section>
-      </ClerkLoading>
       <ClerkLoaded>
         <Show when="signed-out">
-          <SignUp path="/register" routing="path" signInUrl="/login" appearance={clerkAppearance} />
+          <Suspense fallback={<AuthSkeleton label="sign up" />}>
+            <LazySignUp path="/register" routing="path" signInUrl="/login" appearance={clerkAppearance} />
+          </Suspense>
         </Show>
         <Show when="signed-in">
           <section className="card auth-card text-center">

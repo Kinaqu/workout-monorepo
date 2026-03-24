@@ -921,3 +921,63 @@ body::-webkit-scrollbar-thumb:hover,
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.08) !important;
 }
+
+/* Clerk password field/button interaction fixes */
+.clerk-password-toggle,
+.cl-formFieldInputShowPasswordButton {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 10px !important;
+  width: auto !important;
+  min-height: auto !important;
+  padding: 0 6px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 2;
+}
+
+.cl-formField {
+  position: relative;
+}
+
+/* Better auth lazy skeleton */
+.auth-loader-card {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+.auth-loader-title {
+  color: #d3d3dd;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.auth-loader-line,
+.auth-loader-button {
+  border-radius: 10px;
+  background: linear-gradient(90deg, #23232d 0%, #30303d 40%, #23232d 80%);
+  background-size: 220% 100%;
+  animation: authShimmer 1.2s linear infinite;
+}
+
+.auth-loader-line {
+  height: 42px;
+}
+
+.auth-loader-line-short {
+  width: 80%;
+}
+
+.auth-loader-button {
+  margin-top: 8px;
+  height: 46px;
+}
+
+@keyframes authShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -20% 0; }
+}
