@@ -12,6 +12,11 @@ export function removeToken() {
   localStorage.removeItem('token');
 }
 
+export function hasClerkSession() {
+  if (typeof document === 'undefined') return false;
+  return /(?:^|;\s*)__session=/.test(document.cookie);
+}
+
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
   const headers = {
@@ -30,7 +35,9 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config);
     if (response.status === 401) {
       removeToken();
-      window.location.href = '/register';
+      if (!hasClerkSession()) {
+        window.location.href = '/login';
+      }
       return null;
     }
     const data = await response.json().catch(() => ({}));
