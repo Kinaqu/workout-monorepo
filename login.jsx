@@ -1,31 +1,56 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClerkProvider, Show, SignIn, UserButton } from '@clerk/react';
+import { ClerkLoaded, ClerkLoading, ClerkProvider, Show, SignIn, UserButton } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
+
+const hasClerkKey = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+
+function MissingKeyNotice() {
+  return (
+    <main className="auth-container">
+      <section className="card auth-card">
+        <h1 className="mb-4">Clerk key is missing</h1>
+        <p className="text-secondary">Set VITE_CLERK_PUBLISHABLE_KEY in .env.local and redeploy.</p>
+        <p className="mt-4">
+          <a href="https://clerk.com/docs/react/getting-started/quickstart">Clerk React quickstart</a>
+        </p>
+      </section>
+    </main>
+  );
+}
 
 function LoginPage() {
   return (
     <main className="auth-container">
-      <Show when="signed-out">
-        <SignIn path="/login" routing="path" signUpUrl="/register" appearance={clerkAppearance} />
-      </Show>
-      <Show when="signed-in">
-        <section className="card auth-card text-center">
-          <h1 className="mb-4">You are signed in</h1>
-          <div className="flex justify-between items-center" style={{ gap: '12px' }}>
-            <UserButton afterSignOutUrl="/register" />
-            <a href="/">Continue to app</a>
-          </div>
-        </section>
-      </Show>
+      <ClerkLoading>
+        <section className="card auth-card text-center">Loading sign in…</section>
+      </ClerkLoading>
+      <ClerkLoaded>
+        <Show when="signed-out">
+          <SignIn path="/login" routing="path" signUpUrl="/register" appearance={clerkAppearance} />
+        </Show>
+        <Show when="signed-in">
+          <section className="card auth-card text-center">
+            <h1 className="mb-4">You are signed in</h1>
+            <div className="flex justify-between items-center" style={{ gap: '12px' }}>
+              <UserButton afterSignOutUrl="/register" />
+              <a href="/">Continue to app</a>
+            </div>
+          </section>
+        </Show>
+      </ClerkLoaded>
     </main>
   );
 }
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ClerkProvider afterSignOutUrl="/register">
-      <LoginPage />
-    </ClerkProvider>
+    {hasClerkKey ? (
+      <ClerkProvider afterSignOutUrl="/register">
+        <LoginPage />
+      </ClerkProvider>
+    ) : (
+      <MissingKeyNotice />
+    )}
   </StrictMode>
 );
