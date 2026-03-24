@@ -840,3 +840,57 @@ body::-webkit-scrollbar-thumb:hover,
 .auth-card {
   width: 100%;
 }
+
+/* Clerk auth refresh */
+.auth-container {
+  max-width: 460px;
+}
+
+.clerk-root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.clerk-card {
+  width: 100%;
+  background: linear-gradient(180deg, #1f1f25 0%, #17171d 100%);
+  border: 1px solid #2e2e38;
+  border-radius: 18px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35);
+}
+
+.clerk-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-text-secondary,
+.clerk-divider-text,
+.clerk-label {
+  color: #a8a8b8;
+}
+
+.clerk-input {
+  border-radius: 12px;
+  border-color: #333341;
+  background: #111116;
+}
+
+.clerk-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+}
+
+.clerk-primary-button,
+.clerk-social-button {
+  border-radius: 12px;
+  min-height: 46px;
+  font-weight: 700;
+}
+
+.clerk-divider-line {
+  background: #31313a;
+}
