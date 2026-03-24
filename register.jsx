@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClerkProvider, Show, SignUp, UserButton } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
