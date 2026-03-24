@@ -1,6 +1,6 @@
-import { api, getToken } from '/api.js';
+import { api, getToken, hasClerkSession } from '/api.js';
 
-if (!getToken()) {
+if (!getToken() && !hasClerkSession()) {
   window.location.href = '/register';
 }
 
