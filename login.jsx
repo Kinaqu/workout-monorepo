@@ -1,6 +1,6 @@
 import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClerkLoaded, ClerkProvider, Show, UserButton } from '@clerk/react';
+import { ClerkLoaded, ClerkProvider, Show } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
 
 const LazySignIn = lazy(() => import('@clerk/react').then(module => ({ default: module.SignIn })));
@@ -32,6 +32,15 @@ function MissingKeyNotice() {
   );
 }
 
+
+function SignedInRedirect() {
+  React.useEffect(() => {
+    window.location.replace('/');
+  }, []);
+
+  return null;
+}
+
 function AuthSkeleton({ label }) {
   return (
     <section className="card auth-loader-card" aria-live="polite" aria-busy="true">
@@ -53,13 +62,7 @@ function LoginPage() {
           </Suspense>
         </Show>
         <Show when="signed-in">
-          <section className="card auth-card text-center">
-            <h1 className="mb-4">You are signed in</h1>
-            <div className="flex justify-between items-center" style={{ gap: '12px' }}>
-              <UserButton afterSignOutUrl="/register" />
-              <a href="/">Continue to app</a>
-            </div>
-          </section>
+          <SignedInRedirect />
         </Show>
       </ClerkLoaded>
     </main>

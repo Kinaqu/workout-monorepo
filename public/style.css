@@ -998,3 +998,23 @@ body::-webkit-scrollbar-thumb:hover,
 .cl-formFieldSuccessText {
   color: #64d88c !important;
 }
+
+
+/* Verify email readability */
+.cl-otpCodeFieldInput {
+  background: #111116 !important;
+  border: 1px solid #4a4a5a !important;
+  color: #ffffff !important;
+}
+
+.cl-otpCodeFieldInput::placeholder {
+  color: #d5d5e0 !important;
+  opacity: 1;
+}
+
+.cl-formResendCodeLink,
+.cl-identityPreviewText,
+.cl-formHeaderSubtitle,
+.cl-internal-1eekank {
+  color: #d7d7e5 !important;
+}
