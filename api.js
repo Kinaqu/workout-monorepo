@@ -36,7 +36,7 @@ async function request(endpoint, options = {}) {
     if (response.status === 401) {
       removeToken();
       if (!hasClerkSession()) {
-        window.location.href = '/register';
+        window.location.href = '/login';
       }
       return null;
     }

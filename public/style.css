@@ -981,3 +981,20 @@ body::-webkit-scrollbar-thumb:hover,
   0% { background-position: 200% 0; }
   100% { background-position: -20% 0; }
 }
+
+
+/* Clerk password hints readability */
+.cl-formFieldHintText,
+.cl-formFieldWarningText,
+.cl-formFieldSuccessText {
+  font-size: 13px !important;
+}
+
+.cl-formFieldHintText,
+.cl-formFieldWarningText {
+  color: #d0d0db !important;
+}
+
+.cl-formFieldSuccessText {
+  color: #64d88c !important;
+}

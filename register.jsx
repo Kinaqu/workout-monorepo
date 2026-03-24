@@ -49,7 +49,7 @@ function RegisterPage() {
       <ClerkLoaded>
         <Show when="signed-out">
           <Suspense fallback={<AuthSkeleton label="sign up" />}>
-            <LazySignUp path="/register" routing="path" signInUrl="/login" appearance={clerkAppearance} />
+            <LazySignUp path="/register" routing="path" signInUrl="/login" forceRedirectUrl="/login" fallbackRedirectUrl="/login" appearance={clerkAppearance} />
           </Suspense>
         </Show>
         <Show when="signed-in">

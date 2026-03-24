@@ -1,7 +1,7 @@
 import { api, getToken, hasClerkSession } from '/api.js';
 
 if (!getToken() && !hasClerkSession()) {
-  window.location.href = '/register';
+  window.location.href = '/login';
 }
 
 let todayWorkoutType = null;
