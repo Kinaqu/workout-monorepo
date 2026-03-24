@@ -27,16 +27,3 @@ export interface UserState {
   sets: Record<string, number>;
   last_progression: string | null;
 }
-
-export interface User {
-  username: string;
-  passwordHash: string;
-  salt: string;
-  secretKey: string; // автогенерируется при регистрации, используется как userId в KV
-}
-
-export interface JWTPayload {
-  username: string;
-  secretKey: string;
-  exp: number;
-}
