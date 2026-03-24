@@ -134,6 +134,23 @@ Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your ma
    ```
    > Navigate to `http://localhost:3000` in your web browser.
 
+
+### Clerk setup for React (Vite)
+
+For current Clerk React + Vite integration guidance, use the official quickstart:
+https://clerk.com/docs/react/getting-started/quickstart
+
+1. Install the SDK:
+   ```bash
+   npm install @clerk/react@latest
+   ```
+2. Add your publishable key to `.env.local` (preferred) or `.env`:
+   ```bash
+   VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+   ```
+3. Wrap the auth entrypoints in `ClerkProvider` (`login.jsx` and `register.jsx`) and render Clerk components (`SignIn` / `SignUp`) there.
+4. Unauthenticated users are redirected to `/register` from `app.js` and `api.js` to keep the SSO-first flow.
+
 ### Build & Deployment
 
 The frontend is natively designed to be deployed on **Vercel** with zero-config via `vercel.json`.

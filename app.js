@@ -1,7 +1,7 @@
 import { api, getToken } from '/api.js';
 
 if (!getToken()) {
-  window.location.href = '/login';
+  window.location.href = '/register';
 }
 
 let todayWorkoutType = null;

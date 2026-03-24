@@ -790,3 +790,194 @@ body::-webkit-scrollbar-thumb:hover,
     flex-direction: column;
   }
 }
+
+/* Clerk auth theming */
+.clerk-root {
+  width: 100%;
+}
+
+.clerk-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  width: 100%;
+}
+
+.clerk-title,
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-label,
+.clerk-text-secondary,
+.clerk-divider-text,
+.clerk-social-button-text {
+  color: var(--text-primary);
+}
+
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-text-secondary,
+.clerk-divider-text {
+  color: var(--text-secondary);
+}
+
+.clerk-input {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.clerk-primary-button,
+.clerk-social-button {
+  background: var(--primary-color);
+  color: #000;
+  border: none;
+}
+
+.clerk-footer-link {
+  color: var(--primary-color);
+}
+
+.auth-card {
+  width: 100%;
+}
+
+/* Clerk auth refresh */
+.auth-container {
+  max-width: 460px;
+}
+
+.clerk-root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.clerk-card {
+  width: 100%;
+  background: linear-gradient(180deg, #1f1f25 0%, #17171d 100%);
+  border: 1px solid #2e2e38;
+  border-radius: 18px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35);
+}
+
+.clerk-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-text-secondary,
+.clerk-divider-text,
+.clerk-label {
+  color: #a8a8b8;
+}
+
+.clerk-input {
+  border-radius: 12px;
+  border-color: #333341;
+  background: #111116;
+}
+
+.clerk-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.2);
+}
+
+.clerk-primary-button,
+.clerk-social-button {
+  border-radius: 12px;
+  min-height: 46px;
+  font-weight: 700;
+}
+
+.clerk-divider-line {
+  background: #31313a;
+}
+
+
+/* Clerk input visibility fixes */
+.clerk-input,
+.cl-formFieldInput {
+  padding-right: 52px !important;
+}
+
+.clerk-input::placeholder,
+.cl-formFieldInput::placeholder {
+  color: #c5c5d3 !important;
+  opacity: 1;
+}
+
+.clerk-password-toggle,
+.cl-formFieldInputShowPasswordButton {
+  color: #f5f5ff !important;
+  right: 12px !important;
+}
+
+.clerk-badge,
+.cl-badge,
+[class*="cl-badge"],
+[class*="clerk-badge"] {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Clerk password field/button interaction fixes */
+.clerk-password-toggle,
+.cl-formFieldInputShowPasswordButton {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 10px !important;
+  width: auto !important;
+  min-height: auto !important;
+  padding: 0 6px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 2;
+}
+
+.cl-formField {
+  position: relative;
+}
+
+/* Better auth lazy skeleton */
+.auth-loader-card {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+.auth-loader-title {
+  color: #d3d3dd;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.auth-loader-line,
+.auth-loader-button {
+  border-radius: 10px;
+  background: linear-gradient(90deg, #23232d 0%, #30303d 40%, #23232d 80%);
+  background-size: 220% 100%;
+  animation: authShimmer 1.2s linear infinite;
+}
+
+.auth-loader-line {
+  height: 42px;
+}
+
+.auth-loader-line-short {
+  width: 80%;
+}
+
+.auth-loader-button {
+  margin-top: 8px;
+  height: 46px;
+}
+
+@keyframes authShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -20% 0; }
+}

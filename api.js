@@ -30,7 +30,7 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config);
     if (response.status === 401) {
       removeToken();
-      window.location.href = '/login';
+      window.location.href = '/register';
       return null;
     }
     const data = await response.json().catch(() => ({}));

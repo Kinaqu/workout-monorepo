@@ -5,58 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sign Up - Workout Tracker</title>
   <link rel="stylesheet" href="/style.css">
-  <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="shortcut icon" href="/favicon.svg">
   <link rel="mask-icon" href="/favicon.svg" color="#6d28d9">
   <meta name="theme-color" content="#121212">
 </head>
 <body>
-  <div class="auth-container">
-    <h1>Sign Up</h1>
-    <div id="error-msg" class="error-message"></div>
-    <form id="register-form">
-      <input type="text" id="username" placeholder="Username" required autocomplete="username">
-      <input type="password" id="password" placeholder="Password" required autocomplete="new-password">
-      <button type="submit" id="submit-btn">Sign Up</button>
-    </form>
-    <div class="auth-links">
-      <p>Already have an account? <a href="/login">Log in</a></p>
-    </div>
-  </div>
-  <script type="module">
-    import { api, getToken, setToken } from '/api.js';
-
-    if (getToken()) {
-      window.location.href = '/';
+  <div id="root"></div>
+  <script type="module" src="/register.jsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
     }
-
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const usernameInput = document.getElementById('username').value;
-      const passwordInput = document.getElementById('password').value;
-      const errorMsg = document.getElementById('error-msg');
-      const submitBtn = document.getElementById('submit-btn');
-
-      errorMsg.textContent = '';
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Signing up...';
-
-      try {
-        const res = await api.register(usernameInput, passwordInput);
-        if (res && res.token) {
-          setToken(res.token);
-          window.location.href = '/';
-        } else {
-          errorMsg.textContent = 'Unknown error';
-        }
-      } catch (err) {
-        errorMsg.textContent = err.message || 'Sign up error';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign Up';
-      }
-    });
   </script>
 </body>
 </html>
