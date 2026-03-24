@@ -1,0 +1,28 @@
+export const clerkAppearance = {
+  variables: {
+    colorPrimary: '#bb86fc',
+    colorBackground: '#1e1e1e',
+    colorInputBackground: '#1e1e1e',
+    colorInputText: '#ffffff',
+    colorText: '#ffffff',
+    colorTextSecondary: '#b3b3b3',
+    colorDanger: '#cf6679',
+    borderRadius: '12px',
+  },
+  elements: {
+    card: 'clerk-card',
+    rootBox: 'clerk-root',
+    headerTitle: 'clerk-title',
+    headerSubtitle: 'clerk-subtitle',
+    socialButtonsBlockButton: 'clerk-social-button',
+    socialButtonsBlockButtonText: 'clerk-social-button-text',
+    dividerLine: 'clerk-divider-line',
+    dividerText: 'clerk-divider-text',
+    formFieldInput: 'clerk-input',
+    formButtonPrimary: 'clerk-primary-button',
+    footerActionText: 'clerk-footer-text',
+    footerActionLink: 'clerk-footer-link',
+    identityPreviewText: 'clerk-text-secondary',
+    formFieldLabel: 'clerk-label',
+  },
+};

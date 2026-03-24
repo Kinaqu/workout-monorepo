@@ -148,7 +148,8 @@ https://clerk.com/docs/react/getting-started/quickstart
    ```bash
    VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
    ```
-3. Wrap the app in `ClerkProvider` in `main.jsx`/`main.tsx` and render Clerk components from your app.
+3. Wrap the auth entrypoints in `ClerkProvider` (`login.jsx` and `register.jsx`) and render Clerk components (`SignIn` / `SignUp`) there.
+4. Unauthenticated users are redirected to `/register` from `app.js` and `api.js` to keep the SSO-first flow.
 
 ### Build & Deployment
 

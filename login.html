@@ -12,51 +12,7 @@
   <meta name="theme-color" content="#121212">
 </head>
 <body>
-  <div class="auth-container">
-    <h1>Login</h1>
-    <div id="error-msg" class="error-message"></div>
-    <form id="login-form">
-      <input type="text" id="username" placeholder="Username" required autocomplete="username">
-      <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
-      <button type="submit" id="submit-btn">Login</button>
-    </form>
-    <div class="auth-links">
-      <p>Don't have an account? <a href="/register">Sign up</a></p>
-    </div>
-  </div>
-  <script type="module">
-    import { api, getToken, setToken } from '/api.js';
-
-    if (getToken()) {
-      window.location.href = '/';
-    }
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const usernameInput = document.getElementById('username').value;
-      const passwordInput = document.getElementById('password').value;
-      const errorMsg = document.getElementById('error-msg');
-      const submitBtn = document.getElementById('submit-btn');
-
-      errorMsg.textContent = '';
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Logging in...';
-
-      try {
-        const res = await api.login(usernameInput, passwordInput);
-        if (res && res.token) {
-          setToken(res.token);
-          window.location.href = '/';
-        } else {
-          errorMsg.textContent = 'Unknown error';
-        }
-      } catch (err) {
-        errorMsg.textContent = err.message || 'Login error';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Login';
-      }
-    });
-  </script>
+  <div id="root"></div>
+  <script type="module" src="/login.jsx"></script>
 </body>
 </html>

@@ -790,3 +790,53 @@ body::-webkit-scrollbar-thumb:hover,
     flex-direction: column;
   }
 }
+
+/* Clerk auth theming */
+.clerk-root {
+  width: 100%;
+}
+
+.clerk-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  width: 100%;
+}
+
+.clerk-title,
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-label,
+.clerk-text-secondary,
+.clerk-divider-text,
+.clerk-social-button-text {
+  color: var(--text-primary);
+}
+
+.clerk-subtitle,
+.clerk-footer-text,
+.clerk-text-secondary,
+.clerk-divider-text {
+  color: var(--text-secondary);
+}
+
+.clerk-input {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.clerk-primary-button,
+.clerk-social-button {
+  background: var(--primary-color);
+  color: #000;
+  border: none;
+}
+
+.clerk-footer-link {
+  color: var(--primary-color);
+}
+
+.auth-card {
+  width: 100%;
+}
