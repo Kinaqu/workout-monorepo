@@ -30,10 +30,12 @@ export const clerkAppearance = {
     dividerText: 'clerk-divider-text',
     formFieldLabel: 'clerk-label',
     formFieldInput: 'clerk-input',
+    formFieldInputShowPasswordButton: 'clerk-password-toggle',
     formButtonPrimary: 'clerk-primary-button',
     footerActionText: 'clerk-footer-text',
     footerActionLink: 'clerk-footer-link',
     identityPreviewText: 'clerk-text-secondary',
     formResendCodeLink: 'clerk-footer-link',
+    badge: 'clerk-badge',
   },
 };

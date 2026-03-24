@@ -894,3 +894,30 @@ body::-webkit-scrollbar-thumb:hover,
 .clerk-divider-line {
   background: #31313a;
 }
+
+
+/* Clerk input visibility fixes */
+.clerk-input,
+.cl-formFieldInput {
+  padding-right: 52px !important;
+}
+
+.clerk-input::placeholder,
+.cl-formFieldInput::placeholder {
+  color: #c5c5d3 !important;
+  opacity: 1;
+}
+
+.clerk-password-toggle,
+.cl-formFieldInputShowPasswordButton {
+  color: #f5f5ff !important;
+  right: 12px !important;
+}
+
+.clerk-badge,
+.cl-badge,
+[class*="cl-badge"],
+[class*="clerk-badge"] {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
