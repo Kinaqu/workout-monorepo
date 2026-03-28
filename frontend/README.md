@@ -1,206 +1,154 @@
-<div align="center">
-  <h1>🏋️ Workout Manager Frontend</h1>
-  
-  <p>
-    <strong>Frontend application for tracking daily workouts and interacting with the Workout Manager API.</strong>
-  </p>
-  
-  <p>
-    <a href="https://github.com/Kinaqu/workout-frontend/stargazers">
-      <img src="https://img.shields.io/github/stars/Kinaqu/workout-frontend?style=for-the-badge&color=yellow" alt="Stars" />
-    </a>
-    <a href="https://github.com/Kinaqu/workout-frontend/issues">
-      <img src="https://img.shields.io/github/issues/Kinaqu/workout-frontend?style=for-the-badge&color=blue" alt="Issues" />
-    </a>
-    <a href="https://github.com/Kinaqu/workout-frontend/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License" />
-    </a>
-  </p>
-</div>
+# Workout Frontend
 
-<br />
+Frontend application for the Workout Manager project. It is a Vite app deployed to Vercel and connected to the Cloudflare Workers API in `../backend`.
 
-The application allows users to log workouts, view their training history, and track progression in their workout program. This project is a lightweight single-page application that communicates with a backend API deployed on Cloudflare Workers.
+## Overview
 
-## 📝 Table of Contents
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [API Endpoints](#-api-endpoints)
-- [Future Improvements](#-future-improvements)
-- [Author](#-author)
+The frontend mixes a lightweight main app with Clerk-powered auth screens:
 
----
+- `index.html` + `app.js` render the main workout experience
+- `login.html` + `login.jsx` render the Clerk sign-in page
+- `register.html` + `register.jsx` render the Clerk sign-up page
+- `api.js` handles authenticated requests to the backend API
 
-## ✨ Features
+The current API base URL is defined directly in `api.js`.
 
-- **🔐 Authentication**
-  - User registration & login with secure token authentication.
-- **🏋️ Workout Tracking**
-  - View today's workout directly on the dashboard.
-  - Log sets, reps, and add personalized workout notes.
-- **📅 Workout History**
-  - View previous workouts filtered by date.
-  - See logged exercises and insights from past training sessions.
-- **📈 Training Program**
-  - View the complete weekly workout schedule.
-  - Check targeted exercises and track your progression levels.
-- **📱 Mobile-first UI**
-  - Intuitive and simple interface optimized for mobile devices.
-  - Convenient bottom navigation for quick access to core features.
-- **📶 Offline Support**
-  - Basic PWA support with service worker caching for offline availability.
+## Features
 
----
+- Clerk authentication with dedicated login and registration entrypoints
+- Daily workout view
+- Workout logging with optional custom workout date
+- Training history lookup by date
+- Program overview and progression trigger
+- Vite multi-page build for app and auth pages
 
-## 🛠 Tech Stack
+## Tech Stack
 
-### Frontend & Build Tools
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+- Vite
+- React 19 for auth pages
+- Vanilla JavaScript for the main app flow
+- Clerk for authentication
+- Tailwind CSS v4 tooling
+- Vercel for deployment
 
-### Backend API & Deployment
-![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
-![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
-
----
-
-## 🏗 Architecture
-
-The frontend is a lightweight client application configured to interact with a serverless REST API.
-
-**Data Flow:**  
-`Frontend UI` ➔ `REST API` ➔ `Workout Logic`
-
-**The backend automatically handles:**
-- Workout generation & programmatic training progression
-- Workout logging and data persistence
-- Token generation and user authentication
-
-> **Security Note:** Authentication is handled securely using a JWT token stored locally in the browser's `localStorage`.
-
-### Live Infrastructure
-- **Frontend Deployment:** Vercel
-- **Backend API:** Cloudflare Workers
-
-*This setup ensures a highly responsive, lightweight, and easily scalable infrastructure.*
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```text
-workout-frontend/
-├── api.js                # API client for backend communication
-├── app.js                # Main logic and UI rendering
-├── index.html            # Main application entry page
-├── login.html            # User authentication page
-├── register.html         # User registration page
-├── public/               
-│   ├── styles/           # Application CSS stylesheets
-│   ├── manifest.json     # Web app manifest for PWA
-│   └── sw.js             # Service worker configuration
-├── vite.config.ts        # Vite build configuration
-└── vercel.json           # Vercel deployment configuration
+frontend/
+├── api.js
+├── app.js
+├── clerkAppearance.js
+├── index.html
+├── login.html
+├── login.jsx
+├── public/
+├── register.html
+├── register.jsx
+├── package.json
+├── vercel.json
+└── vite.config.ts
 ```
 
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your machine.
 
-### Local Installation
+- Node.js 20+ recommended
+- npm
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Kinaqu/workout-frontend.git
-   cd workout-frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-   > Navigate to `http://localhost:3000` in your web browser.
-
-
-### Clerk setup for React (Vite)
-
-For current Clerk React + Vite integration guidance, use the official quickstart:
-https://clerk.com/docs/react/getting-started/quickstart
-
-1. Install the SDK:
-   ```bash
-   npm install @clerk/react@latest
-   ```
-2. Add your publishable key to `.env.local` (preferred) or `.env`:
-   ```bash
-   VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
-   ```
-3. Wrap the auth entrypoints in `ClerkProvider` (`login.jsx` and `register.jsx`) and render Clerk components (`SignIn` / `SignUp`) there.
-4. Unauthenticated users are redirected to `/register` from `app.js` and `api.js` to keep the SSO-first flow.
-
-### Build & Deployment
-
-The frontend is natively designed to be deployed on **Vercel** with zero-config via `vercel.json`.
+### Install
 
 ```bash
-# Create an optimized production build (Outputs to /dist)
-npm run build
-
-# Preview the production build locally
-npm run preview
+cd frontend
+npm install
 ```
 
----
+### Environment Variables
 
-## 🔌 API Endpoints
+Create `frontend/.env.local` for local development:
 
-The frontend application directly communicates with the Workout Manager API. 
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+```
 
-> **Note:** All authenticated endpoints require the `Authorization: Bearer <token>` header.
+Optional:
 
-| HTTP Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/auth/register` | Register a new user |
-| `POST` | `/auth/login` | Authenticate and obtain JWT |
-| `GET` | `/workout/today` | Fetch today's generated workout plan |
-| `POST` | `/log` | Log a completed exercise, sets, and reps |
-| `GET` | `/log/{date}` | Retrieve workout history by specific date |
-| `GET` | `/program` | Get weekly training schedule and exercises |
-| `POST` | `/progression/run` | Process and update overall training progression |
+```bash
+GEMINI_API_KEY=your_key
+```
 
----
+Only `VITE_CLERK_PUBLISHABLE_KEY` is read by the auth entrypoints. `GEMINI_API_KEY` is exposed through the Vite config only if you actually use the related dependency.
 
-## 🔮 Future Improvements
+### Run Locally
 
-- [ ] Migrate component logic to **React** or **Next.js** for better scalability.
-- [ ] Improve UI/UX with smoother page transitions and micro-animations.
-- [ ] Enhance offline mode capabilities (full PWA integration with IndexedDB cache).
-- [ ] Implement push notifications or external reminders for scheduled workouts.
+```bash
+npm run dev
+```
 
----
+The Vite dev server runs on `http://localhost:3000`.
 
-## 👨‍💻 Author
+### Local Backend Integration
 
-**Kinaqu**  
-*Full-stack web developer focused on building simple and functional web applications.*
+By default, the frontend calls the deployed Worker from `api.js`:
 
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Kinaqu)
+```js
+export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+```
 
-<br />
+If you want to develop against the local backend, change `BASE_URL` to your local Wrangler URL, usually:
 
-<div align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/Kinaqu">Kinaqu</a></sub>
-</div>
+```js
+export const BASE_URL = 'http://127.0.0.1:8787';
+```
+
+The repository does not currently use a frontend environment variable for the API base URL.
+
+## Development Workflow
+
+Useful commands:
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run lint
+```
+
+Notes:
+
+- `npm run lint` currently runs TypeScript checking with `tsc --noEmit`
+- the production build emits separate entrypoints for `index.html`, `login.html`, and `register.html`
+- auth pages will show a diagnostic message if `VITE_CLERK_PUBLISHABLE_KEY` is missing
+
+## API Integration
+
+Authenticated requests use a Clerk session token from the `__session` cookie when available. A legacy token from `localStorage` is still supported by `api.js`, but the current auth flow is Clerk-first.
+
+Primary API calls used by the UI:
+
+- `GET /workout/today`
+- `POST /log`
+- `GET /log/:date`
+- `GET /program`
+- `POST /progression/run`
+
+Legacy auth endpoints still exist in the backend for compatibility, but they intentionally return `410 Gone`:
+
+- `POST /auth/register`
+- `POST /auth/login`
+
+## Deployment
+
+The frontend is intended to be deployed from the `frontend/` directory on Vercel.
+
+Recommended Vercel settings:
+
+- Root Directory: `frontend`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+Required production variable:
+
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_or_pk_test
+```
