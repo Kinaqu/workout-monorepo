@@ -891,6 +891,33 @@ body::-webkit-scrollbar-thumb:hover,
   font-weight: 700;
 }
 
+.clerk-alt-method-button,
+.cl-alternativeMethodsBlockButton {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(187, 134, 252, 0.28);
+  background: linear-gradient(180deg, rgba(187, 134, 252, 0.18) 0%, rgba(98, 74, 155, 0.28) 100%);
+  color: #f8f3ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.clerk-alt-method-button:hover,
+.clerk-alt-method-button:focus-visible,
+.clerk-alt-method-button:active,
+.cl-alternativeMethodsBlockButton:hover,
+.cl-alternativeMethodsBlockButton:focus-visible,
+.cl-alternativeMethodsBlockButton:active {
+  background: linear-gradient(180deg, rgba(187, 134, 252, 0.26) 0%, rgba(98, 74, 155, 0.38) 100%);
+  border-color: rgba(206, 173, 255, 0.44);
+}
+
+.clerk-alt-method-button-text,
+.clerk-alt-method-button-arrow,
+.cl-alternativeMethodsBlockButtonText,
+.cl-alternativeMethodsBlockButtonArrow {
+  color: #f8f3ff;
+}
+
 .clerk-divider-line {
   background: #31313a;
 }
@@ -918,8 +945,26 @@ body::-webkit-scrollbar-thumb:hover,
 .cl-badge,
 [class*="cl-badge"],
 [class*="clerk-badge"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  padding: 8px 12px !important;
+}
+
+.clerk-badge::before,
+.cl-badge::before,
+[class*="cl-badge"]::before,
+[class*="clerk-badge"]::before {
+  content: "Protected sign-in by Clerk";
+  color: #ddd6f3;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 /* Clerk password field/button interaction fixes */
