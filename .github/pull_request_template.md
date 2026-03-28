@@ -1,11 +1,19 @@
-## What changed
+## Summary
+
+Describe the change in 1-3 short paragraphs.
 
 ## Scope
-- [ ] frontend
-- [ ] backend
-- [ ] repo / docs / github config
 
-## Checklist
-- [ ] I tested my changes
-- [ ] I updated docs if needed
-- [ ] This PR changes only the intended area
+- [ ] Frontend
+- [ ] Backend
+- [ ] Repository docs / GitHub configuration
+
+## Validation
+
+- [ ] I tested the affected area locally
+- [ ] I updated documentation when setup or behavior changed
+- [ ] This PR stays within the intended scope
+
+## Notes for Reviewers
+
+List anything that needs special attention during review, rollout, or manual verification.
