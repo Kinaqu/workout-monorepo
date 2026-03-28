@@ -1,5 +1,24 @@
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
 
+function getCookieValue(name) {
+  if (typeof document === 'undefined') return null;
+
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`));
+
+  if (!match || match.length < 2) return null;
+
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+function getClerkTokenFromCookie() {
+  return getCookieValue('__session');
+}
+
 export function getToken() {
   return localStorage.getItem('token');
 }
@@ -13,8 +32,14 @@ export function removeToken() {
 }
 
 export function hasClerkSession() {
-  if (typeof document === 'undefined') return false;
-  return /(?:^|;\s*)__session=/.test(document.cookie);
+  return Boolean(getClerkTokenFromCookie());
+}
+
+async function resolveAuthToken() {
+  const localToken = getToken();
+  if (localToken) return localToken;
+
+  return getClerkTokenFromCookie();
 }
 
 async function request(endpoint, options = {}) {
@@ -24,7 +49,7 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const token = getToken();
+  const token = await resolveAuthToken();
   if (token && !options.noAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
