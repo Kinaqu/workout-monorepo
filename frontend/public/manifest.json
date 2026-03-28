@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Workout Tracker",
+  "short_name": "Workout",
+  "description": "Focused workout tracking with a clean mobile-first interface.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "/icons/workout-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
