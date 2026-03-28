@@ -1,20 +1,237 @@
-# Workout API Backend
+<div align="center">
+  <h1>⚙️ Workout Manager Backend</h1>
+  
+  <p>
+    <strong>Cloudflare Worker API for workout programs, progression tracking, workout history, and Clerk-based authentication.</strong>
+  </p>
+  
+  <p>
+    <a href="https://github.com/Kinaqu/workout-monorepo/stargazers">
+      <img src="https://img.shields.io/github/stars/Kinaqu/workout-monorepo?style=for-the-badge&color=yellow" alt="Stars" />
+    </a>
+    <a href="https://github.com/Kinaqu/workout-monorepo/issues">
+      <img src="https://img.shields.io/github/issues/Kinaqu/workout-monorepo?style=for-the-badge&color=blue" alt="Issues" />
+    </a>
+  </p>
+</div>
 
-Cloudflare Worker backend for the workout application. Authentication stays fully on Clerk. The backend verifies Clerk JWTs, treats the Clerk `sub` as the canonical `user_id`, and stores program templates, progression state, and workout session history in Cloudflare D1.
+<br />
 
-## Architecture
+The backend powers the Workout Manager application with a serverless API running on Cloudflare Workers. It verifies Clerk JWTs, stores normalized workout data in Cloudflare D1, preserves a temporary migration path from legacy KV storage, and exposes endpoints for workout generation, logging, sessions, programs, and progression updates.
 
-The backend now has explicit domain boundaries:
+## 📝 Table of Contents
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [API Endpoints](#-api-endpoints)
+- [Development Notes](#-development-notes)
+- [Future Improvements](#-future-improvements)
+- [Author](#-author)
 
-- `program templates`: immutable program versions with normalized workouts, exercises, and weekly schedule
-- `progression state`: per-user, per-program exercise state used to derive today's prescription
-- `workout sessions`: append-only history with multiple sessions per day, structured sets, and text-log ingestion
+---
 
-HTTP routes call services. Services call repositories. Route handlers no longer touch KV or D1 directly.
+## ✨ Features
 
-## Storage Model
+- **🔐 Authentication**
+  - Clerk is the only authentication provider.
+  - The Worker verifies Bearer JWTs and uses the Clerk `sub` as the canonical `user_id`.
+- **🏋️ Workout Generation**
+  - Returns a deterministic workout plan for the current day.
+  - Builds today's workout from the active program and stored progression state.
+- **📝 Workout Logging**
+  - Accepts structured JSON logs and plain-text compatibility logs.
+  - Stores append-only workout session history with exercises and sets in D1.
+- **📅 Training History**
+  - Returns workout history by date.
+  - Supports multi-session days and detailed session lookup.
+- **📈 Program & Progression**
+  - Stores normalized program templates, workouts, exercises, and schedule data.
+  - Recomputes progression state from workout history without mutating templates.
+- **☁️ Cloudflare-Native Deployment**
+  - Runs on Cloudflare Workers.
+  - Uses D1 as the primary datastore and KV only for staged legacy migration.
 
-Primary storage is D1 with the following tables:
+---
+
+## 🛠 Tech Stack
+
+### Backend Runtime & Storage
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
+![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Cloudflare KV](https://img.shields.io/badge/Cloudflare_KV-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+
+### Tooling & Auth
+![Wrangler](https://img.shields.io/badge/Wrangler-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
+![Clerk](https://img.shields.io/badge/Clerk-%236B4EFF.svg?style=for-the-badge)
+
+---
+
+## 🏗 Architecture
+
+The backend is a layered serverless API designed to keep HTTP routing, business logic, and persistence separate.
+
+**Data Flow:**  
+`Frontend UI` ➔ `Cloudflare Worker API` ➔ `Services` ➔ `Repositories` ➔ `D1 / KV`
+
+**The backend automatically handles:**
+- Clerk token verification and request authentication
+- Program storage and normalization into relational D1 tables
+- Workout generation from active program and progression state
+- Session logging, structured set storage, and history retrieval
+- Legacy KV import on first authenticated access when D1 data is missing
+
+> **Security Note:** The backend does not manage passwords or local sessions. Auth is delegated to Clerk, and protected endpoints require `Authorization: Bearer <clerk-jwt>`.
+
+### Live Infrastructure
+- **API Runtime:** Cloudflare Workers
+- **Primary Database:** Cloudflare D1
+- **Legacy Migration Store:** Cloudflare KV
+
+*This setup keeps the backend lightweight, scalable, and operationally simple while preserving a migration path from older data.*
+
+---
+
+## 📂 Project Structure
+
+```text
+backend/
+├── migrations/           # D1 schema migrations
+├── src/
+│   ├── auth/             # Clerk JWT verification
+│   ├── db/               # Database helpers
+│   ├── domain/           # Program, progression, and session domain logic
+│   ├── http/             # Request/response helpers
+│   ├── lib/              # Shared utilities
+│   ├── repositories/     # D1 and legacy KV persistence layer
+│   ├── routes/           # HTTP route handlers
+│   ├── services/         # Application services
+│   ├── env.ts            # Worker environment contract
+│   └── index.ts          # Worker entrypoint
+├── package.json
+├── tsconfig.json
+└── wrangler.toml
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your machine.
+
+### Local Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Kinaqu/workout-monorepo.git
+   cd workout-monorepo/backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Create local development variables**
+   Create a `.dev.vars` file in `backend/`:
+   ```bash
+   RESET_TOKEN=local-reset-token
+   CLERK_ISSUER=https://your-clerk-domain.clerk.accounts.dev
+   CLERK_AUDIENCE=
+   CLERK_JWKS_URL=
+   ```
+   > `RESET_TOKEN` and `CLERK_ISSUER` are required. `CLERK_AUDIENCE` and `CLERK_JWKS_URL` are optional.
+
+4. **Apply local D1 migrations**
+   ```bash
+   npx wrangler d1 migrations apply DB --local
+   ```
+
+5. **Start the local Worker**
+   ```bash
+   npm run dev
+   ```
+   > The local API is typically available at `http://127.0.0.1:8787`.
+
+### Development Workflow
+
+For end-to-end local development with the frontend:
+
+1. Start the backend from `backend/`.
+2. Update `frontend/api.js` to point `BASE_URL` to `http://127.0.0.1:8787`.
+3. Start the frontend separately from `frontend/` with `npm run dev`.
+
+Useful backend commands:
+
+```bash
+# Run the Worker locally
+npm run dev
+
+# Type-check the project
+npm run typecheck
+
+# Regenerate Wrangler types
+npm run cf-typegen
+
+# Deploy the Worker
+npm run deploy
+```
+
+### Build & Deployment
+
+The backend is designed to be deployed through **Wrangler** using the configuration in `wrangler.toml`.
+
+```bash
+# Deploy to Cloudflare Workers
+npm run deploy
+```
+
+Before deploying:
+- Ensure Wrangler is authenticated with Cloudflare.
+- Confirm `wrangler.toml` points to the correct D1 and KV resources.
+- Apply pending migrations to the target database if required.
+
+---
+
+## 🔌 API Endpoints
+
+The backend exposes a protected REST API for the Workout Manager application.
+
+> **Note:** All protected endpoints require the `Authorization: Bearer <clerk-jwt>` header.
+
+| HTTP Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/auth/register` | Legacy auth endpoint, intentionally disabled with `410` |
+| `POST` | `/auth/login` | Legacy auth endpoint, intentionally disabled with `410` |
+| `GET` | `/workout/today` | Fetch today's generated workout plan |
+| `GET` | `/program` | Retrieve the active program and progression metadata |
+| `POST` | `/program` | Save a new active program version |
+| `POST` | `/program/reset` | Reset to the built-in default program using `X-Reset-Token` |
+| `POST` | `/log` | Create a workout session from JSON or plain text |
+| `GET` | `/log/{date}` | Retrieve the latest workout log for a specific date |
+| `GET` | `/sessions` | List stored workout sessions with optional filters |
+| `GET` | `/sessions/{id}` | Retrieve a full session by ID |
+| `POST` | `/progression/run` | Recalculate progression state from recent session history |
+
+---
+
+## 🧪 Development Notes
+
+### Environment Variables
+
+The Worker uses the following runtime variables:
+
+- `RESET_TOKEN`
+- `CLERK_ISSUER`
+- `CLERK_AUDIENCE` optional
+- `CLERK_JWKS_URL` optional
+
+### Database Model
+
+Primary storage is D1 with the following key tables:
 
 - `users`
 - `programs`
@@ -28,161 +245,33 @@ Primary storage is D1 with the following tables:
 - `workout_session_sets`
 - `progression_events`
 
-Legacy KV is retained only for staged migration. On first authenticated access for a user, the backend:
+### Migration Notes
 
-1. checks for an active D1 program
-2. imports the user's legacy KV program, state, and logs if D1 is empty
-3. seeds normalized D1 rows
-4. continues using D1 as the source of truth
+- D1 is the source of truth for active backend data.
+- KV is retained temporarily to import legacy programs, progression state, and logs.
+- On first authenticated access, the backend can bootstrap a user from KV when D1 is empty.
+- Current migrations live in `backend/migrations/`.
 
-KV is no longer the primary datastore.
+---
 
-## Auth Model
+## 🔮 Future Improvements
 
-- Clerk remains the only auth provider.
-- The Worker verifies Clerk Bearer JWTs against Clerk JWKS.
-- `user_id` in D1 always means the Clerk JWT `sub`.
-- No local auth, password, session, or login tables are introduced.
+- [ ] Add automated backend tests for routes, services, and repositories.
+- [ ] Improve observability with structured logging and request tracing.
+- [ ] Remove KV migration support after the migration window closes.
+- [ ] Add rate limiting and stricter operational safeguards for admin-style endpoints.
 
-## API
+---
 
-Protected routes require `Authorization: Bearer <clerk-jwt>`.
+## 👨‍💻 Author
 
-### Auth
+**Kinaqu**  
+*Full-stack web developer focused on building simple and functional web applications.*
 
-- `POST /auth/register`
-- `POST /auth/login`
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Kinaqu)
 
-Both are intentionally disabled with `410`.
+<br />
 
-### Workouts
-
-- `GET /workout/today`
-  Returns the deterministic workout for the current day.
-  Optional query: `?date=YYYY-MM-DD`
-
-### Programs
-
-- `GET /program`
-  Returns the active program template plus progression metadata.
-- `POST /program`
-  Saves a new active program version.
-- `POST /program/reset`
-  Resets to the built-in default program. Requires `X-Reset-Token`.
-
-### Sessions and Logs
-
-- `POST /log`
-  Compatibility endpoint. Accepts JSON or plain text and creates a workout session.
-- `GET /log/:date`
-  Compatibility endpoint. Returns the latest session for the date plus `sessions` when multiple sessions exist.
-- `GET /sessions`
-  Lists session history. Supports `?limit=` and `?date=YYYY-MM-DD`.
-- `GET /sessions/:id`
-  Returns a full stored session.
-
-### Progression
-
-- `POST /progression/run`
-  Reads recent session history from D1 and updates `exercise_progression_state` without mutating the program template.
-
-## Program Payload
-
-`POST /program` still accepts the legacy program shape:
-
-```json
-{
-  "id": "default",
-  "name": "Program name",
-  "schedule": {
-    "monday": "A",
-    "tuesday": "B",
-    "wednesday": "rest",
-    "thursday": "A",
-    "friday": "B",
-    "saturday": "stretch",
-    "sunday": "rest"
-  },
-  "workouts": {
-    "A": {
-      "name": "Workout A",
-      "exercises": [
-        {
-          "id": "pushups",
-          "name": "Push Ups",
-          "type": "reps",
-          "max_sets": 3,
-          "reps": { "min": 8, "max": 12 }
-        }
-      ]
-    }
-  }
-}
-```
-
-Internally that payload is normalized into D1 rows.
-
-## Development
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run the Worker locally:
-
-```bash
-npm run dev
-```
-
-Typecheck:
-
-```bash
-npm run typecheck
-```
-
-Required environment variables:
-
-- `CLERK_ISSUER`
-- `CLERK_AUDIENCE` optional
-- `CLERK_JWKS_URL` optional
-- `RESET_TOKEN`
-
-## Cloudflare Configuration
-
-`wrangler.toml` now binds:
-
-- `DB`: D1 production database `workout-api-prod`
-- `preview_database_id`: D1 preview database `workout-api-preview`
-- `KV`: retained temporarily for legacy import only
-
-Migrations live in [migrations/0001_initial.sql](/home/dev/repos/workout-monorepo/backend/migrations/0001_initial.sql).
-
-## Migration Notes
-
-### What changed
-
-- KV blobs are replaced by normalized D1 storage.
-- Program templates are immutable versions.
-- Progression state is isolated in `exercise_progression_state`.
-- Workout logging is append-only session history with multiple sessions per day.
-- Progression reads session history and updates state only.
-
-### Compatibility
-
-- Clerk auth behavior is preserved.
-- `GET /program`, `GET /workout/today`, `POST /log`, `GET /log/:date`, and `POST /progression/run` still exist.
-- `GET /log/:date` now exposes `sessions` because a date can contain multiple sessions.
-
-### Deployment steps
-
-1. Ensure Worker secrets/vars are set for Clerk and `RESET_TOKEN`.
-2. Confirm `wrangler.toml` points at the correct D1 and KV resources.
-3. Apply migrations to both D1 databases if they are recreated.
-4. Deploy with `npm run deploy`.
-5. Allow users to lazily migrate on first authenticated access, or remove KV after the migration window if all users are imported.
-
-### Important migration caveat
-
-Legacy KV programs may already contain progression-mutated targets because the old model mixed template and user state. During import, the backend treats the stored KV program as the current template snapshot and seeds independent progression state from it. After import, progression no longer mutates templates.
+<div align="center">
+  <sub>Built for the Workout Manager monorepo by <a href="https://github.com/Kinaqu">Kinaqu</a></sub>
+</div>
