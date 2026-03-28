@@ -1,8 +1,11 @@
-# repo settings / workflows
+# Default owner for the repository
+* @Kinaqu
+
+# Repository health and configuration
 /.github/ @Kinaqu
+/README.md @Kinaqu
+/.gitignore @Kinaqu
 
-# backend
-/backend/ @Kinaqu
-
-# frontend
+# Application boundaries
 /frontend/ @Kinaqu
+/backend/ @Kinaqu

@@ -1,0 +1,47 @@
+name: Feature request
+description: Suggest an improvement for the frontend, backend, or repository workflow.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Target area
+      description: Which part of the monorepo should change?
+      options:
+        - frontend
+        - backend
+        - repository / docs / GitHub config
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What is missing, painful, or unclear today?
+      placeholder: Describe the current limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the improvement you want to see.
+      placeholder: Describe the expected behavior or workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected impact
+      description: Explain who benefits and why the change matters.
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Mockups, references, related issues, or constraints.
+    validations:
+      required: false
