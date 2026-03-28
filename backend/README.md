@@ -1,20 +1,55 @@
-# Workout API Backend
+# Workout Backend
 
-Cloudflare Worker backend for the workout application. Authentication stays fully on Clerk. The backend verifies Clerk JWTs, treats the Clerk `sub` as the canonical `user_id`, and stores program templates, progression state, and workout session history in Cloudflare D1.
+Cloudflare Worker backend for the Workout Manager project. Clerk remains the only authentication provider, while the Worker verifies Clerk JWTs and stores program, progression, and workout-session data in Cloudflare D1.
 
-## Architecture
+## Overview
 
-The backend now has explicit domain boundaries:
+The backend is organized around clear application layers:
 
-- `program templates`: immutable program versions with normalized workouts, exercises, and weekly schedule
-- `progression state`: per-user, per-program exercise state used to derive today's prescription
-- `workout sessions`: append-only history with multiple sessions per day, structured sets, and text-log ingestion
+- route handlers parse HTTP requests and return responses
+- services contain application logic
+- repositories read and write D1 and legacy KV data
+- domain modules define program, progression, and session behavior
 
-HTTP routes call services. Services call repositories. Route handlers no longer touch KV or D1 directly.
+The backend still keeps KV binding support for staged migration, but D1 is the primary datastore.
+
+## Features
+
+- Clerk JWT verification inside the Worker
+- D1-backed normalized storage for programs, workouts, exercises, and sessions
+- Append-only workout session history
+- Deterministic daily workout generation from active program state
+- Program reset and progression recalculation endpoints
+- Lazy import path from legacy KV into D1 on first authenticated access
+
+## Tech Stack
+
+- Cloudflare Workers
+- Wrangler
+- Cloudflare D1
+- Cloudflare KV for legacy import support
+- TypeScript
+
+## Project Structure
+
+```text
+backend/
+├── migrations/
+├── src/
+│   ├── auth/
+│   ├── domain/
+│   ├── http/
+│   ├── repositories/
+│   ├── routes/
+│   └── services/
+├── package.json
+├── tsconfig.json
+└── wrangler.toml
+```
 
 ## Storage Model
 
-Primary storage is D1 with the following tables:
+Primary storage is D1. Main tables:
 
 - `users`
 - `programs`
@@ -28,67 +63,36 @@ Primary storage is D1 with the following tables:
 - `workout_session_sets`
 - `progression_events`
 
-Legacy KV is retained only for staged migration. On first authenticated access for a user, the backend:
-
-1. checks for an active D1 program
-2. imports the user's legacy KV program, state, and logs if D1 is empty
-3. seeds normalized D1 rows
-4. continues using D1 as the source of truth
-
-KV is no longer the primary datastore.
-
-## Auth Model
-
-- Clerk remains the only auth provider.
-- The Worker verifies Clerk Bearer JWTs against Clerk JWKS.
-- `user_id` in D1 always means the Clerk JWT `sub`.
-- No local auth, password, session, or login tables are introduced.
+Legacy KV is retained only to import older user data into D1 when needed.
 
 ## API
 
-Protected routes require `Authorization: Bearer <clerk-jwt>`.
+Protected routes require:
 
-### Auth
+```http
+Authorization: Bearer <clerk-jwt>
+```
+
+Active endpoints:
+
+- `GET /workout/today`
+- `GET /program`
+- `POST /program`
+- `POST /program/reset`
+- `POST /log`
+- `GET /log/:date`
+- `GET /sessions`
+- `GET /sessions/:id`
+- `POST /progression/run`
+
+Legacy auth endpoints intentionally return `410 Gone`:
 
 - `POST /auth/register`
 - `POST /auth/login`
 
-Both are intentionally disabled with `410`.
-
-### Workouts
-
-- `GET /workout/today`
-  Returns the deterministic workout for the current day.
-  Optional query: `?date=YYYY-MM-DD`
-
-### Programs
-
-- `GET /program`
-  Returns the active program template plus progression metadata.
-- `POST /program`
-  Saves a new active program version.
-- `POST /program/reset`
-  Resets to the built-in default program. Requires `X-Reset-Token`.
-
-### Sessions and Logs
-
-- `POST /log`
-  Compatibility endpoint. Accepts JSON or plain text and creates a workout session.
-- `GET /log/:date`
-  Compatibility endpoint. Returns the latest session for the date plus `sessions` when multiple sessions exist.
-- `GET /sessions`
-  Lists session history. Supports `?limit=` and `?date=YYYY-MM-DD`.
-- `GET /sessions/:id`
-  Returns a full stored session.
-
-### Progression
-
-- `POST /progression/run`
-  Reads recent session history from D1 and updates `exercise_progression_state` without mutating the program template.
-
 ## Program Payload
 
-`POST /program` still accepts the legacy program shape:
+`POST /program` accepts the legacy program shape and normalizes it into D1 rows:
 
 ```json
 {
@@ -120,69 +124,124 @@ Both are intentionally disabled with `410`.
 }
 ```
 
-Internally that payload is normalized into D1 rows.
+## Getting Started
 
-## Development
+### Prerequisites
 
-Install dependencies:
+- Node.js 20+ recommended
+- npm
+- Cloudflare account for remote deploys
+
+### Install
 
 ```bash
+cd backend
 npm install
 ```
 
-Run the Worker locally:
+### Environment Variables
+
+For local development, create `backend/.dev.vars`:
+
+```bash
+RESET_TOKEN=local-reset-token
+CLERK_ISSUER=https://your-clerk-domain.clerk.accounts.dev
+CLERK_AUDIENCE=
+CLERK_JWKS_URL=
+```
+
+Required:
+
+- `RESET_TOKEN`
+- `CLERK_ISSUER`
+
+Optional:
+
+- `CLERK_AUDIENCE`
+- `CLERK_JWKS_URL`
+
+Wrangler loads `.dev.vars` in local development. Do not commit that file.
+
+### Apply Local Migrations
+
+Before the first local run, apply D1 migrations to the local database used by Wrangler:
+
+```bash
+npx wrangler d1 migrations apply DB --local
+```
+
+If you add a new migration later, run the same command again.
+
+### Run Locally
 
 ```bash
 npm run dev
 ```
 
-Typecheck:
+Wrangler serves the Worker locally, usually on `http://127.0.0.1:8787`.
+
+## Development Workflow
+
+Useful commands:
 
 ```bash
+npm run dev
 npm run typecheck
+npm run cf-typegen
+npm run deploy
 ```
 
-Required environment variables:
+Recommended local workflow:
 
-- `CLERK_ISSUER`
-- `CLERK_AUDIENCE` optional
-- `CLERK_JWKS_URL` optional
-- `RESET_TOKEN`
+1. Update or add SQL files in `migrations/` when the schema changes.
+2. Apply migrations locally with `npx wrangler d1 migrations apply DB --local`.
+3. Start the Worker with `npm run dev`.
+4. Point the frontend `BASE_URL` in `../frontend/api.js` to `http://127.0.0.1:8787` if you want end-to-end local testing.
+5. Run `npm run typecheck` before shipping changes.
+
+## D1 and Migration Notes
+
+Current migration files:
+
+- `migrations/0001_initial.sql`
+- `migrations/0002_users_legacy_marker.sql`
+
+For preview or remote databases, use Wrangler explicitly:
+
+```bash
+npx wrangler d1 migrations apply DB --preview
+npx wrangler d1 migrations apply DB --remote
+```
+
+Use `--preview` for the preview database configured in `wrangler.toml` and `--remote` for the remote database used by `wrangler dev --remote`.
 
 ## Cloudflare Configuration
 
-`wrangler.toml` now binds:
+`wrangler.toml` currently binds:
 
-- `DB`: D1 production database `workout-api-prod`
-- `preview_database_id`: D1 preview database `workout-api-preview`
-- `KV`: retained temporarily for legacy import only
+- `DB` to the D1 database
+- `KV` to the legacy KV namespace
 
-Migrations live in [migrations/0001_initial.sql](/home/dev/repos/workout-monorepo/backend/migrations/0001_initial.sql).
+Production deployment uses the Worker defined by:
 
-## Migration Notes
+- `name = "workout-api"`
+- `main = "src/index.ts"`
 
-### What changed
+## Deployment
 
-- KV blobs are replaced by normalized D1 storage.
-- Program templates are immutable versions.
-- Progression state is isolated in `exercise_progression_state`.
-- Workout logging is append-only session history with multiple sessions per day.
-- Progression reads session history and updates state only.
+Deploy from the `backend/` directory:
 
-### Compatibility
+```bash
+npm run deploy
+```
 
-- Clerk auth behavior is preserved.
-- `GET /program`, `GET /workout/today`, `POST /log`, `GET /log/:date`, and `POST /progression/run` still exist.
-- `GET /log/:date` now exposes `sessions` because a date can contain multiple sessions.
+Before deploying:
 
-### Deployment steps
+1. Make sure Cloudflare auth is configured locally for Wrangler.
+2. Confirm `wrangler.toml` points to the correct D1 and KV resources.
+3. Apply pending migrations to the intended database.
+4. Ensure production secrets and vars are configured for Clerk and `RESET_TOKEN`.
 
-1. Ensure Worker secrets/vars are set for Clerk and `RESET_TOKEN`.
-2. Confirm `wrangler.toml` points at the correct D1 and KV resources.
-3. Apply migrations to both D1 databases if they are recreated.
-4. Deploy with `npm run deploy`.
-5. Allow users to lazily migrate on first authenticated access, or remove KV after the migration window if all users are imported.
+## Migration Caveat
 
-### Important migration caveat
-
-Legacy KV programs may already contain progression-mutated targets because the old model mixed template and user state. During import, the backend treats the stored KV program as the current template snapshot and seeds independent progression state from it. After import, progression no longer mutates templates.
+Old KV data may already contain progression-mutated values because the previous model mixed program template data with user state. During import, the backend treats that KV snapshot as the current template baseline, seeds D1 progression state from it, and continues forward with D1 as the source of truth.
