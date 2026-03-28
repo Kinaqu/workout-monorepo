@@ -1,4 +1,5 @@
-import { Env, json } from "./index";
+import { Env } from "../env";
+import { errorResponse } from "../http/response";
 
 const CLERK_JWKS_CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -50,8 +51,7 @@ function parseJwt(token: string): { header: { kid?: string; alg?: string }; payl
     const [headerB64, payloadB64, signatureB64] = parts;
     const header = JSON.parse(fromB64url(headerB64)) as { kid?: string; alg?: string };
     const payload = JSON.parse(fromB64url(payloadB64)) as ClerkJwtPayload;
-    const signature = Uint8Array.from(fromB64url(signatureB64), c => c.charCodeAt(0));
-
+    const signature = Uint8Array.from(fromB64url(signatureB64), char => char.charCodeAt(0));
     return {
       header,
       payload,
@@ -71,12 +71,11 @@ async function getClerkJwks(env: Env): Promise<JwksResponse> {
 
   const jwksUrl = env.CLERK_JWKS_URL ?? `${env.CLERK_ISSUER}/.well-known/jwks.json`;
   const response = await fetch(jwksUrl, { cf: { cacheTtl: 300, cacheEverything: true } });
-
   if (!response.ok) {
     throw new Error(`Failed to fetch Clerk JWKS: ${response.status}`);
   }
 
-  const jwks = await response.json() as JwksResponse;
+  const jwks = await response.json<JwksResponse>();
   if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) {
     throw new Error("Clerk JWKS is empty");
   }
@@ -89,17 +88,17 @@ async function getClerkJwks(env: Env): Promise<JwksResponse> {
   return jwks;
 }
 
-async function verifyRs256Signature(token: string, env: Env): Promise<ClerkJwtPayload | null> {
+async function verifySignature(token: string, env: Env): Promise<ClerkJwtPayload | null> {
   const parsed = parseJwt(token);
-  if (!parsed) return null;
-
-  if (parsed.header.alg !== "RS256" || !parsed.header.kid) {
+  if (!parsed || parsed.header.alg !== "RS256" || !parsed.header.kid) {
     return null;
   }
 
   const jwks = await getClerkJwks(env);
   const jwk = jwks.keys.find(key => key.kid === parsed.header.kid && key.kty === "RSA" && key.n && key.e);
-  if (!jwk) return null;
+  if (!jwk) {
+    return null;
+  }
 
   const key = await crypto.subtle.importKey(
     "jwk",
@@ -109,66 +108,59 @@ async function verifyRs256Signature(token: string, env: Env): Promise<ClerkJwtPa
     ["verify"]
   );
 
-  const isValid = await crypto.subtle.verify(
+  const valid = await crypto.subtle.verify(
     "RSASSA-PKCS1-v1_5",
     key,
     parsed.signature,
     new TextEncoder().encode(parsed.signedPart)
   );
 
-  if (!isValid) return null;
-  return parsed.payload;
+  return valid ? parsed.payload : null;
 }
 
 function isAudienceValid(payloadAud: string | string[] | undefined, expectedAud?: string): boolean {
   if (!expectedAud) return true;
   if (!payloadAud) return false;
-
-  if (Array.isArray(payloadAud)) {
-    return payloadAud.includes(expectedAud);
-  }
-
-  return payloadAud === expectedAud;
+  return Array.isArray(payloadAud) ? payloadAud.includes(expectedAud) : payloadAud === expectedAud;
 }
 
 export async function authenticate(request: Request, env: Env): Promise<AuthContext | Response> {
-  const authHeader = request.headers.get("Authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return json({ error: "Unauthorized" }, 401);
+  const header = request.headers.get("Authorization");
+  if (!header?.startsWith("Bearer ")) {
+    return errorResponse("Unauthorized", 401);
   }
 
-  const token = authHeader.slice(7).trim();
+  const token = header.slice(7).trim();
   if (!token) {
-    return json({ error: "Unauthorized" }, 401);
+    return errorResponse("Unauthorized", 401);
   }
 
   let payload: ClerkJwtPayload | null = null;
   try {
-    payload = await verifyRs256Signature(token, env);
+    payload = await verifySignature(token, env);
   } catch {
-    return json({ error: "Auth provider unavailable" }, 503);
+    return errorResponse("Auth provider unavailable", 503);
   }
 
   if (!payload) {
-    return json({ error: "Invalid or expired token" }, 401);
+    return errorResponse("Invalid or expired token", 401);
   }
 
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (!payload.sub || !payload.exp || payload.exp < nowSec) {
-    return json({ error: "Invalid or expired token" }, 401);
+  const now = Math.floor(Date.now() / 1000);
+  if (!payload.sub || !payload.exp || payload.exp < now) {
+    return errorResponse("Invalid or expired token", 401);
   }
 
-  if (payload.nbf && payload.nbf > nowSec) {
-    return json({ error: "Token is not active yet" }, 401);
+  if (payload.nbf && payload.nbf > now) {
+    return errorResponse("Token is not active yet", 401);
   }
 
   if (env.CLERK_ISSUER && payload.iss !== env.CLERK_ISSUER) {
-    return json({ error: "Invalid token issuer" }, 401);
+    return errorResponse("Invalid token issuer", 401);
   }
 
   if (!isAudienceValid(payload.aud, env.CLERK_AUDIENCE)) {
-    return json({ error: "Invalid token audience" }, 401);
+    return errorResponse("Invalid token audience", 401);
   }
 
   return {
