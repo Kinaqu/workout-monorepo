@@ -20,7 +20,7 @@
 
 <br />
 
-The API provides endpoints for authentication, daily workout generation, workout logging, training program management, and automatic progression of exercises based on user performance. Designed to be used with the Workout Manager frontend application, this service is built for serverless deployment and runs on Cloudflare Workers using KV storage.
+The API provides endpoints for daily workout generation, workout logging, training program management, and automatic progression of exercises based on user performance. Authentication is handled by Clerk on the frontend, while this backend verifies Clerk Bearer JWTs. Designed to be used with the Workout Manager frontend application, this service is built for serverless deployment and runs on Cloudflare Workers using KV storage.
 
 ## 📝 Table of Contents
 - [Features](#-features)
@@ -36,9 +36,9 @@ The API provides endpoints for authentication, daily workout generation, workout
 
 ## ✨ Features
 
-- **🔐 User Authentication**
-  - User registration & login with secure JWT (HMAC SHA-256) authentication.
-  - Token-based API access for protected routes.
+- **🔐 Clerk Authentication**
+  - Verifies Clerk-issued Bearer JWTs on every protected API call.
+  - Uses Clerk user ID (`sub`) as stable `userId` in KV keys.
 - **🏋️ Workout Generation**
   - Generates daily workouts based on a weekly schedule.
   - Returns target exercises, sets, and automatically handles rest days.
@@ -61,7 +61,7 @@ The API provides endpoints for authentication, daily workout generation, workout
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge)
 
 **Core Infrastructure:** Stateless Serverless Architecture
 
@@ -77,7 +77,7 @@ The API is designed as a stateless serverless service optimized for speed and lo
 ### Components:
 - **Cloudflare Worker:** Handles HTTP requests and routing.
 - **KV Storage:** Stores user data, programs, state progression, and workout logs using structured keys (`program:{userId}`, `state:{userId}`, `log:{userId}:{date}`).
-- **Authentication Layer:** Verifies JWT tokens for all protected routes.
+- **Authentication Layer:** Verifies Clerk JWTs against Clerk JWKS for all protected routes.
 - **Core Modules:** Authentication, Program Management, Workout Generation, Exercise Progression, and Log Parsing.
 
 ---
@@ -88,9 +88,9 @@ The API is designed as a stateless serverless service optimized for speed and lo
 workout-manager/
 ├── src/
 │   ├── index.ts              # Main entry point and HTTP router
-│   ├── auth.ts               # JWT creation, verification, and middleware
+│   ├── auth.ts               # Clerk JWT verification and auth middleware
 │   ├── routes/               # API route handlers
-│   │   ├── auth.ts           # User authentication
+│   │   ├── auth.ts           # Legacy auth endpoints (disabled)
 │   │   ├── workout.ts        # Daily workout generation
 │   │   ├── log.ts            # Log storage and retrieval
 │   │   ├── program.ts        # Training program management
@@ -109,13 +109,13 @@ workout-manager/
 
 ## 🔌 API Endpoints
 
-> **Note:** All protected endpoints require a JWT token via the `Authorization: Bearer <token>` header.
+> **Note:** All protected endpoints require a Clerk session JWT via the `Authorization: Bearer <token>` header.
 
 ### 🔐 Authentication
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/auth/register` | Create a new user account |
-| `POST` | `/auth/login` | Authenticate user and return JWT token |
+| `POST` | `/auth/register` | Disabled (`410`). Use Clerk sign-up on frontend |
+| `POST` | `/auth/login` | Disabled (`410`). Use Clerk sign-in on frontend |
 
 ### 🏋️ Workout & Logging
 | Method | Endpoint | Description |
@@ -147,6 +147,16 @@ workout-manager/
    npm run dev
    ```
    > The server will run locally using [Wrangler](https://developers.cloudflare.com/workers/cli-wrangler/).
+
+3. **Configure Clerk env vars in Worker**
+   - `CLERK_ISSUER` (required), example: `https://your-app.clerk.accounts.dev`
+   - `CLERK_AUDIENCE` (optional, if you validate `aud`)
+   - `CLERK_JWKS_URL` (optional override, otherwise derived from issuer)
+
+   In the frontend, keep using `VITE_CLERK_PUBLISHABLE_KEY` as usual for Vite apps.
+
+
+For the frontend Clerk + React (Vite) setup, use the official quickstart: https://clerk.com/docs/react/getting-started/quickstart
 
 ### Deployment
 
