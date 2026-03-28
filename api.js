@@ -1,4 +1,36 @@
+import { Clerk } from '@clerk/clerk-js';
+
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+let clerkClient = null;
+let clerkLoadPromise = null;
+
+async function getClerkClient() {
+  if (!clerkPublishableKey) return null;
+
+  if (!clerkClient) {
+    clerkClient = new Clerk(clerkPublishableKey);
+    clerkLoadPromise = clerkClient.load();
+  }
+
+  if (clerkLoadPromise) {
+    await clerkLoadPromise;
+  }
+
+  return clerkClient;
+}
+
+async function getClerkToken() {
+  try {
+    const clerk = await getClerkClient();
+    if (!clerk || !clerk.session) return null;
+    return await clerk.session.getToken();
+  } catch (error) {
+    console.warn('Failed to get Clerk token:', error);
+    return null;
+  }
+}
 
 export function getToken() {
   return localStorage.getItem('token');
@@ -17,6 +49,14 @@ export function hasClerkSession() {
   return /(?:^|;\s*)__session=/.test(document.cookie);
 }
 
+async function resolveAuthToken() {
+  const localToken = getToken();
+  if (localToken) return localToken;
+
+  if (!hasClerkSession()) return null;
+  return await getClerkToken();
+}
+
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
   const headers = {
@@ -24,7 +64,7 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const token = getToken();
+  const token = await resolveAuthToken();
   if (token && !options.noAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
