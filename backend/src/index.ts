@@ -1,64 +1,46 @@
-import { handleWorkout }     from "./routes/workout";
-import { handleLog }         from "./routes/log";
-import { handleProgram }     from "./routes/program";
+import { authenticate } from "./auth/clerk";
+import { Env } from "./env";
+import { noContent, json } from "./http/response";
+import { handleAuth } from "./routes/auth";
+import { handleLog } from "./routes/log";
+import { handleProgram } from "./routes/program";
 import { handleProgression } from "./routes/progression";
-import { handleAuth }        from "./routes/auth";
-import { authenticate }      from "./auth";
+import { handleSessions } from "./routes/sessions";
+import { handleWorkout } from "./routes/workout";
 
-export interface Env {
-  KV: KVNamespace;
-  RESET_TOKEN: string;
-  CLERK_ISSUER: string;
-  CLERK_AUDIENCE?: string;
-  CLERK_JWKS_URL?: string;
-}
-
-export function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Access-Control-Allow-Origin": "*",
-    },
-  });
-}
+export { Env };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    const path = url.pathname;
+    const { pathname } = url;
     const method = request.method;
 
     if (method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Workout-Date, X-Reset-Token",
-        },
-      });
+      return noContent();
     }
 
     try {
-      if (path === "/auth/register" || path === "/auth/login") {
+      if (pathname === "/auth/register" || pathname === "/auth/login") {
         return handleAuth();
       }
 
       const auth = await authenticate(request, env);
-      if (auth instanceof Response) return auth;
+      if (auth instanceof Response) {
+        return auth;
+      }
 
-      if (method === "GET"  && path === "/workout/today")   return handleWorkout(request, env, auth);
-      if (method === "POST" && path === "/log")             return handleLog(request, env, auth);
-      if (method === "GET"  && path.startsWith("/log/"))    return handleLog(request, env, auth);
-      if (method === "GET"  && path === "/program")         return handleProgram(request, env, auth);
-      if (method === "POST" && path === "/program")         return handleProgram(request, env, auth);
-      if (method === "POST" && path === "/program/reset")   return handleProgram(request, env, auth);
-      if (method === "POST" && path === "/progression/run") return handleProgression(request, env, auth);
+      if (method === "GET" && pathname === "/workout/today") return handleWorkout(request, env, auth);
+      if (pathname === "/program") return handleProgram(request, env, auth);
+      if (pathname === "/program/reset") return handleProgram(request, env, auth);
+      if (pathname === "/progression/run") return handleProgression(request, env, auth);
+      if (pathname === "/log" || pathname.startsWith("/log/")) return handleLog(request, env, auth);
+      if (pathname === "/sessions" || pathname.startsWith("/sessions/")) return handleSessions(request, env, auth);
 
       return json({ error: "Not found" }, 404);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      return json({ error: "Internal server error", detail: message }, 500);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      return json({ error: "Internal server error", detail }, 500);
     }
   },
 };

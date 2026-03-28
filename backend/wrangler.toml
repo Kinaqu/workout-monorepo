@@ -1,7 +1,14 @@
 name = "workout-api"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-03-28"
 workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "workout-api-prod"
+database_id = "764e6f95-24ba-4a44-baeb-647644b0df77"
+preview_database_id = "fe2ce2a6-6bb4-4ebb-bd79-cb73da1c2149"
+migrations_dir = "migrations"
 
 [[kv_namespaces]]
 binding = "KV"

@@ -1,48 +1,16 @@
-import { Env, json } from "../index";
-import { DEFAULT_PROGRAM } from "../lib/defaults";
-import { getTodayWorkout } from "../lib/schedule";
-import { Program, UserState } from "../lib/types";
+import { AuthContext } from "../auth/clerk";
+import { Env } from "../env";
+import { errorResponse, json } from "../http/response";
+import { createAppContext } from "../services/app-context";
+import { isValidDate, todayDate } from "../lib/time";
 
-export async function handleWorkout(
-  _request: Request,
-  env: Env,
-  auth: { userId: string; username: string }
-): Promise<Response> {
-  const { userId } = auth;
-
-  const programRaw = await env.KV.get(`program:${userId}`);
-  const program: Program = programRaw ? JSON.parse(programRaw) : DEFAULT_PROGRAM;
-
-  const stateRaw = await env.KV.get(`state:${userId}`);
-  let state: UserState | null = stateRaw ? JSON.parse(stateRaw) : null;
-
-  if (!state) {
-    const allExerciseIds = Object.values(program.workouts)
-      .flatMap(w => w.exercises.map(e => e.id));
-
-    const sets: Record<string, number> = {};
-    for (const id of allExerciseIds) {
-      sets[id] = 1;
-    }
-
-    state = {
-      program_id: program.id,
-      sets,
-      last_progression: null,
-    };
-
-    await env.KV.put(`state:${userId}`, JSON.stringify(state));
+export async function handleWorkout(request: Request, env: Env, auth: AuthContext): Promise<Response> {
+  const url = new URL(request.url);
+  const date = url.searchParams.get("date") ?? todayDate();
+  if (!isValidDate(date)) {
+    return errorResponse("Invalid date. Use format: 2026-03-11", 400);
   }
 
-  const result = getTodayWorkout(program, state.sets);
-
-  if (!("name" in result)) {
-    return json({ type: "rest", message: "Today is a rest day 🛋️" });
-  }
-
-  return json({
-    type: result.type,
-    name: result.name,
-    exercises: result.exercises,
-  });
+  const { workoutService } = createAppContext(env);
+  return json(await workoutService.getWorkoutForDate(auth.userId, auth.username, date));
 }
