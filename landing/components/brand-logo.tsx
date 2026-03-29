@@ -2,6 +2,7 @@ import Image from "next/image";
 
 type BrandLogoProps = {
   className?: string;
+  iconClassName?: string;
   priority?: boolean;
   showWordmark?: boolean;
   size?: number;
@@ -11,9 +12,10 @@ type BrandLogoProps = {
 
 export function BrandLogo({
   className = "",
+  iconClassName = "",
   priority = false,
   showWordmark = true,
-  size = 42,
+  size = 30,
   subtitle,
   titleClassName = "",
 }: BrandLogoProps) {
@@ -25,7 +27,7 @@ export function BrandLogo({
         width={size}
         height={size}
         priority={priority}
-        className="h-auto w-auto shrink-0"
+        className={`h-auto w-auto shrink-0 ${iconClassName}`.trim()}
       />
       {showWordmark ? (
         <div className="min-w-0">

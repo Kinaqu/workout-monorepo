@@ -186,7 +186,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-[1240px] px-6 pb-[4.5rem] pt-6 sm:px-8 lg:px-10">
           <header className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-md sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <BrandLogo priority subtitle="Kinetic Nova" />
+              <BrandLogo priority size={28} subtitle="Kinetic Nova" />
               <a
                 href="#final-cta"
                 className="inline-flex items-center justify-center rounded-full border border-[color:rgba(120,167,255,0.3)] bg-[color:rgba(47,107,255,0.16)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:rgba(47,107,255,0.24)]"
@@ -211,7 +211,7 @@ export default function Home() {
           <div className="grid gap-14 pb-20 pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(480px,560px)] lg:items-center lg:gap-12 lg:pt-[4.5rem]">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/72">
-                <BrandLogo showWordmark={false} size={22} />
+                <BrandLogo showWordmark={false} size={16} />
                 Adaptive workout app
               </div>
 
@@ -440,7 +440,7 @@ export default function Home() {
             <div className="relative overflow-hidden rounded-[2rem] border border-black/8 bg-[linear-gradient(180deg,#07101f,#0b1630)] p-6 text-white shadow-[0_30px_80px_rgba(9,17,31,0.18)] lg:p-8">
               <div className="bg-grid absolute inset-0 opacity-35" />
               <div className="relative flex items-center justify-between gap-4">
-                <BrandLogo showWordmark={false} size={34} />
+                <BrandLogo showWordmark={false} size={22} />
                 <div className="rounded-full border border-white/12 bg-white/[0.06] px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/68">
                   Progression route
                 </div>
@@ -529,7 +529,7 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <BrandLogo
                 className="justify-center text-white"
-                size={62}
+                size={40}
                 subtitle="Kinetic Nova"
                 titleClassName="text-3xl sm:text-4xl"
               />
@@ -622,7 +622,11 @@ export default function Home() {
           <div className="flex flex-col gap-8 rounded-[1.9rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-xl">
-                <BrandLogo priority subtitle="A new era of personal movement." />
+                <BrandLogo
+                  priority
+                  size={28}
+                  subtitle="A new era of personal movement."
+                />
                 <p className="mt-5 text-sm leading-7 text-white/62">
                   Kinova helps people train with more structure, smarter
                   progression, and a plan that fits how real progress actually

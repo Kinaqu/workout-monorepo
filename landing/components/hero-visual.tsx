@@ -35,7 +35,7 @@ export function HeroVisual() {
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(120,167,255,0.7),transparent)]" />
 
         <div className="relative flex items-center justify-between gap-4">
-          <BrandLogo showWordmark={false} size={36} priority />
+          <BrandLogo showWordmark={false} size={24} priority />
           <div className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/70">
             Personal training that adapts
           </div>
