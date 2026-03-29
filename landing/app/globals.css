@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --kinova-black: #05070d;
+  --kinova-surface: #0b1324;
+  --kinova-surface-2: #121d34;
+  --kinova-white: #f7f9fc;
+  --kinova-muted: #98a3bf;
+  --kinova-blue: #2f6bff;
+  --kinova-blue-soft: #86b6ff;
+  --kinova-blue-deep: #0f37bd;
+  --background: var(--kinova-black);
+  --foreground: var(--kinova-white);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), sans-serif;
+  background-image:
+    radial-gradient(circle at top, rgba(47, 107, 255, 0.2), transparent 32%),
+    radial-gradient(circle at left bottom, rgba(15, 55, 189, 0.18), transparent 28%);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(47, 107, 255, 0.35);
+  color: var(--kinova-white);
+}
+
+.font-display {
+  font-family: var(--font-sora), sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 34px 34px;
+  background-position: center;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.pulse-soft {
+  animation: pulse-soft 5s ease-in-out infinite;
+}
+
+.float-slow {
+  animation: float-slow 10s ease-in-out infinite;
+}
+
+.float-delayed {
+  animation: float-slow 12s ease-in-out infinite 1.5s;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
 }
