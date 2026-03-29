@@ -1,27 +1,17 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Manrope } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { hasClerkCredentials } from "@/lib/clerk";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "Workout Landing",
-    template: "%s | Workout Landing",
+    default: "Workout",
+    template: "%s | Workout",
   },
   description:
-    "Standalone landing and onboarding app for Vercel deployment, kept separate from the existing frontend and backend.",
+    "Landing and onboarding app styled to match the existing workout frontend, with Clerk-first authentication for Next.js.",
 };
 
 export default function RootLayout({
@@ -29,17 +19,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appShell = (
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(187,134,252,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(3,218,198,0.12),_transparent_24%)]" />
+      <SiteHeader authEnabled={hasClerkCredentials} />
+      <main className="relative z-10 flex-1">{children}</main>
+      <SiteFooter />
+    </div>
+  );
+
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${ibmPlexMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-page text-ink">
-        <div className="relative flex min-h-screen flex-col">
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-        </div>
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full bg-bg text-text-primary">
+        {hasClerkCredentials ? <ClerkProvider>{appShell}</ClerkProvider> : appShell}
       </body>
     </html>
   );
