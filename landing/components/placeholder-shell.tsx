@@ -50,19 +50,20 @@ export function PlaceholderShell({
 
         <aside className="surface-card rounded-[1.8rem] p-6">
           <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-            Next Route
+            Preview
           </p>
           <p className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-text-primary">
             {nextLabel}
           </p>
           <p className="mt-3 text-sm leading-7 text-text-secondary">
-            These placeholder routes are wired now so later tasks can add real state and product logic without changing the shell structure.
+            Use this flow to see how the app guides you from your starting point into a
+            plan that keeps adapting along the way.
           </p>
           <Link
             href={nextHref}
-            className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-black transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#c89dff]"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-[#0a130f] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#e4ff92]"
           >
-            Go to {nextLabel}
+            Open {nextLabel}
           </Link>
         </aside>
       </div>

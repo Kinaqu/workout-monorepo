@@ -2,9 +2,10 @@ import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 const navItems = [
-  { href: "/#product", label: "Design" },
-  { href: "/#features", label: "Flow" },
-  { href: "/onboarding", label: "Onboarding" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#comparison", label: "Why It Works" },
+  { href: "/#adaptive", label: "Adaptive" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 type SiteHeaderProps = {
@@ -16,15 +17,15 @@ function HeaderLinks() {
     <>
       <Link
         href="/sign-in"
-        className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong"
+        className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10"
       >
         Sign in
       </Link>
       <Link
         href="/sign-up"
-        className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-black transition-colors hover:bg-[#c89dff]"
+        className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-[#0a130f] transition-colors hover:bg-[#e4ff92]"
       >
-        Try it free
+        Build my plan
       </Link>
     </>
   );
@@ -32,16 +33,16 @@ function HeaderLinks() {
 
 export function SiteHeader({ authEnabled }: SiteHeaderProps) {
   return (
-    <header className="relative z-20 border-b border-white/6 bg-black/35 backdrop-blur-xl">
+    <header className="relative z-20 border-b border-white/6 bg-black/25 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-black">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-[#0a130f]">
             W
           </div>
           <div>
             <p className="text-sm font-semibold text-text-primary">Workout</p>
             <p className="text-[11px] uppercase tracking-[0.18em] text-text-secondary">
-              Landing App
+              Adaptive training
             </p>
           </div>
         </Link>
@@ -67,9 +68,9 @@ export function SiteHeader({ authEnabled }: SiteHeaderProps) {
               <Show when="signed-in">
                 <Link
                   href="/app"
-                  className="hidden h-10 items-center justify-center rounded-full border border-white/10 bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong sm:inline-flex"
+                  className="hidden h-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10 sm:inline-flex"
                 >
-                  Open app
+                  My plan
                 </Link>
                 <UserButton />
               </Show>
