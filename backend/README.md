@@ -17,7 +17,7 @@
 
 <br />
 
-The backend powers the Workout Manager application with a serverless API running on Cloudflare Workers. It verifies Clerk JWTs, stores normalized workout data in Cloudflare D1, preserves a temporary migration path from legacy KV storage, and exposes endpoints for workout generation, logging, sessions, programs, and progression updates.
+The backend powers the Workout Manager application with a serverless API running on Cloudflare Workers. It uses Hono for the HTTP layer, generates OpenAPI automatically with `@hono/zod-openapi`, serves Scalar API docs, verifies Clerk JWTs, stores normalized workout data in Cloudflare D1, preserves a temporary migration path from legacy KV storage, and exposes endpoints for workout generation, logging, sessions, programs, and progression updates.
 
 ## 📝 Table of Contents
 - [Features](#-features)
@@ -52,6 +52,9 @@ The backend powers the Workout Manager application with a serverless API running
 - **☁️ Cloudflare-Native Deployment**
   - Runs on Cloudflare Workers.
   - Uses D1 as the primary datastore and KV only for staged legacy migration.
+- **📚 API Documentation**
+  - Generates OpenAPI at `/openapi.json`.
+  - Serves Scalar API Reference at `/docs`.
 
 ---
 
@@ -66,6 +69,8 @@ The backend powers the Workout Manager application with a serverless API running
 ### Tooling & Auth
 ![Wrangler](https://img.shields.io/badge/Wrangler-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
 ![Clerk](https://img.shields.io/badge/Clerk-%236B4EFF.svg?style=for-the-badge)
+![Hono](https://img.shields.io/badge/Hono-E36002?style=for-the-badge)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-6BA539?style=for-the-badge)
 
 ---
 
@@ -74,10 +79,11 @@ The backend powers the Workout Manager application with a serverless API running
 The backend is a layered serverless API designed to keep HTTP routing, business logic, and persistence separate.
 
 **Data Flow:**  
-`Frontend UI` ➔ `Cloudflare Worker API` ➔ `Services` ➔ `Repositories` ➔ `D1 / KV`
+`Frontend UI` ➔ `Hono Worker Routes` ➔ `Services` ➔ `Repositories` ➔ `D1 / KV`
 
 **The backend automatically handles:**
 - Clerk token verification and request authentication
+- OpenAPI schema generation and Scalar docs publishing
 - Program storage and normalization into relational D1 tables
 - Workout generation from active program and progression state
 - Session logging, structured set storage, and history retrieval
@@ -105,9 +111,12 @@ backend/
 │   ├── domain/           # Program, progression, and session domain logic
 │   ├── http/             # Request/response helpers
 │   ├── lib/              # Shared utilities
+│   ├── middleware/       # Hono middleware such as Clerk auth glue
+│   ├── openapi/          # OpenAPI config and shared zod schemas
 │   ├── repositories/     # D1 and legacy KV persistence layer
-│   ├── routes/           # HTTP route handlers
+│   ├── routes/           # Hono route registration modules
 │   ├── services/         # Application services
+│   ├── app.ts            # Hono app composition and docs endpoints
 │   ├── env.ts            # Worker environment contract
 │   └── index.ts          # Worker entrypoint
 ├── package.json
@@ -156,6 +165,10 @@ Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your ma
    ```
    > The local API is typically available at `http://127.0.0.1:8787`.
 
+6. **Open the generated API docs**
+   - Scalar UI: `http://127.0.0.1:8787/docs`
+   - OpenAPI JSON: `http://127.0.0.1:8787/openapi.json`
+
 ### Development Workflow
 
 For end-to-end local development with the frontend:
@@ -180,6 +193,11 @@ npm run cf-typegen
 npm run deploy
 ```
 
+Documentation endpoints:
+
+- `GET /openapi.json` returns the generated OpenAPI document.
+- `GET /docs` serves the Scalar API Reference UI backed by `/openapi.json`.
+
 ### Build & Deployment
 
 The backend is designed to be deployed through **Wrangler** using the configuration in `wrangler.toml`.
@@ -193,6 +211,7 @@ Before deploying:
 - Ensure Wrangler is authenticated with Cloudflare.
 - Confirm `wrangler.toml` points to the correct D1 and KV resources.
 - Apply pending migrations to the target database if required.
+- No D1 migration is required for the Hono/OpenAPI/Scalar HTTP-layer migration.
 
 ---
 
@@ -201,6 +220,7 @@ Before deploying:
 The backend exposes a protected REST API for the Workout Manager application.
 
 > **Note:** All protected endpoints require the `Authorization: Bearer <clerk-jwt>` header.
+> **Docs:** The API reference is available at `/docs` and the generated OpenAPI document is available at `/openapi.json`.
 
 | HTTP Method | Endpoint | Description |
 | :--- | :--- | :--- |
