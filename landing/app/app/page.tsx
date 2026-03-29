@@ -4,21 +4,21 @@ export default function AppPage() {
   return (
     <PlaceholderShell
       eyebrow="App"
-      title="Post-onboarding app placeholder"
-      description="This route represents the handoff target after sign-in and onboarding are complete. It is intentionally a placeholder so the landing app can define its boundaries before real product logic arrives."
+      title="Post-auth app shell"
+      description="This is the current handoff target for signed-in users in the landing project. It stays separate from the existing frontend implementation, but the route is now auth-aware and ready for the next stage."
       nextHref="/"
       nextLabel="Landing"
       notes={[
-        "No backend API integration has been added.",
-        "No connection to the existing workout experience has been implemented yet.",
+        "Backend integration is still intentionally not implemented here.",
+        "This screen is ready to become a redirect or embedded app shell later.",
       ]}
     >
-      <div className="rounded-[1.5rem] border border-dashed border-border bg-page/70 p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.24em] text-accent">
+      <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6">
+        <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
           Handoff Placeholder
         </p>
-        <p className="mt-3 text-sm leading-7 text-muted">
-          Use this route later for the authenticated post-onboarding shell or for a redirect into the main product experience once that behavior is clearly defined.
+        <p className="mt-3 text-sm leading-7 text-text-secondary">
+          Use this route later for the authenticated post-onboarding shell or redirect into the main workout experience once the exact product boundary is defined.
         </p>
       </div>
     </PlaceholderShell>

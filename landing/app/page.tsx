@@ -3,133 +3,142 @@ import { FeatureCard } from "@/components/feature-card";
 
 const featureCards = [
   {
-    title: "Focused first-run flow",
+    eyebrow: "Today",
+    title: "Daily surface first",
     description:
-      "A dedicated surface for acquisition, sign-in, and onboarding without disturbing the existing product apps.",
+      "The landing hero now borrows the same dark card language, pill system, and mobile-first composition as the existing workout app.",
   },
   {
-    title: "Vercel-friendly architecture",
+    eyebrow: "Auth",
+    title: "Clerk-first entry",
     description:
-      "Next.js App Router, TypeScript, and Tailwind provide a clean deployment path for fast iteration on marketing and onboarding.",
+      "Sign-in and sign-up are real Clerk routes in Next.js App Router instead of placeholders, with the same appearance model carried over from frontend.",
   },
   {
-    title: "Clear extension points",
+    eyebrow: "Flow",
+    title: "Protected next steps",
     description:
-      "Authentication, backend integration, and workout generation remain intentionally deferred behind explicit placeholders.",
-  },
-];
-
-const flowSteps = [
-  {
-    label: "01",
-    title: "Discover the product",
-    description:
-      "Explain the value proposition simply and get visitors into the product with a single primary CTA.",
-  },
-  {
-    label: "02",
-    title: "Collect setup inputs",
-    description:
-      "Use the onboarding route later for goals, experience, and equipment preferences when that work is ready.",
-  },
-  {
-    label: "03",
-    title: "Hand off into the app",
-    description:
-      "After onboarding is complete, transition users into the app surface without mixing concerns into this foundation step.",
+      "Onboarding and post-onboarding routes are ready to sit behind Clerk protection once keys are configured in the landing project.",
   },
 ];
 
 export default function Home() {
   return (
     <div className="pb-20">
-      <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-16 pt-16 lg:grid-cols-[minmax(0,1.2fr)_24rem] lg:items-center lg:pt-24">
+      <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 pb-16 pt-12 lg:grid-cols-[minmax(0,1.1fr)_26rem] lg:items-center lg:pt-20">
         <div className="space-y-8">
-          <div className="inline-flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-2 text-sm text-muted shadow-sm">
-            <span className="font-mono text-xs uppercase tracking-[0.24em] text-accent">
-              New App
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/8 bg-surface px-4 py-2 text-sm text-text-secondary">
+            <span className="pill pill-accent px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
+              Frontend-based
             </span>
-            <span>Landing and onboarding foundation, separate from the existing product.</span>
+            <span>Landing now follows the same visual system as the core app.</span>
           </div>
-          <div className="space-y-6">
-            <h1 className="max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-ink sm:text-6xl">
-              Training plans that adapt to real weeks, not ideal ones.
+
+          <div className="space-y-5">
+            <h1 className="max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-text-primary sm:text-6xl">
+              Start the same workout experience from the first screen.
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-              This new Next.js app is the future home for acquisition, sign-in, and first-run personalization.
-              It stays isolated from the existing React frontend and Cloudflare Workers API while the product foundation evolves.
+            <p className="max-w-2xl text-lg leading-8 text-text-secondary sm:text-xl">
+              The new landing app now mirrors the dark card-based style of the existing frontend and uses a real Clerk-first auth flow in Next.js instead of placeholder screens.
             </p>
           </div>
+
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
-              href="/sign-in"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 hover:bg-accent-strong"
+              href="/sign-up"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-black transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#c89dff]"
             >
               Try it free
             </Link>
             <Link
-              href="/onboarding"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-white/70 px-6 text-sm font-semibold text-ink transition-colors hover:bg-white"
+              href="/sign-in"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-surface px-6 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong"
             >
-              Preview onboarding
+              Sign in
             </Link>
           </div>
-          <div className="grid gap-3 text-sm text-muted sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-white/70 p-4">
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-accent">Standalone</p>
-              <p className="mt-2">Owns landing and onboarding without rewriting the existing apps.</p>
+
+          <div className="grid gap-3 text-sm text-text-secondary sm:grid-cols-3">
+            <div className="surface-card rounded-[1.4rem] p-4">
+              <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Shared palette
+              </p>
+              <p className="mt-3">Same black surfaces, violet actions, and teal accent as the existing app.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-white/70 p-4">
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-accent">Deferred</p>
-              <p className="mt-2">Clerk, backend calls, and workout generation are intentionally not wired yet.</p>
+            <div className="surface-card rounded-[1.4rem] p-4">
+              <p className="pill pill-secondary inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Real auth
+              </p>
+              <p className="mt-3">Clerk routes are now part of the landing app instead of a future TODO.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-white/70 p-4">
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-accent">Deployable</p>
-              <p className="mt-2">Ready for Vercel with App Router, TypeScript, and Tailwind in place.</p>
+            <div className="surface-card rounded-[1.4rem] p-4">
+              <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Route split
+              </p>
+              <p className="mt-3">Marketing stays in `landing/`, while onboarding and app continue as separate steps.</p>
             </div>
           </div>
         </div>
 
-        <aside className="glass-panel rounded-[2rem] border border-white/70 p-6 shadow-[0_24px_80px_rgba(23,28,40,0.12)]">
-          <div className="rounded-[1.5rem] border border-border bg-surface-strong p-6">
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-accent">
-              Future Journey
-            </p>
-            <div className="mt-6 space-y-5">
-              {flowSteps.map((step) => (
-                <div key={step.label} className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-xs font-semibold text-accent-strong">
-                    {step.label}
-                  </div>
-                  <div>
-                    <h2 className="text-base font-semibold text-ink">{step.title}</h2>
-                    <p className="mt-1 text-sm leading-6 text-muted">{step.description}</p>
-                  </div>
+        <aside className="surface-card rounded-[1.8rem] p-6">
+          <div className="space-y-5 rounded-[1.4rem] border border-white/6 bg-surface-muted p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Today</p>
+                <p className="text-sm text-text-secondary">Frontend-style preview</p>
+              </div>
+              <span className="pill pill-accent px-3 py-1 text-xs font-semibold">Pull</span>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-white/6 bg-surface-strong p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-semibold text-text-primary">Upper Strength</p>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Same card hierarchy the main app already uses.
+                  </p>
                 </div>
-              ))}
+                <span className="pill pill-secondary px-3 py-1 text-xs font-semibold">
+                  4 sets
+                </span>
+              </div>
+              <div className="mt-5 space-y-3">
+                {["Warm up pull-ups", "Ring rows", "Tempo curls"].map((item, index) => (
+                  <div
+                    key={item}
+                    className="flex items-center justify-between rounded-2xl border border-white/6 bg-black/15 px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary">{item}</p>
+                      <p className="text-xs text-text-secondary">Set {index + 1}</p>
+                    </div>
+                    <span className="pill px-3 py-1 text-xs font-semibold">Track</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </aside>
       </section>
 
       <section id="product" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="grid gap-8 rounded-[2rem] border border-border bg-white/75 p-8 shadow-sm lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="grid gap-8 rounded-[1.8rem] border border-white/6 bg-surface p-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-4">
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-accent">
-              Product Direction
+            <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+              Design base
             </p>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-ink">
-              A dedicated first-touch experience for conversion and setup.
+            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-text-primary">
+              The landing no longer feels like a separate product.
             </h2>
-            <p className="max-w-2xl text-base leading-7 text-muted">
-              The landing app will eventually guide a visitor from product story to authentication and onboarding,
-              then hand off into the main experience. For this step, the structure and route boundaries are the product.
+            <p className="max-w-2xl text-base leading-7 text-text-secondary">
+              Instead of a light generic SaaS page, the new shell borrows the visual grammar of the workout frontend: dark surfaces, rounded panels, compact pills, and a more app-native first impression.
             </p>
           </div>
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-page/70 p-6 text-sm leading-7 text-muted">
-            <p className="font-semibold text-ink">Foundation guardrails</p>
+
+          <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6 text-sm leading-7 text-text-secondary">
+            <p className="font-semibold text-text-primary">Auth status</p>
             <p className="mt-3">
-              No backend contract changes, no authentication wiring, and no workout generation logic have been added here.
+              Clerk is integrated in code. To make production auth actually work, this Vercel project still needs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`.
             </p>
           </div>
         </div>
@@ -137,18 +146,37 @@ export default function Home() {
 
       <section id="features" className="mx-auto w-full max-w-6xl px-6 py-10">
         <div className="mb-8 flex flex-col gap-3">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-accent">Feature Areas</p>
-          <h2 className="text-3xl font-semibold tracking-[-0.04em] text-ink">
-            Built to grow one concern at a time.
+          <p className="pill inline-flex w-fit px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            What changed
+          </p>
+          <h2 className="text-3xl font-semibold tracking-[-0.04em] text-text-primary">
+            The structure now matches the intended product flow.
           </h2>
-          <p className="max-w-2xl text-base leading-7 text-muted">
-            The initial app shell keeps the codebase modular so later tasks can add real auth, onboarding state, and product integration without reworking the foundation.
+          <p className="max-w-2xl text-base leading-7 text-text-secondary">
+            The landing app now owns acquisition and authentication properly, while keeping onboarding and app handoff as separate routes ready for the next feature steps.
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {featureCards.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-6 pt-6">
+        <div className="surface-card flex flex-col gap-4 rounded-[1.8rem] p-8 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-2xl font-semibold text-text-primary">Ready to move the auth entrypoint into Next.js</p>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-text-secondary">
+              Sign up now routes into Clerk, and signed-in users can continue into onboarding and the app shell from the same visual system as the main frontend.
+            </p>
+          </div>
+          <Link
+            href="/sign-up"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-black transition-colors hover:bg-[#c89dff]"
+          >
+            Create account
+          </Link>
         </div>
       </section>
     </div>

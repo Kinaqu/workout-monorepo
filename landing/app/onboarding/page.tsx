@@ -4,21 +4,21 @@ export default function OnboardingPage() {
   return (
     <PlaceholderShell
       eyebrow="Onboarding"
-      title="Personalization flow placeholder"
-      description="This route will eventually collect first-run personalization inputs such as goals, training history, constraints, and preferences. For now it exists only as a structural boundary."
+      title="Protected onboarding shell"
+      description="This route now sits behind the Clerk flow when auth keys are configured. It is ready to become the first personalized step after registration without changing the landing app structure again."
       nextHref="/app"
       nextLabel="App"
       notes={[
-        "No form state, persistence, or validation has been implemented yet.",
-        "No workout generation logic belongs here in this stage.",
+        "Add onboarding state, validation, and persistence in a later step.",
+        "The visual shell already matches the frontend card system.",
       ]}
     >
-      <div className="rounded-[1.5rem] border border-dashed border-border bg-page/70 p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.24em] text-accent">
+      <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6">
+        <p className="pill pill-secondary inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
           Future Inputs
         </p>
-        <p className="mt-3 text-sm leading-7 text-muted">
-          Later tasks can add onboarding sections, local state, and backend persistence here without changing the app shell or route structure introduced in this foundation step.
+        <p className="mt-3 text-sm leading-7 text-text-secondary">
+          Use this step for goals, equipment, experience level, and scheduling preferences once the onboarding logic is ready. The auth handoff into this route is already prepared.
         </p>
       </div>
     </PlaceholderShell>
