@@ -3,23 +3,30 @@ import { PlaceholderShell } from "@/components/placeholder-shell";
 export default function AppPage() {
   return (
     <PlaceholderShell
-      eyebrow="App"
-      title="Post-auth app shell"
-      description="This is the current handoff target for signed-in users in the landing project. It stays separate from the existing frontend implementation, but the route is now auth-aware and ready for the next stage."
+      eyebrow="Your plan"
+      title="See how your training keeps adapting."
+      description="This preview shows the kind of guidance the app gives after your plan is created: a clear workout path, steady progression, and sensible adjustments when needed."
       nextHref="/"
-      nextLabel="Landing"
+      nextLabel="Home"
       notes={[
-        "Backend integration is still intentionally not implemented here.",
-        "This screen is ready to become a redirect or embedded app shell later.",
+        "As you complete workouts, the plan can increase the challenge little by little.",
+        "If a movement is too hard, the next step can shift so progress stays realistic.",
       ]}
     >
-      <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6">
-        <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-          Handoff Placeholder
-        </p>
-        <p className="mt-3 text-sm leading-7 text-text-secondary">
-          Use this route later for the authenticated post-onboarding shell or redirect into the main workout experience once the exact product boundary is defined.
-        </p>
+      <div className="grid gap-4">
+        {[
+          ["Today", "Pull foundation", "30 min"],
+          ["Up next", "Push and core", "25 min"],
+          ["Adjustment", "Easier row variation added until your pulling strength catches up", "Smart step back"],
+        ].map(([label, title, detail]) => (
+          <div key={label} className="rounded-[1.4rem] border border-white/8 bg-black/15 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">
+              {label}
+            </p>
+            <p className="mt-3 text-lg font-semibold text-text-primary">{title}</p>
+            <p className="mt-2 text-sm leading-7 text-text-secondary">{detail}</p>
+          </div>
+        ))}
       </div>
     </PlaceholderShell>
   );

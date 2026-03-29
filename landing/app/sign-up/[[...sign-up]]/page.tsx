@@ -1,20 +1,16 @@
 import { SignUp } from "@clerk/nextjs";
 import { AuthShell } from "@/components/auth-shell";
 import { ClerkEnvNotice } from "@/components/clerk-env-notice";
-import {
-  clerkAppearance,
-  clerkEnvDiagnostics,
-  hasClerkCredentials,
-} from "@/lib/clerk";
+import { clerkAppearance, hasClerkCredentials } from "@/lib/clerk";
 
 export default function SignUpPage() {
   return (
     <AuthShell
-      eyebrow="Sign Up"
-      title="Create an account without leaving the landing app."
-      description="Registration now uses the Clerk flow directly inside the Next.js landing project, with the same appearance carried over from the current frontend."
-      sideTitle="New here?"
-      sideDescription="After sign-up, users can move into onboarding instead of dropping into a dead-end placeholder page."
+      eyebrow="Start"
+      title="Start with a plan built around you."
+      description="Create your account, answer a few quick questions, and get workouts that match your level, your goal, and the way you like to train."
+      sideTitle="Training that fits real life"
+      sideDescription="Home sessions, park workouts, bodyweight progressions, or short blocks of time. Your plan is shaped around what you can actually do."
     >
       {hasClerkCredentials ? (
         <SignUp
@@ -26,11 +22,7 @@ export default function SignUpPage() {
           fallbackRedirectUrl="/onboarding"
         />
       ) : (
-        <ClerkEnvNotice
-          mode="sign up"
-          hasPublishableKey={clerkEnvDiagnostics.hasPublishableKey}
-          hasSecretKey={clerkEnvDiagnostics.hasSecretKey}
-        />
+        <ClerkEnvNotice mode="sign up" />
       )}
     </AuthShell>
   );

@@ -36,33 +36,33 @@ export function AuthShell({
         <div className="surface-card rounded-[1.8rem] p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-lg font-semibold text-text-primary">
-                {sideTitle}
-              </p>
+              <p className="text-lg font-semibold text-text-primary">{sideTitle}</p>
               <p className="mt-2 text-sm leading-7 text-text-secondary">
                 {sideDescription}
               </p>
             </div>
             <span className="pill pill-secondary px-3 py-1 text-xs font-semibold">
-              Clerk
+              Members
             </span>
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/6 bg-black/15 p-4">
               <p className="text-sm font-semibold text-text-primary">
-                Same visual system
+                Built around your level
               </p>
               <p className="mt-2 text-sm leading-6 text-text-secondary">
-                Dark surfaces, rounded cards, and accent colors are carried over from the frontend app.
+                The experience is designed to feel approachable whether you are starting
+                fresh, coming back, or chasing a new milestone.
               </p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-black/15 p-4">
               <p className="text-sm font-semibold text-text-primary">
-                Next step routes
+                Flexible by design
               </p>
               <p className="mt-2 text-sm leading-6 text-text-secondary">
-                After sign-up, users can move into onboarding. Existing users can continue into the app shell.
+                Train at home, outdoors, with bodyweight, or with whatever setup you have
+                right now.
               </p>
             </div>
           </div>
@@ -70,15 +70,15 @@ export function AuthShell({
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10"
             >
-              Back to landing
+              Back to home
             </Link>
             <Link
-              href="/app"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong"
+              href="/onboarding"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10"
             >
-              App shell
+              Preview the plan
             </Link>
           </div>
         </div>

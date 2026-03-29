@@ -1,182 +1,525 @@
 import Link from "next/link";
-import { FeatureCard } from "@/components/feature-card";
 
-const featureCards = [
+const steps = [
   {
-    eyebrow: "Today",
-    title: "Daily surface first",
+    number: "01",
+    title: "Tell us where you're starting",
     description:
-      "The landing hero now borrows the same dark card language, pill system, and mobile-first composition as the existing workout app.",
+      "Share your goal, current level, available equipment, training style, and how much time you have.",
   },
   {
-    eyebrow: "Auth",
-    title: "Clerk-first entry",
+    number: "02",
+    title: "Get a plan built around you",
     description:
-      "Sign-in and sign-up are real Clerk routes in Next.js App Router instead of placeholders, with the same appearance model carried over from frontend.",
+      "Start with workouts that match your real level instead of guessing where to begin.",
   },
   {
-    eyebrow: "Flow",
-    title: "Protected next steps",
+    number: "03",
+    title: "Train and log what happened",
     description:
-      "Onboarding and post-onboarding routes are ready to sit behind Clerk protection once keys are configured in the landing project.",
+      "Complete sessions, track your progress, and show the app what feels good, challenging, or too much.",
   },
+  {
+    number: "04",
+    title: "Let the plan keep adapting",
+    description:
+      "As you improve, the app adjusts your training so you keep moving toward your goal step by step.",
+  },
+];
+
+const audience = [
+  {
+    title: "Beginners",
+    description:
+      "If you do not know where to start, the app gives you a realistic first step instead of an overwhelming plan.",
+  },
+  {
+    title: "People coming back",
+    description:
+      "Returning after a break feels easier when the plan meets your current level rather than your past one.",
+  },
+  {
+    title: "Home and outdoor trainers",
+    description:
+      "Use it for bodyweight sessions, park workouts, minimal equipment routines, or flexible training on the go.",
+  },
+  {
+    title: "People who want structure",
+    description:
+      "Follow a clear path without paying for a coach or figuring out every next step alone.",
+  },
+];
+
+const benefits = [
+  {
+    title: "A starting point that fits",
+    description:
+      "Your plan begins at a level you can actually handle, so progress feels possible from day one.",
+  },
+  {
+    title: "Difficulty that adjusts",
+    description:
+      "When you are ready, the challenge grows. When something is too hard, the plan changes with you.",
+  },
+  {
+    title: "Clear next steps",
+    description:
+      "You always know what to do next instead of bouncing between random workouts and hoping for results.",
+  },
+  {
+    title: "Progress you can sustain",
+    description:
+      "The goal is not to crush one session. It is to keep building week after week without burning out.",
+  },
+  {
+    title: "Flexible for real life",
+    description:
+      "Short sessions, busy weeks, and changing conditions do not have to break your routine.",
+  },
+  {
+    title: "Training with purpose",
+    description:
+      "Every workout supports a goal, whether you want strength, fitness, consistency, or a specific milestone.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is this app suitable for beginners?",
+    answer:
+      "Yes. It is built to start from your real level, including if you are brand new to training and need more guidance.",
+  },
+  {
+    question: "What if I cannot do some exercises yet?",
+    answer:
+      "The plan adjusts. If a movement is too difficult, the app gives you a more suitable step so you can keep progressing instead of getting stuck.",
+  },
+  {
+    question: "Do I need gym equipment?",
+    answer:
+      "No. The app can support bodyweight training, outdoor workouts, and routines built around minimal equipment.",
+  },
+  {
+    question: "Can I use it at home or outdoors?",
+    answer:
+      "Yes. It is designed for self-guided training in the places people actually work out, including at home, outside, or anywhere with limited space.",
+  },
+  {
+    question: "What if I only have a short amount of time?",
+    answer:
+      "You can build your plan around the time you have. The goal is to make training easier to fit into real life, not harder.",
+  },
+  {
+    question: "How is this different from other workout apps?",
+    answer:
+      "Most apps give you a fixed program or a large library. This app gives you a plan that keeps changing with your level, progress, and training reality.",
+  },
+];
+
+const outcomeCards = [
+  "Get stronger with a path that builds over time.",
+  "Train more consistently because the plan stays realistic.",
+  "Improve fitness without feeling lost between sessions.",
+  "Work toward a goal with a routine you can actually stick to.",
 ];
 
 export default function Home() {
   return (
     <div className="pb-20">
-      <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 pb-16 pt-12 lg:grid-cols-[minmax(0,1.1fr)_26rem] lg:items-center lg:pt-20">
-        <div className="space-y-8">
-          <div className="inline-flex items-center gap-3 rounded-full border border-white/8 bg-surface px-4 py-2 text-sm text-text-secondary">
-            <span className="pill pill-accent px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
-              Frontend-based
+      <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 pb-20 pt-12 lg:grid-cols-[minmax(0,1.02fr)_32rem] lg:items-center lg:pt-20">
+        <div className="min-w-0 space-y-8">
+          <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-text-secondary">
+            <span className="pill pill-accent px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+              Personalized training
             </span>
-            <span>Landing now follows the same visual system as the core app.</span>
+            <span>Start at your level. Keep progressing at your pace.</span>
           </div>
 
           <div className="space-y-5">
-            <h1 className="max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-text-primary sm:text-6xl">
-              Start the same workout experience from the first screen.
+            <h1 className="max-w-3xl text-5xl font-semibold leading-none tracking-[-0.06em] text-text-primary sm:text-6xl lg:text-7xl">
+              Your workout plan should move with you.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-text-secondary sm:text-xl">
-              The new landing app now mirrors the dark card-based style of the existing frontend and uses a real Clerk-first auth flow in Next.js instead of placeholder screens.
+              Build a personalized program based on your goal, fitness level, preferences,
+              and training conditions. As you improve, your plan evolves. If something is
+              too difficult, it adjusts so you can keep moving forward.
             </p>
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
               href="/sign-up"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-black transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#c89dff]"
+              className="inline-flex h-13 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-[#0a130f] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#e4ff92]"
             >
-              Try it free
+              Build my plan
             </Link>
             <Link
-              href="/sign-in"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-surface px-6 text-sm font-semibold text-text-primary transition-colors hover:bg-surface-strong"
+              href="/#how-it-works"
+              className="inline-flex h-13 items-center justify-center rounded-full border border-white/12 bg-white/5 px-6 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10"
             >
-              Sign in
+              See how it works
             </Link>
           </div>
 
           <div className="grid gap-3 text-sm text-text-secondary sm:grid-cols-3">
-            <div className="surface-card rounded-[1.4rem] p-4">
-              <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-                Shared palette
-              </p>
-              <p className="mt-3">Same black surfaces, violet actions, and teal accent as the existing app.</p>
-            </div>
-            <div className="surface-card rounded-[1.4rem] p-4">
-              <p className="pill pill-secondary inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-                Real auth
-              </p>
-              <p className="mt-3">Clerk routes are now part of the landing app instead of a future TODO.</p>
-            </div>
-            <div className="surface-card rounded-[1.4rem] p-4">
-              <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-                Route split
-              </p>
-              <p className="mt-3">Marketing stays in `landing/`, while onboarding and app continue as separate steps.</p>
-            </div>
+            {[
+              "Fits home, outdoor, and bodyweight training",
+              "Adjusts if a workout feels too hard too soon",
+              "Keeps the path clear when life and energy change",
+            ].map((item) => (
+              <div key={item} className="surface-card rounded-[1.5rem] p-4">
+                <p className="font-medium leading-6 text-text-primary">{item}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        <aside className="surface-card rounded-[1.8rem] p-6">
-          <div className="space-y-5 rounded-[1.4rem] border border-white/6 bg-surface-muted p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Today</p>
-                <p className="text-sm text-text-secondary">Frontend-style preview</p>
-              </div>
-              <span className="pill pill-accent px-3 py-1 text-xs font-semibold">Pull</span>
-            </div>
-
-            <div className="rounded-[1.35rem] border border-white/6 bg-surface-strong p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-2xl font-semibold text-text-primary">Upper Strength</p>
-                  <p className="mt-1 text-sm text-text-secondary">
-                    Same card hierarchy the main app already uses.
-                  </p>
-                </div>
-                <span className="pill pill-secondary px-3 py-1 text-xs font-semibold">
-                  4 sets
-                </span>
-              </div>
-              <div className="mt-5 space-y-3">
-                {["Warm up pull-ups", "Ring rows", "Tempo curls"].map((item, index) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between rounded-2xl border border-white/6 bg-black/15 px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-text-primary">{item}</p>
-                      <p className="text-xs text-text-secondary">Set {index + 1}</p>
-                    </div>
-                    <span className="pill px-3 py-1 text-xs font-semibold">Track</span>
+        <div className="min-w-0">
+          <div className="surface-card relative overflow-hidden rounded-[2rem] p-5 sm:p-6">
+            <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            <div className="grid gap-4">
+              <div className="rounded-[1.7rem] border border-white/10 bg-[linear-gradient(180deg,rgba(212,255,99,0.18),rgba(212,255,99,0.05))] p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#e6f6b7]">
+                      Goal
+                    </p>
+                    <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-text-primary">
+                      First pull-up
+                    </p>
+                    <p className="mt-2 max-w-xs text-sm leading-6 text-[#d2ddcf]">
+                      Start with a plan that builds strength, control, and confidence without
+                      skipping steps.
+                    </p>
                   </div>
-                ))}
+                  <span className="rounded-full border border-[#d4ff63]/30 bg-[#d4ff63]/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#ebf8c4]">
+                    Week 1
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-[1.6rem] border border-white/8 bg-black/15 p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary">This week</p>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        A clear path instead of random sessions
+                      </p>
+                    </div>
+                    <span className="pill pill-secondary px-3 py-1 text-xs font-semibold">
+                      3 workouts
+                    </span>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    {[
+                      ["Push strength", "25 min", "Ready"],
+                      ["Pull foundation", "30 min", "Today"],
+                      ["Core and mobility", "20 min", "Next"],
+                    ].map(([title, time, status]) => (
+                      <div
+                        key={title}
+                        className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-text-primary">{title}</p>
+                          <p className="text-xs text-text-secondary">{time}</p>
+                        </div>
+                        <span className="pill px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                          {status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-5">
+                    <p className="text-sm font-semibold text-text-primary">Today&apos;s shift</p>
+                    <p className="mt-3 text-sm leading-6 text-text-secondary">
+                      Ring rows felt strong last session, so the next workout adds a harder
+                      angle and a little more volume.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-5">
+                    <p className="text-sm font-semibold text-text-primary">If it feels too hard</p>
+                    <p className="mt-3 text-sm leading-6 text-text-secondary">
+                      The plan steps back to a more suitable variation so progress keeps
+                      going instead of stopping.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </aside>
-      </section>
-
-      <section id="product" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="grid gap-8 rounded-[1.8rem] border border-white/6 bg-surface p-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="space-y-4">
-            <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-              Design base
-            </p>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-text-primary">
-              The landing no longer feels like a separate product.
-            </h2>
-            <p className="max-w-2xl text-base leading-7 text-text-secondary">
-              Instead of a light generic SaaS page, the new shell borrows the visual grammar of the workout frontend: dark surfaces, rounded panels, compact pills, and a more app-native first impression.
-            </p>
-          </div>
-
-          <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6 text-sm leading-7 text-text-secondary">
-            <p className="font-semibold text-text-primary">Auth status</p>
-            <p className="mt-3">
-              Clerk is integrated in code. To make production auth actually work, this Vercel project still needs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`.
-            </p>
           </div>
         </div>
       </section>
 
-      <section id="features" className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="mb-8 flex flex-col gap-3">
+      <section id="how-it-works" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="mb-10 flex flex-col gap-3">
           <p className="pill inline-flex w-fit px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-            What changed
+            How it works
           </p>
-          <h2 className="text-3xl font-semibold tracking-[-0.04em] text-text-primary">
-            The structure now matches the intended product flow.
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+            A guided training path in four simple steps.
           </h2>
           <p className="max-w-2xl text-base leading-7 text-text-secondary">
-            The landing app now owns acquisition and authentication properly, while keeping onboarding and app handoff as separate routes ready for the next feature steps.
+            The goal is to make progress feel clear, realistic, and personal from the very
+            first session.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {featureCards.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {steps.map((step) => (
+            <article key={step.number} className="surface-card rounded-[1.7rem] p-6">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d9ec95]">
+                {step.number}
+              </span>
+              <h3 className="mt-6 text-2xl font-semibold tracking-[-0.04em] text-text-primary">
+                {step.title}
+              </h3>
+              <p className="mt-4 text-sm leading-7 text-text-secondary">{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="comparison" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
+          <div className="surface-card rounded-[1.9rem] p-8">
+            <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+              Why this is different
+            </p>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+              Generic plans tell everyone to do the same thing.
+            </h2>
+            <p className="mt-4 text-base leading-7 text-text-secondary">
+              That is where people get stuck. Some plans are too hard, some are too random,
+              and most do not know what to do when your progress changes.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <article className="rounded-[1.8rem] border border-white/8 bg-black/15 p-6">
+              <p className="text-lg font-semibold text-text-primary">One-size-fits-all plans</p>
+              <ul className="mt-5 space-y-3 text-sm leading-7 text-text-secondary">
+                <li>Start too hard or too easy for many people</li>
+                <li>Leave you guessing what to do next</li>
+                <li>Do not respond when you stall or fall behind</li>
+                <li>Make consistency harder because the plan does not fit your reality</li>
+              </ul>
+            </article>
+
+            <article className="rounded-[1.8rem] border border-[#d4ff63]/20 bg-[linear-gradient(180deg,rgba(212,255,99,0.14),rgba(124,233,207,0.05))] p-6">
+              <p className="text-lg font-semibold text-text-primary">An adaptive personal plan</p>
+              <ul className="mt-5 space-y-3 text-sm leading-7 text-[#deeadf]">
+                <li>Starts from your current level and goal</li>
+                <li>Changes as you complete workouts and improve</li>
+                <li>Adjusts when a movement is not there yet</li>
+                <li>Keeps your progress structured, realistic, and easier to sustain</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="for-you" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="mb-10 flex flex-col gap-3">
+          <p className="pill pill-secondary inline-flex w-fit px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            Who it is for
+          </p>
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+            Built for people who want guidance without pressure.
+          </h2>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {audience.map((item) => (
+            <article key={item.title} className="surface-card rounded-[1.7rem] p-6">
+              <h3 className="text-xl font-semibold text-text-primary">{item.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-text-secondary">{item.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="benefits" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="mb-10 flex flex-col gap-3">
+          <p className="pill inline-flex w-fit px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            Key benefits
+          </p>
+          <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+            Less confusion. More structure. A better chance of real progress.
+          </h2>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {benefits.map((benefit) => (
+            <article key={benefit.title} className="surface-card rounded-[1.7rem] p-6">
+              <h3 className="text-xl font-semibold text-text-primary">{benefit.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-text-secondary">
+                {benefit.description}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="adaptive" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+          <div className="surface-card rounded-[1.9rem] p-8">
+            <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+              Adaptive progression
+            </p>
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+              Progress forward, even when the path needs to change.
+            </h2>
+            <p className="mt-4 text-base leading-7 text-text-secondary">
+              Smart training is not about forcing the next hard step before you are ready.
+              It is about giving you the right challenge at the right time, then adjusting
+              when your body, schedule, or current ability says something needs to change.
+            </p>
+            <p className="mt-4 text-base leading-7 text-text-secondary">
+              If you are ready, the app moves you forward. If you are not, it steps back to
+              a more suitable version. That is not failure. That is how consistent progress
+              actually works.
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            <article className="rounded-[1.8rem] border border-[#7ce9cf]/20 bg-[linear-gradient(180deg,rgba(124,233,207,0.12),rgba(124,233,207,0.04))] p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#b8f6e8]">
+                When you are ready
+              </p>
+              <h3 className="mt-4 text-2xl font-semibold text-text-primary">
+                The challenge grows with you.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[#d8efe8]">
+                More reps, harder variations, tighter rest, or stronger progressions are
+                introduced gradually when your training shows you can handle them.
+              </p>
+            </article>
+
+            <article className="rounded-[1.8rem] border border-white/8 bg-white/[0.03] p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d9ec95]">
+                When something is too difficult
+              </p>
+              <h3 className="mt-4 text-2xl font-semibold text-text-primary">
+                The app changes the step, not the goal.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-text-secondary">
+                You may get a simpler variation, a smaller progression, or a lower volume so
+                you can keep building capacity instead of feeling stuck.
+              </p>
+            </article>
+
+            <article className="rounded-[1.8rem] border border-[#d4ff63]/20 bg-[linear-gradient(180deg,rgba(212,255,99,0.13),rgba(212,255,99,0.04))] p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#e7f7bc]">
+                Why it matters
+              </p>
+              <h3 className="mt-4 text-2xl font-semibold text-text-primary">
+                You keep momentum without pretending every day feels the same.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[#dfebda]">
+                The result is a plan that feels supportive, realistic, and easier to stay
+                with over time.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
+        <div className="surface-card rounded-[2rem] p-8 sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div>
+              <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Real outcomes
+              </p>
+              <h2 className="mt-5 max-w-xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+                Train toward results, not just completed workouts.
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-text-secondary">
+                The point is not to stay busy. It is to build strength, consistency, fitness,
+                and confidence with a plan you can keep following long enough to see change.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {outcomeCards.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[1.6rem] border border-white/8 bg-black/15 p-5 text-sm leading-7 text-text-secondary"
+                >
+                  <p className="font-medium text-text-primary">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="mx-auto w-full max-w-4xl px-6 py-12 md:py-16">
+        <div className="mb-10 flex flex-col gap-3">
+          <p className="pill pill-secondary inline-flex w-fit px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            FAQ
+          </p>
+          <h2 className="text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+            Practical answers before you start.
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          {faqs.map((item) => (
+            <details key={item.question} className="surface-card group rounded-[1.6rem] p-6">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold text-text-primary">
+                <span>{item.question}</span>
+                <span className="text-2xl leading-none text-text-secondary transition-transform group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-text-secondary">
+                {item.answer}
+              </p>
+            </details>
           ))}
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-6 pt-6">
-        <div className="surface-card flex flex-col gap-4 rounded-[1.8rem] p-8 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-2xl font-semibold text-text-primary">Ready to move the auth entrypoint into Next.js</p>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-text-secondary">
-              Sign up now routes into Clerk, and signed-in users can continue into onboarding and the app shell from the same visual system as the main frontend.
-            </p>
+        <div className="surface-card overflow-hidden rounded-[2rem] p-8 sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="pill pill-accent inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Start now
+              </p>
+              <h2 className="mt-5 max-w-2xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl">
+                Start at your level and build toward your goal with a plan that adapts to
+                you.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-text-secondary">
+                Get a personalized workout program you can follow at home, outdoors, or
+                wherever you train best.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Link
+                href="/sign-up"
+                className="inline-flex h-13 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-[#0a130f] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#e4ff92]"
+              >
+                Get my personalized plan
+              </Link>
+              <Link
+                href="/onboarding"
+                className="inline-flex h-13 items-center justify-center rounded-full border border-white/12 bg-white/5 px-6 text-sm font-semibold text-text-primary transition-colors hover:bg-white/10"
+              >
+                Preview the plan flow
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/sign-up"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-black transition-colors hover:bg-[#c89dff]"
-          >
-            Create account
-          </Link>
         </div>
       </section>
     </div>

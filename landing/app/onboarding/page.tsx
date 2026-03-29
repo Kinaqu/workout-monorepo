@@ -3,23 +3,39 @@ import { PlaceholderShell } from "@/components/placeholder-shell";
 export default function OnboardingPage() {
   return (
     <PlaceholderShell
-      eyebrow="Onboarding"
-      title="Protected onboarding shell"
-      description="This route now sits behind the Clerk flow when auth keys are configured. It is ready to become the first personalized step after registration without changing the landing app structure again."
+      eyebrow="Build your plan"
+      title="Set your starting point in minutes."
+      description="This is where the app learns about your goal, current level, training preferences, available setup, and weekly routine so your program starts in the right place."
       nextHref="/app"
-      nextLabel="App"
+      nextLabel="Plan preview"
       notes={[
-        "Add onboarding state, validation, and persistence in a later step.",
-        "The visual shell already matches the frontend card system.",
+        "Choose your goal, current level, and the kind of progress you want to make.",
+        "Set your training conditions so the plan matches your real week instead of an ideal one.",
       ]}
     >
-      <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-black/15 p-6">
-        <p className="pill pill-secondary inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-          Future Inputs
-        </p>
-        <p className="mt-3 text-sm leading-7 text-text-secondary">
-          Use this step for goals, equipment, experience level, and scheduling preferences once the onboarding logic is ready. The auth handoff into this route is already prepared.
-        </p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-[1.4rem] border border-white/8 bg-black/15 p-6">
+          <p className="pill pill-secondary inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            Your inputs
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm text-text-primary">
+            {["Goal", "Level", "Schedule", "Equipment", "Training style"].map((item) => (
+              <span key={item} className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-2">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.4rem] border border-white/8 bg-black/15 p-6">
+          <p className="pill inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+            What happens next
+          </p>
+          <p className="mt-3 text-sm leading-7 text-text-secondary">
+            The app turns those choices into a plan that feels achievable now and is ready
+            to grow as your sessions start adding up.
+          </p>
+        </div>
       </div>
     </PlaceholderShell>
   );

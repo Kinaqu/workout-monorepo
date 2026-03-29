@@ -1,42 +1,40 @@
+import Link from "next/link";
+
 type ClerkEnvNoticeProps = {
   mode: "sign in" | "sign up";
-  hasPublishableKey: boolean;
-  hasSecretKey: boolean;
 };
 
-export function ClerkEnvNotice({
-  mode,
-  hasPublishableKey,
-  hasSecretKey,
-}: ClerkEnvNoticeProps) {
+export function ClerkEnvNotice({ mode }: ClerkEnvNoticeProps) {
   return (
     <div className="space-y-4 rounded-[1.4rem] border border-white/6 bg-black/15 p-6">
       <h2 className="text-2xl font-semibold text-text-primary">
-        Clerk keys are missing
+        Member access is almost ready
       </h2>
       <p className="text-sm leading-7 text-text-secondary">
-        This route is wired for Clerk {mode}, but the landing app does not have
-        the required environment variables yet. Add them in Vercel Project
-        Settings and redeploy.
+        This preview is focused on the training experience first. Account access for{" "}
+        {mode} will be available here soon, and you can still explore how the app builds
+        and adjusts a plan around your level.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-white/6 bg-surface p-4 text-sm text-text-secondary">
-          <p className="font-semibold text-text-primary">
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+          <p className="font-semibold text-text-primary">Start where you are</p>
+          <p className="mt-2">
+            Build around your current strength, schedule, and preferred training style.
           </p>
-          <p className="mt-2">{String(hasPublishableKey)}</p>
         </div>
         <div className="rounded-2xl border border-white/6 bg-surface p-4 text-sm text-text-secondary">
-          <p className="font-semibold text-text-primary">CLERK_SECRET_KEY</p>
-          <p className="mt-2">{String(hasSecretKey)}</p>
+          <p className="font-semibold text-text-primary">Keep progressing</p>
+          <p className="mt-2">
+            Explore how the plan adapts when you improve or need an easier step.
+          </p>
         </div>
       </div>
-      <a
-        href="https://clerk.com/docs/quickstarts/nextjs"
-        className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-black transition-colors hover:bg-[#c89dff]"
+      <Link
+        href="/"
+        className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-[#0a130f] transition-colors hover:bg-[#e4ff92]"
       >
-        Clerk Next.js quickstart
-      </a>
+        Back to home
+      </Link>
     </div>
   );
 }
