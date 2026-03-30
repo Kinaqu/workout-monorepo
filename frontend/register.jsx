@@ -72,7 +72,7 @@ function RegisterPage() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {hasClerkKey ? (
-      <ClerkProvider afterSignOutUrl="/register">
+      <ClerkProvider afterSignOutUrl="/login">
         <RegisterPage />
       </ClerkProvider>
     ) : (
