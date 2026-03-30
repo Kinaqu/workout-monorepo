@@ -1,4 +1,4 @@
-import { api, getToken, hasClerkSession } from '/api.js';
+import { api, getToken, hasClerkSession, AuthRedirectError } from '/api.js';
 
 if (!getToken() && !hasClerkSession()) {
   window.location.href = '/login';
@@ -37,6 +37,14 @@ function el(tag, className, text) {
   return element;
 }
 
+function ensureApiObject(data, resourceName) {
+  if (data && typeof data === 'object') {
+    return data;
+  }
+
+  throw new Error(`Invalid ${resourceName} response`);
+}
+
 // ==========================================
 // TAB 1: TODAY
 // ==========================================
@@ -46,7 +54,7 @@ async function loadToday() {
   const content = document.getElementById('today-content');
 
   try {
-    const data = await api.getTodayWorkout();
+    const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
     loader.classList.add('hidden');
     content.classList.remove('hidden');
 
@@ -126,6 +134,7 @@ async function loadToday() {
 
   } catch (err) {
     loader.classList.add('hidden');
+    if (err instanceof AuthRedirectError) return;
     errorEl.textContent = 'Error loading workout: ' + err.message;
   }
 }
@@ -221,6 +230,7 @@ document.getElementById('save-workout-btn').addEventListener('click', async () =
     if (historyDate === today) loadHistory(today);
 
   } catch (err) {
+    if (err instanceof AuthRedirectError) return;
     alert('Save error: ' + err.message);
   } finally {
     btn.disabled = false;
@@ -285,6 +295,7 @@ async function loadHistory(date) {
 
   } catch (err) {
     loader.classList.add('hidden');
+    if (err instanceof AuthRedirectError) return;
     if (err.message.includes('404') || err.message.toLowerCase().includes('not found') || err.message.toLowerCase().includes('no log')) {
       empty.classList.remove('hidden');
     } else {
@@ -302,7 +313,7 @@ async function loadProgram() {
   const content = document.getElementById('program-content');
 
   try {
-    const data = await api.getProgram();
+    const data = ensureApiObject(await api.getProgram(), 'program');
     loader.classList.add('hidden');
     content.classList.remove('hidden');
 
@@ -366,6 +377,7 @@ async function loadProgram() {
 
   } catch (err) {
     loader.classList.add('hidden');
+    if (err instanceof AuthRedirectError) return;
     errorEl.textContent = 'Error loading program: ' + err.message;
   }
 }

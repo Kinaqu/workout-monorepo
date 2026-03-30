@@ -1,4 +1,12 @@
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+const LOGIN_PATH = '/login?reauth=1';
+
+export class AuthRedirectError extends Error {
+  constructor(message = 'Session expired. Please sign in again.') {
+    super(message);
+    this.name = 'AuthRedirectError';
+  }
+}
 
 function getCookieValue(name) {
   if (typeof document === 'undefined') return null;
@@ -36,10 +44,40 @@ export function hasClerkSession() {
 }
 
 async function resolveAuthToken() {
-  const localToken = getToken();
-  if (localToken) return localToken;
+  const clerkToken = getClerkTokenFromCookie();
+  if (clerkToken) return clerkToken;
 
-  return getClerkTokenFromCookie();
+  return getToken();
+}
+
+function getErrorMessage(data, fallbackStatus) {
+  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
+  if (typeof data?.error === 'string' && data.error.trim()) return data.error;
+
+  return `API Error: ${fallbackStatus}`;
+}
+
+function isAuthFailure(response, data) {
+  if (response.status === 401 || response.status === 403) {
+    return true;
+  }
+
+  if (response.status !== 400) {
+    return false;
+  }
+
+  const errorMessage = getErrorMessage(data, response.status).toLowerCase();
+  return /(unauthor|auth|token|bearer|session|expired|forbidden)/i.test(errorMessage);
+}
+
+function redirectToLogin(message) {
+  removeToken();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.replace(LOGIN_PATH);
+  }
+
+  throw new AuthRedirectError(message);
 }
 
 async function request(endpoint, options = {}) {
@@ -58,17 +96,16 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    if (response.status === 401) {
-      removeToken();
-      if (!hasClerkSession()) {
-        window.location.href = '/login';
-      }
-      return null;
-    }
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.message || data.error || `API Error: ${response.status}`);
+
+    if (isAuthFailure(response, data)) {
+      redirectToLogin(getErrorMessage(data, response.status));
     }
+
+    if (!response.ok) {
+      throw new Error(getErrorMessage(data, response.status));
+    }
+
     return data;
   } catch (error) {
     console.error('API Request failed:', error);
