@@ -4,6 +4,16 @@ import { isValidDate, todayDate } from "../lib/time";
 import { SessionRepository } from "../repositories/session-repository";
 import { UserBootstrapService } from "./user-bootstrap-service";
 
+export class SessionAlreadyExistsError extends Error {
+  constructor(
+    public readonly sessionDate: string,
+    public readonly sessionId: string
+  ) {
+    super(`Workout log for ${sessionDate} already exists`);
+    this.name = "SessionAlreadyExistsError";
+  }
+}
+
 export class SessionService {
   constructor(
     private readonly bootstrap: UserBootstrapService,
@@ -109,6 +119,11 @@ export class SessionService {
   }
 
   private async createSession(userId: string, program: ProgramTemplate, input: SessionWriteInput) {
+    const existing = await this.sessions.getLatestSessionByDate(userId, input.sessionDate);
+    if (existing) {
+      throw new SessionAlreadyExistsError(input.sessionDate, existing.id);
+    }
+
     return this.sessions.createSession(userId, program, enrichSessionInput(program, input));
   }
 }

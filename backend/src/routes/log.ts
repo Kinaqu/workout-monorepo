@@ -12,6 +12,7 @@ import {
   WorkoutDateHeaderSchema,
 } from "../openapi/schemas";
 import { createAppContext } from "../services/app-context";
+import { SessionAlreadyExistsError } from "../services/session-service";
 
 const getLogRoute = createRoute({
   method: "get",
@@ -108,6 +109,14 @@ const createLogRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "A workout log already exists for the requested date.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
     401: {
       description: "Missing or invalid Clerk Bearer token.",
       content: {
@@ -178,6 +187,16 @@ export function registerLogRoutes(app: OpenAPIHono<AppEnv>) {
         200
       );
     } catch (error) {
+      if (error instanceof SessionAlreadyExistsError) {
+        return c.json(
+          {
+            error: error.message,
+            detail: `Existing session id: ${error.sessionId}`,
+          },
+          409
+        );
+      }
+
       return c.json(
         {
           error: error instanceof Error ? error.message : "Invalid request",
