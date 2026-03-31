@@ -45,13 +45,18 @@ function ensureApiObject(data, resourceName) {
   throw new Error(`Invalid ${resourceName} response`);
 }
 
+function setTodayError(message = '') {
+  const errorEl = document.getElementById('today-error');
+  errorEl.textContent = message;
+}
+
 // ==========================================
 // TAB 1: TODAY
 // ==========================================
 async function loadToday() {
   const loader = document.getElementById('today-loader');
-  const errorEl = document.getElementById('today-error');
   const content = document.getElementById('today-content');
+  setTodayError('');
 
   try {
     const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
@@ -135,7 +140,7 @@ async function loadToday() {
   } catch (err) {
     loader.classList.add('hidden');
     if (err instanceof AuthRedirectError) return;
-    errorEl.textContent = 'Error loading workout: ' + err.message;
+    setTodayError('Error loading workout: ' + err.message);
   }
 }
 
@@ -210,6 +215,7 @@ function syncExerciseStack() {
 
 document.getElementById('save-workout-btn').addEventListener('click', async () => {
   const btn = document.getElementById('save-workout-btn');
+  setTodayError('');
   btn.disabled = true;
   btn.textContent = 'Saving...';
 
@@ -231,7 +237,7 @@ document.getElementById('save-workout-btn').addEventListener('click', async () =
 
   } catch (err) {
     if (err instanceof AuthRedirectError) return;
-    alert('Save error: ' + err.message);
+    setTodayError('Save error: ' + err.message);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Save Workout';

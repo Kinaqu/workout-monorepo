@@ -8,6 +8,15 @@ export class AuthRedirectError extends Error {
   }
 }
 
+export class ApiError extends Error {
+  constructor(message, status, data) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 function getCookieValue(name) {
   if (typeof document === 'undefined') return null;
 
@@ -51,23 +60,22 @@ async function resolveAuthToken() {
 }
 
 function getErrorMessage(data, fallbackStatus) {
-  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
-  if (typeof data?.error === 'string' && data.error.trim()) return data.error;
+  const message = typeof data?.message === 'string' && data.message.trim()
+    ? data.message.trim()
+    : typeof data?.error === 'string' && data.error.trim()
+      ? data.error.trim()
+      : '';
+
+  const detail = typeof data?.detail === 'string' && data.detail.trim() ? data.detail.trim() : '';
+  if (message && detail && detail !== message) return `${message}: ${detail}`;
+  if (message) return message;
+  if (detail) return detail;
 
   return `API Error: ${fallbackStatus}`;
 }
 
-function isAuthFailure(response, data) {
-  if (response.status === 401 || response.status === 403) {
-    return true;
-  }
-
-  if (response.status !== 400) {
-    return false;
-  }
-
-  const errorMessage = getErrorMessage(data, response.status).toLowerCase();
-  return /(unauthor|auth|token|bearer|session|expired|forbidden)/i.test(errorMessage);
+function isExpiredSession(response) {
+  return response.status === 401;
 }
 
 function redirectToLogin(message) {
@@ -98,12 +106,12 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config);
     const data = await response.json().catch(() => ({}));
 
-    if (isAuthFailure(response, data)) {
+    if (isExpiredSession(response)) {
       redirectToLogin(getErrorMessage(data, response.status));
     }
 
     if (!response.ok) {
-      throw new Error(getErrorMessage(data, response.status));
+      throw new ApiError(getErrorMessage(data, response.status), response.status, data);
     }
 
     return data;
