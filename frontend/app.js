@@ -1,10 +1,13 @@
-import { api, getToken, hasClerkSession, AuthRedirectError } from '/api.js';
+import { api, getToken, hasClerkSession, AuthRedirectError, ApiError } from '/api.js';
 
 if (!getToken() && !hasClerkSession()) {
   window.location.href = '/login';
 }
 
 let todayWorkoutType = null;
+let todayWorkoutDate = null;
+let todayWorkoutSaved = false;
+let todaySaveInFlight = false;
 let activeExerciseIndex = 0;
 
 const tabs = document.querySelectorAll('.tab-content');
@@ -21,7 +24,7 @@ navItems.forEach(item => {
     document.getElementById(`tab-${tabId}`).classList.add('active');
 
     if (tabId === 'history' && !document.getElementById('history-date').value) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayDateString();
       document.getElementById('history-date').value = today;
       loadHistory(today);
     } else if (tabId === 'program' && document.getElementById('program-content').classList.contains('hidden')) {
@@ -45,9 +48,90 @@ function ensureApiObject(data, resourceName) {
   throw new Error(`Invalid ${resourceName} response`);
 }
 
+function getTodayDateString() {
+  return new Date().toISOString().split('T')[0];
+}
+
 function setTodayError(message = '') {
   const errorEl = document.getElementById('today-error');
   errorEl.textContent = message;
+}
+
+function setTodayLockedMessage(message = '') {
+  const lockedMessage = document.getElementById('today-locked-message');
+  lockedMessage.textContent = message;
+}
+
+async function getExistingLog(date) {
+  try {
+    return await api.getLog(date);
+  } catch (err) {
+    if (err instanceof AuthRedirectError) throw err;
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+function collectWorkoutExercises() {
+  const cards = Array.from(document.querySelectorAll('.exercise-card'));
+  const hasMissingValues = cards.some(card =>
+    Array.from(card.querySelectorAll('.set-input')).some(input => input.value.trim() === '')
+  );
+
+  if (hasMissingValues) {
+    throw new Error('Complete every set before saving.');
+  }
+
+  return cards.map(card => ({
+    id: card.dataset.id,
+    sets: Array.from(card.querySelectorAll('.set-input')).map(input => Number.parseInt(input.value, 10) || 0),
+  }));
+}
+
+async function saveTodayWorkout(triggerBtn, footerHint) {
+  if (todaySaveInFlight || todayWorkoutSaved || !todayWorkoutType || !todayWorkoutDate) {
+    return;
+  }
+
+  setTodayError('');
+  todaySaveInFlight = true;
+
+  if (triggerBtn) triggerBtn.disabled = true;
+  if (footerHint) footerHint.textContent = 'Saving workout...';
+
+  try {
+    const existingLog = await getExistingLog(todayWorkoutDate);
+    if (existingLog) {
+      todayWorkoutSaved = true;
+      await loadToday();
+      return;
+    }
+
+    const exercises = collectWorkoutExercises();
+    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note: '' }, todayWorkoutDate);
+    todayWorkoutSaved = true;
+
+    const historyDate = document.getElementById('history-date').value;
+    if (historyDate === todayWorkoutDate) {
+      await loadHistory(todayWorkoutDate);
+    }
+
+    await loadToday();
+  } catch (err) {
+    if (err instanceof AuthRedirectError) return;
+
+    if (err instanceof ApiError && err.status === 409) {
+      todayWorkoutSaved = true;
+      await loadToday();
+      return;
+    }
+
+    setTodayError('Save error: ' + err.message);
+  } finally {
+    todaySaveInFlight = false;
+    if (triggerBtn && triggerBtn.isConnected) triggerBtn.disabled = false;
+    if (footerHint && footerHint.isConnected) footerHint.textContent = '';
+  }
 }
 
 // ==========================================
@@ -56,30 +140,50 @@ function setTodayError(message = '') {
 async function loadToday() {
   const loader = document.getElementById('today-loader');
   const content = document.getElementById('today-content');
+  const exercisesContainer = document.getElementById('today-exercises');
+  const restMessage = document.getElementById('today-rest-message');
+  const lockedMessage = document.getElementById('today-locked-message');
+
   setTodayError('');
+  setTodayLockedMessage('');
+  loader.classList.remove('hidden');
+  content.classList.add('hidden');
 
   try {
     const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
+    const existingLog = await getExistingLog(data.date);
+
     loader.classList.add('hidden');
     content.classList.remove('hidden');
 
-    todayWorkoutType = data.type;
+    todayWorkoutDate = data.date;
+    todayWorkoutType = data.type === 'rest' ? null : data.type;
+    todayWorkoutSaved = Boolean(existingLog);
 
     document.getElementById('today-workout-name').textContent = data.name || 'Workout';
     document.getElementById('today-workout-type').textContent = `Type: ${data.type}`;
 
-    const exercisesContainer = document.getElementById('today-exercises');
-    const restMessage = document.getElementById('today-rest-message');
-    const formContainer = document.getElementById('today-form-container');
+    exercisesContainer.classList.remove('hidden');
+    exercisesContainer.innerHTML = '';
+    restMessage.classList.add('hidden');
+    lockedMessage.classList.add('hidden');
 
-    if (data.type === 'rest') {
-      restMessage.classList.remove('hidden');
-      formContainer.classList.add('hidden');
+    if (todayWorkoutSaved) {
+      exercisesContainer.classList.add('hidden');
+      setTodayLockedMessage(
+        data.date === getTodayDateString()
+          ? "Today's workout is already saved. Open History to review it."
+          : `Workout for ${data.date} is already saved.`
+      );
+      lockedMessage.classList.remove('hidden');
       return;
     }
 
-    exercisesContainer.innerHTML = '';
-    formContainer.classList.remove('hidden');
+    if (data.type === 'rest') {
+      exercisesContainer.classList.add('hidden');
+      restMessage.classList.remove('hidden');
+      return;
+    }
 
     if (!data.exercises || data.exercises.length === 0) {
       exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
@@ -127,7 +231,9 @@ async function loadToday() {
       const confirmBtn = el('button', 'exercise-complete-btn', '✓');
       confirmBtn.type = 'button';
       confirmBtn.setAttribute('aria-label', index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise');
-      confirmBtn.addEventListener('click', () => advanceExercise(card));
+      confirmBtn.addEventListener('click', async () => {
+        await advanceExercise(card);
+      });
       footer.appendChild(footerHint);
       footer.appendChild(confirmBtn);
       card.appendChild(footer);
@@ -136,7 +242,6 @@ async function loadToday() {
     });
 
     syncExerciseStack();
-
   } catch (err) {
     loader.classList.add('hidden');
     if (err instanceof AuthRedirectError) return;
@@ -156,6 +261,7 @@ function createSetRow(index, type) {
 
   return row;
 }
+
 function setActiveExercise(nextIndex) {
   const cards = Array.from(document.querySelectorAll('.exercise-card'));
   activeExerciseIndex = Math.max(0, Math.min(nextIndex, cards.length - 1));
@@ -180,8 +286,8 @@ function setActiveExercise(nextIndex) {
   syncExerciseStack();
 }
 
-function advanceExercise(card) {
-  if (!card.classList.contains('active')) return;
+async function advanceExercise(card) {
+  if (!card.classList.contains('active') || todaySaveInFlight) return;
 
   const inputs = Array.from(card.querySelectorAll('.set-input'));
   const isComplete = inputs.every(input => input.value.trim() !== '');
@@ -193,14 +299,18 @@ function advanceExercise(card) {
 
   const cards = Array.from(document.querySelectorAll('.exercise-card'));
   const currentIndex = cards.indexOf(card);
-  card.classList.add('is-leaving');
 
   if (currentIndex >= 0 && currentIndex < cards.length - 1) {
+    card.classList.add('is-leaving');
     window.setTimeout(() => setActiveExercise(currentIndex + 1), 180);
-  } else {
-    card.classList.add('completed-pulse');
-    window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
+    return;
   }
+
+  card.classList.add('completed-pulse');
+  window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
+  const confirmBtn = card.querySelector('.exercise-complete-btn');
+  const footerHint = card.querySelector('.exercise-footer-hint');
+  await saveTodayWorkout(confirmBtn, footerHint);
 }
 
 function syncExerciseStack() {
@@ -212,42 +322,10 @@ function syncExerciseStack() {
   container.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
 }
 
-
-document.getElementById('save-workout-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('save-workout-btn');
-  setTodayError('');
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-
-  try {
-    const exercises = [];
-    document.querySelectorAll('.exercise-card').forEach(card => {
-      const id = card.dataset.id;
-      const inputs = card.querySelectorAll('.set-input');
-      const sets = Array.from(inputs).map(inp => parseInt(inp.value) || 0);
-      exercises.push({ id, sets });
-    });
-
-    await api.logWorkout({ workout_type: todayWorkoutType, exercises, note: '' });
-    alert('Workout saved!');
-
-    const historyDate = document.getElementById('history-date').value;
-    const today = new Date().toISOString().split('T')[0];
-    if (historyDate === today) loadHistory(today);
-
-  } catch (err) {
-    if (err instanceof AuthRedirectError) return;
-    setTodayError('Save error: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save Workout';
-  }
-});
-
 // ==========================================
 // TAB 2: HISTORY
 // ==========================================
-document.getElementById('history-date').addEventListener('change', (e) => {
+document.getElementById('history-date').addEventListener('change', e => {
   loadHistory(e.target.value);
 });
 
@@ -298,11 +376,10 @@ async function loadHistory(date) {
     }
 
     document.getElementById('history-note').textContent = data.note || 'No notes added for this workout.';
-
   } catch (err) {
     loader.classList.add('hidden');
     if (err instanceof AuthRedirectError) return;
-    if (err.message.includes('404') || err.message.toLowerCase().includes('not found') || err.message.toLowerCase().includes('no log')) {
+    if (err instanceof ApiError && err.status === 404) {
       empty.classList.remove('hidden');
     } else {
       errorEl.textContent = 'Error loading history: ' + err.message;
@@ -325,7 +402,6 @@ async function loadProgram() {
 
     const userSets = data.userSets ?? {};
 
-    // Schedule
     const scheduleContainer = document.getElementById('program-schedule');
     scheduleContainer.innerHTML = '';
     if (data.schedule) {
@@ -341,7 +417,6 @@ async function loadProgram() {
       });
     }
 
-    // Workouts
     const workoutsContainer = document.getElementById('program-workouts');
     workoutsContainer.innerHTML = '';
     if (data.workouts) {
@@ -380,7 +455,6 @@ async function loadProgram() {
         workoutsContainer.appendChild(card);
       });
     }
-
   } catch (err) {
     loader.classList.add('hidden');
     if (err instanceof AuthRedirectError) return;
