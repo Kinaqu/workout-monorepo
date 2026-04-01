@@ -1,8 +1,5 @@
-import { api, getToken, hasClerkSession, AuthRedirectError, ApiError } from '/api.js';
-
-if (!getToken() && !hasClerkSession()) {
-  window.location.href = '/login';
-}
+import { api, getToken, AuthRedirectError, ApiError } from '/api.js';
+import { ensureClerkReady } from '/clerk-bootstrap.js';
 
 let todayWorkoutType = null;
 let todayWorkoutDate = null;
@@ -462,4 +459,24 @@ async function loadProgram() {
   }
 }
 
-loadToday();
+async function bootstrapApp() {
+  try {
+    const { isSignedIn } = await ensureClerkReady();
+
+    if (!getToken() && !isSignedIn) {
+      window.location.replace('/login');
+      return;
+    }
+  } catch (error) {
+    console.error('Failed to initialize Clerk on the main app page:', error);
+
+    if (!getToken()) {
+      window.location.replace('/login');
+      return;
+    }
+  }
+
+  await loadToday();
+}
+
+bootstrapApp();

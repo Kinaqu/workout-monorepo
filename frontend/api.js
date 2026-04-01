@@ -1,3 +1,5 @@
+import { getToken as getClerkToken } from '@clerk/shared/getToken';
+
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
 const LOGIN_PATH = '/login?reauth=1';
 
@@ -17,23 +19,12 @@ export class ApiError extends Error {
   }
 }
 
-function getCookieValue(name) {
-  if (typeof document === 'undefined') return null;
-
-  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`));
-
-  if (!match || match.length < 2) return null;
-
-  try {
-    return decodeURIComponent(match[1]);
-  } catch {
-    return match[1];
+function getClerkInstance() {
+  if (typeof window === 'undefined' || !('Clerk' in window)) {
+    return null;
   }
-}
 
-function getClerkTokenFromCookie() {
-  return getCookieValue('__session');
+  return window.Clerk ?? null;
 }
 
 export function getToken() {
@@ -49,12 +40,17 @@ export function removeToken() {
 }
 
 export function hasClerkSession() {
-  return Boolean(getClerkTokenFromCookie());
+  const clerk = getClerkInstance();
+  return Boolean(clerk?.session || clerk?.isSignedIn);
 }
 
-async function resolveAuthToken() {
-  const clerkToken = getClerkTokenFromCookie();
-  if (clerkToken) return clerkToken;
+async function resolveAuthToken(options) {
+  try {
+    const clerkToken = await getClerkToken(options);
+    if (clerkToken) return clerkToken;
+  } catch (error) {
+    console.warn('Unable to resolve Clerk token, falling back to legacy token storage.', error);
+  }
 
   return getToken();
 }
@@ -78,6 +74,10 @@ function isExpiredSession(response) {
   return response.status === 401;
 }
 
+function hasStoredSession() {
+  return hasClerkSession() || Boolean(getToken());
+}
+
 function redirectToLogin(message) {
   removeToken();
 
@@ -95,7 +95,7 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const token = await resolveAuthToken();
+  const token = options.authToken ?? await resolveAuthToken(options.authTokenOptions);
   if (token && !options.noAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -106,8 +106,22 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config);
     const data = await response.json().catch(() => ({}));
 
-    if (isExpiredSession(response)) {
-      redirectToLogin(getErrorMessage(data, response.status));
+    if (isExpiredSession(response) && !options.noAuth) {
+      if (!options.__retriedWithFreshToken) {
+        const freshToken = await resolveAuthToken({ skipCache: true });
+        if (freshToken) {
+          return request(endpoint, {
+            ...options,
+            __retriedWithFreshToken: true,
+            authToken: freshToken,
+            authTokenOptions: { skipCache: true },
+          });
+        }
+      }
+
+      if (!hasStoredSession()) {
+        redirectToLogin(getErrorMessage(data, response.status));
+      }
     }
 
     if (!response.ok) {
