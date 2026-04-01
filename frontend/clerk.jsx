@@ -1,6 +1,4 @@
-import React, { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/react';
+import { loadClerkJsScript } from '@clerk/shared/loadClerkJsScript';
 
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
@@ -28,17 +26,6 @@ function isClerkReady(clerk) {
   return Boolean(clerk.loaded && !clerk.status);
 }
 
-function HiddenClerkBootstrap({ onResolved }) {
-  const { isLoaded, isSignedIn } = useAuth();
-
-  React.useEffect(() => {
-    if (!isLoaded) return;
-    onResolved({ isLoaded: true, isSignedIn: Boolean(isSignedIn) });
-  }, [isLoaded, isSignedIn, onResolved]);
-
-  return null;
-}
-
 export function ensureClerkReady() {
   if (!hasClerkKey || typeof document === 'undefined') {
     return Promise.resolve({ isLoaded: false, isSignedIn: false });
@@ -53,30 +40,29 @@ export function ensureClerkReady() {
   }
 
   if (!clerkBootstrapPromise) {
-    clerkBootstrapPromise = new Promise(resolve => {
-      const existingHost = document.getElementById('clerk-auth-bootstrap');
-      const host = existingHost ?? document.createElement('div');
+    clerkBootstrapPromise = (async () => {
+      await loadClerkJsScript({ publishableKey: clerkPublishableKey });
 
-      host.id = 'clerk-auth-bootstrap';
-      host.hidden = true;
-      host.setAttribute('aria-hidden', 'true');
-
-      if (!existingHost) {
-        document.body.appendChild(host);
+      const clerk = getClerkInstance();
+      if (!clerk) {
+        throw new Error('Clerk failed to attach to window.');
       }
 
-      const root = createRoot(host);
-      const handleResolved = state => resolve(state);
+      if (!isClerkReady(clerk) && typeof clerk.load === 'function') {
+        await clerk.load();
+      }
 
-      root.render(
-        <StrictMode>
-          <ClerkProvider publishableKey={clerkPublishableKey} afterSignOutUrl="/login">
-            <ClerkLoaded>
-              <HiddenClerkBootstrap onResolved={handleResolved} />
-            </ClerkLoaded>
-          </ClerkProvider>
-        </StrictMode>
-      );
+      if (!isClerkReady(clerk)) {
+        throw new Error('Clerk did not reach a ready state.');
+      }
+
+      return {
+        isLoaded: true,
+        isSignedIn: Boolean(clerk.session || clerk.isSignedIn),
+      };
+    })().catch(error => {
+      clerkBootstrapPromise = null;
+      throw error;
     });
   }
 
