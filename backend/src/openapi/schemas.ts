@@ -399,6 +399,8 @@ export const SessionLogExerciseSchema = z
 export const WorkoutSessionExerciseSchema = z
   .object({
     id: z.string().openapi({ example: "se_123" }),
+    programExerciseId: z.string().nullable().openapi({ example: "exercise_123" }),
+    catalogExerciseId: z.string().nullable().openapi({ example: "catalog_pushups" }),
     exerciseKey: z.string().nullable().openapi({ example: "pushups" }),
     exerciseName: z.string().openapi({ example: "Push-ups" }),
     exerciseType: z.enum(["reps", "time", "cycles"]).nullable().openapi({ example: "reps" }),

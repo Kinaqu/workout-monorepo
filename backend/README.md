@@ -79,15 +79,32 @@ New onboarding and generation tables:
 
 - `onboarding_answers`
 - `user_profiles`
+- `user_profile_goal_tags`
+- `user_profile_equipment`
+- `user_profile_focus_areas`
+- `user_profile_limitation_tags`
+- `user_profile_preferred_styles`
 - `exercise_catalog`
+- `exercise_catalog_equipment`
+- `exercise_catalog_workout_tags`
+- `exercise_catalog_goal_tags`
+- `exercise_catalog_focus_areas`
+- `exercise_catalog_contraindication_tags`
+- `exercise_catalog_experience_levels`
 - `generated_program_metadata`
+- `workout_session_imports`
 
 Notes:
 
 - `exercise_catalog` is the global source of truth for exercise selection.
-- `programs/workouts/exercises/...` remain the per-user active snapshot used by workout, logging, and progression flows.
+- `programs` are versioned, not mutable-in-place. Each new save/reset/generation creates a new program version with lineage in `program_family_id`, `version_number`, and `previous_program_id`.
+- `programs/workouts/exercises/...` remain the per-user snapshot used by workout, logging, and progression flows, but `exercises.catalog_exercise_id` links snapshots back to the canonical catalog definition when possible.
+- `workout_session_exercises` is an immutable execution snapshot and can store both `program_exercise_id` / `catalog_exercise_id` links plus rendered `exercise_key` / `exercise_name` / `exercise_type`.
+- `workout_session_imports` holds raw parser/import payload such as `raw_text` and `unmatched_text`, so `workout_sessions` stays the canonical session header.
+- Snapshot fields are immutable history. FK fields are linkage only. Do not “sync names everywhere” after catalog edits.
 - `users.onboarding_completed_at` is the user-level completion marker.
 - `generated_program_metadata` links a created program version to generator version, catalog seed version, and source profile context.
+- `users.username` is treated as a display identifier from Clerk context, not as a product-wide unique handle.
 
 ## Key Services
 
@@ -186,6 +203,8 @@ Guard semantics:
 ## Exercise Catalog Source Of Truth
 
 Initial catalog data is seeded by D1 migration `0003_onboarding_catalog_generation.sql`.
+Schema hardening and normalized tag tables are added by `0004_schema_hardening.sql`.
+Date validation guards for legacy non-rewritten tables are added by `0005_date_validation_guards.sql`.
 
 This is the current seed path because it is:
 
@@ -199,6 +218,8 @@ Future catalog changes should be additive:
 1. add a new migration
 2. insert/update catalog rows explicitly
 3. bump `seed_version` when the catalog meaningfully changes
+
+For filter-heavy attributes, keep the JSON payload for convenience but also maintain the normalized tag tables. The database migration now does this for catalog and profile traits so ad hoc analytics and indexed filtering do not depend on JSON extraction.
 
 ## Local Development
 
@@ -233,9 +254,13 @@ Useful commands:
 
 ```bash
 npm run typecheck
+npm run d1:preflight-0004:local
+npm run d1:postflight-0004:local
 npm run cf-typegen
 npm run deploy
 ```
+
+For `0004_schema_hardening.sql`, run preflight before applying to populated databases and postflight immediately after. The migration now uses deferred foreign-key enforcement plus in-migration assertions for orphaned progression rows, duplicate orderings, row-count preservation, normalized-tag parity, and final `foreign_key_check`. `wrangler d1 migrations apply` rolls back a failed migration file, but these checks are still important because they fail early with data-shape errors instead of leaving the root cause implicit.
 
 Docs:
 
@@ -249,6 +274,8 @@ Docs:
 - Do not move generation logic into the frontend.
 - Do not use KV for new product features.
 - Do not treat `exercise_catalog` and user program snapshots as the same thing.
+- Keep `exercise_catalog` canonical, `exercises` as per-program snapshots with optional catalog links, and sessions as immutable execution snapshots.
+- Treat rendered snapshot fields as immutable history and FK fields as linkage. They intentionally duplicate some catalog/program data.
 - Add new migrations; do not rewrite applied migrations.
 - Prefer additive, backward-safe schema changes.
 - Preserve existing training/session/progression behavior unless a product rule explicitly requires a change.

@@ -6,6 +6,8 @@ import { nowIso } from "../lib/time";
 
 interface ProgressionRow {
   id: string;
+  exercise_id: string;
+  catalog_exercise_id: string | null;
   exercise_key: string;
   current_sets: number;
   current_target_min: number;
@@ -21,7 +23,8 @@ export class ProgressionRepository {
   async getByProgram(userId: string, programId: string): Promise<Map<string, ExerciseProgressionState>> {
     const rows = await fetchAll<ProgressionRow>(
       this.env.DB.prepare(
-        `SELECT id, exercise_key, current_sets, current_target_min, current_target_max, last_progression_at, created_at, updated_at
+        `SELECT id, exercise_id, catalog_exercise_id, exercise_key, current_sets, current_target_min, current_target_max,
+                last_progression_at, created_at, updated_at
          FROM exercise_progression_state
          WHERE user_id = ? AND program_id = ?`
       ).bind(userId, programId)
@@ -32,6 +35,8 @@ export class ProgressionRepository {
         row.exercise_key,
         {
           id: row.id,
+          exerciseId: row.exercise_id,
+          catalogExerciseId: row.catalog_exercise_id,
           exerciseKey: row.exercise_key,
           currentSets: row.current_sets,
           currentTargetMin: row.current_target_min,
@@ -56,13 +61,15 @@ export class ProgressionRepository {
       statements.push(
         this.env.DB.prepare(
           `INSERT INTO exercise_progression_state (
-            id, user_id, program_id, exercise_key, current_sets, current_target_min, current_target_max,
-            last_progression_at, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            id, user_id, program_id, exercise_id, catalog_exercise_id, exercise_key, current_sets, current_target_min,
+            current_target_max, last_progression_at, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           state.id || createId("eps"),
           userId,
           programId,
+          state.exerciseId,
+          state.catalogExerciseId,
           state.exerciseKey,
           state.currentSets,
           state.currentTargetMin,
@@ -81,7 +88,10 @@ export class ProgressionRepository {
     userId: string,
     programId: string,
     events: Array<{
-      id: string;
+      exerciseId: string;
+      catalogExerciseId: string | null;
+      exerciseKey: string;
+      exerciseName: string;
       direction: "up" | "down";
       reason: string;
       before: { sets: number; min: number; max: number };
@@ -94,14 +104,17 @@ export class ProgressionRepository {
     const statements = events.map(event =>
       this.env.DB.prepare(
         `INSERT INTO progression_events (
-          id, user_id, program_id, exercise_key, direction, reason, before_sets, before_target_min,
-          before_target_max, after_sets, after_target_min, after_target_max, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          id, user_id, program_id, exercise_id, catalog_exercise_id, exercise_key, exercise_name, direction, reason,
+          before_sets, before_target_min, before_target_max, after_sets, after_target_min, after_target_max, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         createId("pe"),
         userId,
         programId,
-        event.id,
+        event.exerciseId,
+        event.catalogExerciseId,
+        event.exerciseKey,
+        event.exerciseName,
         event.direction,
         event.reason,
         event.before.sets,

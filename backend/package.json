@@ -6,7 +6,9 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "d1:preflight-0004:local": "wrangler d1 execute DB --local --file scripts/sql/0004_schema_hardening_preflight.sql",
+    "d1:postflight-0004:local": "wrangler d1 execute DB --local --file scripts/sql/0004_schema_hardening_postflight.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260312.1",

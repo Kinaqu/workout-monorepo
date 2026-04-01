@@ -18,6 +18,8 @@ export interface SessionWriteInput {
 
 export interface WorkoutSessionExercise {
   id: string;
+  programExerciseId: string | null;
+  catalogExerciseId: string | null;
   exerciseKey: string | null;
   exerciseName: string;
   exerciseType: ExerciseType | null;
@@ -130,6 +132,8 @@ function mapExerciseToSession(
 
   return {
     id: "",
+    programExerciseId: workoutExercise?.exercise.id ?? null,
+    catalogExerciseId: workoutExercise?.exercise.catalogExerciseId ?? null,
     exerciseKey: workoutExercise?.exercise.key ?? exercise.id,
     exerciseName: exercise.name ?? workoutExercise?.exercise.name ?? exercise.id,
     exerciseType: workoutExercise?.exercise.type ?? null,

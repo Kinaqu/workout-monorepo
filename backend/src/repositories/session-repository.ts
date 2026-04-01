@@ -12,8 +12,6 @@ interface SessionRow {
   workout_name: string | null;
   note: string;
   source: "json" | "text" | "legacy-kv";
-  raw_text: string | null;
-  unmatched_text: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,11 +19,18 @@ interface SessionRow {
 interface SessionExerciseRow {
   id: string;
   session_id: string;
+  program_exercise_id: string | null;
+  catalog_exercise_id: string | null;
   exercise_key: string | null;
   exercise_name: string;
   exercise_type: "reps" | "time" | "cycles" | null;
   matched: number;
   sort_order: number;
+}
+
+interface SessionImportRow {
+  raw_text: string | null;
+  unmatched_text: string | null;
 }
 
 interface SessionSetRow {
@@ -56,8 +61,8 @@ export class SessionRepository {
     const statements: D1PreparedStatement[] = [
       this.env.DB.prepare(
         `INSERT INTO workout_sessions (
-          id, user_id, program_id, workout_id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          id, user_id, program_id, workout_id, session_date, workout_key, workout_name, note, source, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         sessionId,
         userId,
@@ -68,23 +73,33 @@ export class SessionRepository {
         session.workoutName,
         session.note,
         session.source,
-        session.rawText,
-        session.unmatched.join("\n"),
         now,
         now
       ),
     ];
+
+    if (session.rawText || session.unmatched.length > 0) {
+      statements.push(
+        this.env.DB.prepare(
+          `INSERT INTO workout_session_imports (session_id, raw_text, unmatched_text, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)`
+        ).bind(sessionId, session.rawText, session.unmatched.join("\n") || null, now, now)
+      );
+    }
 
     for (const exercise of session.exercises) {
       const sessionExerciseId = createId("se");
       statements.push(
         this.env.DB.prepare(
           `INSERT INTO workout_session_exercises (
-            id, session_id, exercise_key, exercise_name, exercise_type, matched, sort_order
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+            id, session_id, program_exercise_id, catalog_exercise_id, exercise_key, exercise_name, exercise_type,
+            matched, sort_order
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           sessionExerciseId,
           sessionId,
+          exercise.programExerciseId,
+          exercise.catalogExerciseId,
           exercise.exerciseKey,
           exercise.exerciseName,
           exercise.exerciseType,
@@ -114,7 +129,7 @@ export class SessionRepository {
   async getSession(userId: string, sessionId: string): Promise<WorkoutSessionRecord | null> {
     const session = await fetchFirst<SessionRow>(
       this.env.DB.prepare(
-        `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+        `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
          FROM workout_sessions
          WHERE user_id = ? AND id = ?`
       ).bind(userId, sessionId)
@@ -142,7 +157,7 @@ export class SessionRepository {
   async listSessionsByDate(userId: string, sessionDate: string): Promise<WorkoutSessionRecord[]> {
     const sessions = await fetchAll<SessionRow>(
       this.env.DB.prepare(
-        `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+        `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
          FROM workout_sessions
          WHERE user_id = ? AND session_date = ?
          ORDER BY created_at DESC`
@@ -155,14 +170,14 @@ export class SessionRepository {
   async listSessions(userId: string, limit: number, sessionDate?: string): Promise<WorkoutSessionRecord[]> {
     const query = sessionDate
       ? this.env.DB.prepare(
-          `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+          `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
            FROM workout_sessions
            WHERE user_id = ? AND session_date = ?
            ORDER BY session_date DESC, created_at DESC
            LIMIT ?`
         ).bind(userId, sessionDate, limit)
       : this.env.DB.prepare(
-          `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+          `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
            FROM workout_sessions
            WHERE user_id = ?
            ORDER BY session_date DESC, created_at DESC
@@ -173,10 +188,13 @@ export class SessionRepository {
     return Promise.all(sessions.map(session => this.loadSessionAggregate(session)));
   }
 
-  async listRecentPerformance(userId: string, sinceDate: string): Promise<Array<{ sessionDate: string; exercises: Array<{ exerciseKey: string; sets: number[] }> }>> {
+  async listRecentPerformance(
+    userId: string,
+    sinceDate: string
+  ): Promise<Array<{ sessionDate: string; exercises: Array<{ exerciseKey: string; catalogExerciseId: string | null; sets: number[] }> }>> {
     const sessions = await fetchAll<SessionRow>(
       this.env.DB.prepare(
-        `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+        `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
          FROM workout_sessions
          WHERE user_id = ? AND session_date >= ?
          ORDER BY session_date DESC, created_at DESC`
@@ -185,7 +203,8 @@ export class SessionRepository {
 
     const exerciseRows = await fetchAll<SessionExerciseRow>(
       this.env.DB.prepare(
-        `SELECT id, session_id, exercise_key, exercise_name, exercise_type, matched, sort_order
+        `SELECT id, session_id, program_exercise_id, catalog_exercise_id, exercise_key, exercise_name, exercise_type,
+                matched, sort_order
          FROM workout_session_exercises
          WHERE session_id IN (
            SELECT id FROM workout_sessions WHERE user_id = ? AND session_date >= ?
@@ -210,12 +229,13 @@ export class SessionRepository {
       setsByExercise.set(row.session_exercise_id, sets);
     }
 
-    const exercisesBySession = new Map<string, Array<{ exerciseKey: string; sets: number[] }>>();
+    const exercisesBySession = new Map<string, Array<{ exerciseKey: string; catalogExerciseId: string | null; sets: number[] }>>();
     for (const exercise of exerciseRows) {
       if (!exercise.exercise_key) continue;
       const list = exercisesBySession.get(exercise.session_id) ?? [];
       list.push({
         exerciseKey: exercise.exercise_key,
+        catalogExerciseId: exercise.catalog_exercise_id,
         sets: (setsByExercise.get(exercise.id) ?? []).filter(value => typeof value === "number"),
       });
       exercisesBySession.set(exercise.session_id, list);
@@ -228,13 +248,21 @@ export class SessionRepository {
   }
 
   private async loadSessionAggregate(session: SessionRow): Promise<WorkoutSessionRecord> {
-    const [exerciseRows, setRows] = await Promise.all([
+    const [exerciseRows, importRow, setRows] = await Promise.all([
       fetchAll<SessionExerciseRow>(
         this.env.DB.prepare(
-          `SELECT id, session_id, exercise_key, exercise_name, exercise_type, matched, sort_order
+          `SELECT id, session_id, program_exercise_id, catalog_exercise_id, exercise_key, exercise_name, exercise_type,
+                  matched, sort_order
            FROM workout_session_exercises
            WHERE session_id = ?
            ORDER BY sort_order ASC`
+        ).bind(session.id)
+      ),
+      fetchFirst<SessionImportRow>(
+        this.env.DB.prepare(
+          `SELECT raw_text, unmatched_text
+           FROM workout_session_imports
+           WHERE session_id = ?`
         ).bind(session.id)
       ),
       fetchAll<SessionSetRow>(
@@ -263,12 +291,14 @@ export class SessionRepository {
       workoutName: session.workout_name,
       note: session.note,
       source: session.source,
-      rawText: session.raw_text,
-      unmatched: session.unmatched_text ? session.unmatched_text.split("\n").filter(Boolean) : [],
+      rawText: importRow?.raw_text ?? null,
+      unmatched: importRow?.unmatched_text ? importRow.unmatched_text.split("\n").filter(Boolean) : [],
       createdAt: session.created_at,
       updatedAt: session.updated_at,
       exercises: exerciseRows.map(exercise => ({
         id: exercise.id,
+        programExerciseId: exercise.program_exercise_id,
+        catalogExerciseId: exercise.catalog_exercise_id,
         exerciseKey: exercise.exercise_key,
         exerciseName: exercise.exercise_name,
         exerciseType: exercise.exercise_type,

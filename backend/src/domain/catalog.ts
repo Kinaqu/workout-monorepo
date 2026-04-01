@@ -58,7 +58,8 @@ export function catalogEntryToProgramExercise(
     name: entry.name,
     type: entry.type,
     max_sets: maxSets,
-  } satisfies Pick<ProgramExerciseInput, "id" | "name" | "type" | "max_sets">;
+    catalogExerciseId: entry.id,
+  } satisfies Pick<ProgramExerciseInput, "id" | "name" | "type" | "max_sets" | "catalogExerciseId">;
 
   if (entry.type === "reps") {
     return { ...base, reps: { min, max } };

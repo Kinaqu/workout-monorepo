@@ -2,6 +2,8 @@ import { ProgramTemplate, WorkoutExerciseTemplate } from "./program";
 
 export interface ExerciseProgressionState {
   id: string;
+  exerciseId: string;
+  catalogExerciseId: string | null;
   exerciseKey: string;
   currentSets: number;
   currentTargetMin: number;
@@ -31,6 +33,7 @@ export interface WorkoutPlan {
 
 export interface SessionPerformance {
   exerciseKey: string;
+  catalogExerciseId: string | null;
   sets: number[];
 }
 
@@ -53,11 +56,22 @@ export interface ProgressionChange {
   after: { sets: number; min: number; max: number };
 }
 
+export interface ProgressionEventRecord {
+  exerciseId: string;
+  catalogExerciseId: string | null;
+  exerciseKey: string;
+  exerciseName: string;
+  direction: "up" | "down";
+  reason: string;
+  before: { sets: number; min: number; max: number };
+  after: { sets: number; min: number; max: number };
+}
+
 export interface ProgressionEvaluationResult {
   changed: ProgressionChange[];
   skipped: Array<{ id: string; reason: string }>;
   nextStates: ExerciseProgressionState[];
-  events: ProgressionChange[];
+  events: ProgressionEventRecord[];
 }
 
 export function seedProgressionStates(
@@ -68,11 +82,28 @@ export function seedProgressionStates(
   reset = false
 ): ExerciseProgressionState[] {
   const templates = listDistinctExercises(program);
+  const previousByCatalogExerciseId = new Map<string, ExerciseProgressionState>();
+  const previousByExerciseKey = new Map<string, ExerciseProgressionState>();
+
+  for (const state of previous.values()) {
+    if (state.catalogExerciseId && !previousByCatalogExerciseId.has(state.catalogExerciseId)) {
+      previousByCatalogExerciseId.set(state.catalogExerciseId, state);
+    }
+    if (!previousByExerciseKey.has(state.exerciseKey)) {
+      previousByExerciseKey.set(state.exerciseKey, state);
+    }
+  }
 
   return templates.map(template => {
-    const previousState = reset ? null : previous.get(template.exercise.key);
+    const previousState = reset
+      ? null
+      : (template.exercise.catalogExerciseId
+          ? previousByCatalogExerciseId.get(template.exercise.catalogExerciseId) ?? null
+          : null) ?? previousByExerciseKey.get(template.exercise.key) ?? null;
     return {
       id: previousState?.id ?? "",
+      exerciseId: template.exercise.id,
+      catalogExerciseId: template.exercise.catalogExerciseId,
       exerciseKey: template.exercise.key,
       currentSets: previousState?.currentSets ?? 1,
       currentTargetMin: previousState?.currentTargetMin ?? template.targetMin,
@@ -134,6 +165,7 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
   const nextStates = new Map<string, ExerciseProgressionState>();
   const changed: ProgressionChange[] = [];
   const skipped: Array<{ id: string; reason: string }> = [];
+  const events: ProgressionEventRecord[] = [];
 
   for (const template of listDistinctExercises(input.program)) {
     const current = input.states.get(template.exercise.key);
@@ -143,7 +175,7 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
     }
 
     const sessionResults = input.sessions
-      .map(session => session.exercises.find(exercise => exercise.exerciseKey === template.exercise.key) ?? null)
+      .map(session => session.exercises.find(exercise => matchesSessionPerformance(template, exercise)) ?? null)
       .filter((entry): entry is SessionPerformance => entry !== null && entry.sets.length > 0);
 
     if (!template.exercise.progressionEnabled) {
@@ -194,6 +226,16 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
           max: nextState.currentTargetMax,
         },
       };
+      events.push({
+        exerciseId: template.exercise.id,
+        catalogExerciseId: template.exercise.catalogExerciseId,
+        exerciseKey: template.exercise.key,
+        exerciseName: template.exercise.name,
+        direction: "up",
+        reason: change.reason,
+        before,
+        after: change.after,
+      });
     } else if (belowTarget >= 2) {
       if (current.currentSets > 1) {
         nextState.currentSets -= 1;
@@ -214,6 +256,16 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
           max: nextState.currentTargetMax,
         },
       };
+      events.push({
+        exerciseId: template.exercise.id,
+        catalogExerciseId: template.exercise.catalogExerciseId,
+        exerciseKey: template.exercise.key,
+        exerciseName: template.exercise.name,
+        direction: "down",
+        reason: change.reason,
+        before,
+        after: change.after,
+      });
     }
 
     nextStates.set(template.exercise.key, nextState);
@@ -228,7 +280,7 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
     changed,
     skipped,
     nextStates: Array.from(nextStates.values()),
-    events: changed,
+    events,
   };
 }
 
@@ -236,10 +288,18 @@ function listDistinctExercises(program: ProgramTemplate): WorkoutExerciseTemplat
   const distinct = new Map<string, WorkoutExerciseTemplate>();
   for (const workout of Object.values(program.workouts)) {
     for (const exercise of workout.exercises) {
-      if (!distinct.has(exercise.exercise.key)) {
-        distinct.set(exercise.exercise.key, exercise);
+      if (!distinct.has(exercise.exercise.id)) {
+        distinct.set(exercise.exercise.id, exercise);
       }
     }
   }
   return Array.from(distinct.values());
+}
+
+function matchesSessionPerformance(template: WorkoutExerciseTemplate, performance: SessionPerformance): boolean {
+  if (template.exercise.catalogExerciseId && performance.catalogExerciseId) {
+    return template.exercise.catalogExerciseId === performance.catalogExerciseId;
+  }
+
+  return template.exercise.key === performance.exerciseKey;
 }

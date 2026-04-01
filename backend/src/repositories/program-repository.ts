@@ -7,6 +7,9 @@ import { ALL_DAY_NAMES, DayName, nowIso } from "../lib/time";
 interface ProgramRow {
   id: string;
   program_key: string;
+  program_family_id: string;
+  version_number: number;
+  previous_program_id: string | null;
   name: string;
   source: string;
   created_at: string;
@@ -27,6 +30,7 @@ interface ScheduleRow {
 
 interface ExerciseRow {
   id: string;
+  catalog_exercise_id: string | null;
   exercise_key: string;
   name: string;
   type: ExerciseDefinition["type"];
@@ -51,7 +55,7 @@ export class ProgramRepository {
   async getActiveProgramSummary(userId: string): Promise<ProgramRow | null> {
     return fetchFirst<ProgramRow>(
       this.env.DB.prepare(
-        `SELECT id, program_key, name, source, created_at, updated_at
+        `SELECT id, program_key, program_family_id, version_number, previous_program_id, name, source, created_at, updated_at
          FROM programs
          WHERE user_id = ? AND is_active = 1
          ORDER BY updated_at DESC
@@ -70,7 +74,7 @@ export class ProgramRepository {
   async getProgramById(programId: string): Promise<ProgramTemplate | null> {
     const program = await fetchFirst<ProgramRow>(
       this.env.DB.prepare(
-        `SELECT id, program_key, name, source, created_at, updated_at
+        `SELECT id, program_key, program_family_id, version_number, previous_program_id, name, source, created_at, updated_at
          FROM programs
          WHERE id = ?`
       ).bind(programId)
@@ -96,7 +100,7 @@ export class ProgramRepository {
       ),
       fetchAll<ExerciseRow>(
         this.env.DB.prepare(
-          `SELECT id, exercise_key, name, type, progression_enabled, progression_step, deload_step
+          `SELECT id, catalog_exercise_id, exercise_key, name, type, progression_enabled, progression_step, deload_step
            FROM exercises
            WHERE program_id = ?`
         ).bind(programId)
@@ -126,6 +130,7 @@ export class ProgramRepository {
     for (const exercise of exerciseRows) {
       exerciseById.set(exercise.id, {
         id: exercise.id,
+        catalogExerciseId: exercise.catalog_exercise_id,
         key: exercise.exercise_key,
         name: exercise.name,
         type: exercise.type,
@@ -178,13 +183,34 @@ export class ProgramRepository {
   async createProgramVersion(userId: string, draft: ProgramDraft, source: string): Promise<ProgramTemplate> {
     const now = nowIso();
     const programId = createId("program");
+    const current = await this.getActiveProgramSummary(userId);
+    const catalogIdsByExerciseKey = await this.getCatalogExerciseIdsForKeys(
+      Array.from(new Set(draft.workouts.flatMap(workout => workout.exercises.map(exercise => exercise.exerciseKey))))
+    );
+    const programFamilyId = current?.program_family_id ?? programId;
+    const versionNumber = (current?.version_number ?? 0) + 1;
 
     const statements: D1PreparedStatement[] = [
-      this.env.DB.prepare("UPDATE programs SET is_active = 0, updated_at = ? WHERE user_id = ? AND is_active = 1").bind(now, userId),
       this.env.DB.prepare(
-        `INSERT INTO programs (id, user_id, program_key, name, is_active, source, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?)`
-      ).bind(programId, userId, draft.key, draft.name, source, now, now),
+        "UPDATE programs SET is_active = 0, updated_at = ?, superseded_at = ? WHERE user_id = ? AND is_active = 1"
+      ).bind(now, now, userId),
+      this.env.DB.prepare(
+        `INSERT INTO programs (
+          id, user_id, program_key, program_family_id, version_number, previous_program_id, name, is_active, source,
+          created_at, updated_at, superseded_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, NULL)`
+      ).bind(
+        programId,
+        userId,
+        draft.key,
+        programFamilyId,
+        versionNumber,
+        current?.id ?? null,
+        draft.name,
+        source,
+        now,
+        now
+      ),
     ];
 
     const workoutIds = new Map<string, string>();
@@ -205,11 +231,14 @@ export class ProgramRepository {
         if (!existingExerciseId) {
           statements.push(
             this.env.DB.prepare(
-              `INSERT INTO exercises (id, program_id, exercise_key, name, type, progression_enabled, progression_step, deload_step, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              `INSERT INTO exercises (
+                id, program_id, catalog_exercise_id, exercise_key, name, type, progression_enabled, progression_step,
+                deload_step, created_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             ).bind(
               exerciseId,
               programId,
+              exercise.catalogExerciseId ?? catalogIdsByExerciseKey.get(exercise.exerciseKey) ?? null,
               exercise.exerciseKey,
               exercise.exerciseName,
               exercise.exerciseType,
@@ -256,6 +285,21 @@ export class ProgramRepository {
       throw new Error("Failed to load created program");
     }
     return created;
+  }
+
+  private async getCatalogExerciseIdsForKeys(exerciseKeys: string[]): Promise<Map<string, string>> {
+    if (exerciseKeys.length === 0) {
+      return new Map();
+    }
+
+    const placeholders = exerciseKeys.map(() => "?").join(", ");
+    const statement = this.env.DB.prepare(
+      `SELECT id, exercise_key
+       FROM exercise_catalog
+       WHERE exercise_key IN (${placeholders})`
+    ).bind(...exerciseKeys);
+    const rows = await fetchAll<{ id: string; exercise_key: string }>(statement);
+    return new Map(rows.map(row => [row.exercise_key, row.id]));
   }
 }
 
