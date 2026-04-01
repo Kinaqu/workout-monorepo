@@ -101,6 +101,7 @@ Notes:
 - `programs/workouts/exercises/...` remain the per-user snapshot used by workout, logging, and progression flows, but `exercises.catalog_exercise_id` links snapshots back to the canonical catalog definition when possible.
 - `workout_session_exercises` is an immutable execution snapshot and can store both `program_exercise_id` / `catalog_exercise_id` links plus rendered `exercise_key` / `exercise_name` / `exercise_type`.
 - `workout_session_imports` holds raw parser/import payload such as `raw_text` and `unmatched_text`, so `workout_sessions` stays the canonical session header.
+- Snapshot fields are immutable history. FK fields are linkage only. Do not “sync names everywhere” after catalog edits.
 - `users.onboarding_completed_at` is the user-level completion marker.
 - `generated_program_metadata` links a created program version to generator version, catalog seed version, and source profile context.
 - `users.username` is treated as a display identifier from Clerk context, not as a product-wide unique handle.
@@ -203,6 +204,7 @@ Guard semantics:
 
 Initial catalog data is seeded by D1 migration `0003_onboarding_catalog_generation.sql`.
 Schema hardening and normalized tag tables are added by `0004_schema_hardening.sql`.
+Date validation guards for legacy non-rewritten tables are added by `0005_date_validation_guards.sql`.
 
 This is the current seed path because it is:
 
@@ -252,9 +254,13 @@ Useful commands:
 
 ```bash
 npm run typecheck
+npm run d1:preflight-0004:local
+npm run d1:postflight-0004:local
 npm run cf-typegen
 npm run deploy
 ```
+
+For `0004_schema_hardening.sql`, run preflight before applying to populated databases and postflight immediately after. The migration now uses deferred foreign-key enforcement plus in-migration assertions for orphaned progression rows, duplicate orderings, row-count preservation, normalized-tag parity, and final `foreign_key_check`. `wrangler d1 migrations apply` rolls back a failed migration file, but these checks are still important because they fail early with data-shape errors instead of leaving the root cause implicit.
 
 Docs:
 
@@ -269,6 +275,7 @@ Docs:
 - Do not use KV for new product features.
 - Do not treat `exercise_catalog` and user program snapshots as the same thing.
 - Keep `exercise_catalog` canonical, `exercises` as per-program snapshots with optional catalog links, and sessions as immutable execution snapshots.
+- Treat rendered snapshot fields as immutable history and FK fields as linkage. They intentionally duplicate some catalog/program data.
 - Add new migrations; do not rewrite applied migrations.
 - Prefer additive, backward-safe schema changes.
 - Preserve existing training/session/progression behavior unless a product rule explicitly requires a change.

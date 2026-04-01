@@ -1,5 +1,254 @@
-PRAGMA foreign_keys = OFF;
+PRAGMA foreign_keys = ON;
+PRAGMA defer_foreign_keys = ON;
 PRAGMA legacy_alter_table = ON;
+
+CREATE TABLE __migration_0004_assertions (
+  ok INTEGER NOT NULL CHECK (ok = 1)
+);
+
+CREATE TABLE __migration_0004_counts (
+  name TEXT PRIMARY KEY,
+  row_count INTEGER NOT NULL
+);
+
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'programs', COUNT(*) FROM programs;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'user_profiles', COUNT(*) FROM user_profiles;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'exercise_catalog', COUNT(*) FROM exercise_catalog;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'workouts', COUNT(*) FROM workouts;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'exercises', COUNT(*) FROM exercises;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'workout_exercises', COUNT(*) FROM workout_exercises;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'program_schedule', COUNT(*) FROM program_schedule;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'exercise_progression_state', COUNT(*) FROM exercise_progression_state;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'progression_events', COUNT(*) FROM progression_events;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'workout_sessions', COUNT(*) FROM workout_sessions;
+INSERT INTO __migration_0004_counts (name, row_count)
+SELECT 'workout_session_imports_source', COUNT(*)
+FROM workout_sessions
+WHERE raw_text IS NOT NULL OR unmatched_text IS NOT NULL;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'workout_session_exercises', COUNT(*) FROM workout_session_exercises;
+INSERT INTO __migration_0004_counts (name, row_count) SELECT 'workout_session_sets', COUNT(*) FROM workout_session_sets;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM (
+    SELECT program_id, sort_order
+    FROM workouts
+    GROUP BY program_id, sort_order
+    HAVING COUNT(*) > 1
+  )
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM (
+    SELECT workout_id, sort_order
+    FROM workout_exercises
+    GROUP BY workout_id, sort_order
+    HAVING COUNT(*) > 1
+  )
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM (
+    SELECT workout_id, exercise_id
+    FROM workout_exercises
+    GROUP BY workout_id, exercise_id
+    HAVING COUNT(*) > 1
+  )
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM (
+    SELECT session_id, sort_order
+    FROM workout_session_exercises
+    GROUP BY session_id, sort_order
+    HAVING COUNT(*) > 1
+  )
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM (
+    SELECT session_exercise_id, set_order
+    FROM workout_session_sets
+    GROUP BY session_exercise_id, set_order
+    HAVING COUNT(*) > 1
+  )
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM program_schedule
+  LEFT JOIN workouts ON workouts.id = program_schedule.workout_id
+  WHERE program_schedule.workout_id IS NOT NULL
+    AND (workouts.id IS NULL OR workouts.program_id <> program_schedule.program_id)
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workout_sessions
+  LEFT JOIN workouts ON workouts.id = workout_sessions.workout_id
+  WHERE workout_sessions.workout_id IS NOT NULL
+    AND workout_sessions.program_id IS NOT NULL
+    AND (workouts.id IS NULL OR workouts.program_id <> workout_sessions.program_id)
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercise_progression_state
+  LEFT JOIN exercises
+    ON exercises.program_id = exercise_progression_state.program_id
+   AND exercises.exercise_key = exercise_progression_state.exercise_key
+  WHERE exercises.id IS NULL
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM progression_events
+  LEFT JOIN exercises
+    ON exercises.program_id = progression_events.program_id
+   AND exercises.exercise_key = progression_events.exercise_key
+  WHERE exercises.id IS NULL
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercise_catalog
+  WHERE max_sets <= 0
+     OR default_target_min <= 0
+     OR default_target_max < default_target_min
+     OR progression_step <= 0
+     OR deload_step <= 0
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercises
+  WHERE progression_step <= 0
+     OR deload_step <= 0
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workout_exercises
+  WHERE sort_order < 0
+     OR max_sets <= 0
+     OR target_min <= 0
+     OR target_max < target_min
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercise_progression_state
+  WHERE current_sets <= 0
+     OR current_target_min <= 0
+     OR current_target_max < current_target_min
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM progression_events
+  WHERE before_sets <= 0
+     OR before_target_min <= 0
+     OR before_target_max < before_target_min
+     OR after_sets <= 0
+     OR after_target_min <= 0
+     OR after_target_max < after_target_min
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workout_session_sets
+  WHERE set_order < 0
+     OR value <= 0
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workout_session_exercises
+  WHERE sort_order < 0
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM programs
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR updated_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM user_profiles
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR updated_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercise_catalog
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR updated_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workouts
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercises
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM exercise_progression_state
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR updated_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR (last_progression_at IS NOT NULL AND last_progression_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM progression_events
+  WHERE created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN NOT EXISTS (
+  SELECT 1
+  FROM workout_sessions
+  WHERE session_date NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+     OR created_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+     OR updated_at NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'
+) THEN 1 ELSE 0 END;
 
 -- Make program version lineage explicit and enforce a single active version per user.
 ALTER TABLE programs RENAME TO programs_old;
@@ -16,9 +265,9 @@ CREATE TABLE programs (
   name TEXT NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
   source TEXT NOT NULL DEFAULT 'api',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  superseded_at TEXT,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  superseded_at TEXT CHECK (superseded_at IS NULL OR superseded_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (previous_program_id) REFERENCES programs(id) ON DELETE SET NULL
 );
@@ -59,15 +308,15 @@ CREATE TABLE user_profiles (
   source_answer_id TEXT,
   primary_goal TEXT NOT NULL,
   experience_level TEXT NOT NULL,
-  training_days_per_week INTEGER NOT NULL CHECK (training_days_per_week BETWEEN 2 AND 5),
-  session_duration_minutes INTEGER NOT NULL CHECK (session_duration_minutes BETWEEN 20 AND 75),
+  training_days_per_week INTEGER NOT NULL CHECK (training_days_per_week > 0),
+  session_duration_minutes INTEGER NOT NULL CHECK (session_duration_minutes > 0),
   equipment_json TEXT NOT NULL,
   focus_areas_json TEXT NOT NULL,
   limitation_tags_json TEXT NOT NULL,
   preferred_styles_json TEXT NOT NULL,
   profile_json TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (source_answer_id) REFERENCES onboarding_answers(id) ON DELETE SET NULL
 );
@@ -110,8 +359,8 @@ CREATE TABLE exercise_catalog (
   deload_step INTEGER NOT NULL DEFAULT 1 CHECK (deload_step > 0),
   seed_version TEXT NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z')
 );
 
 INSERT INTO exercise_catalog (
@@ -136,7 +385,7 @@ CREATE TABLE workouts (
   workout_key TEXT NOT NULL,
   name TEXT NOT NULL,
   sort_order INTEGER NOT NULL CHECK (sort_order >= 0),
-  created_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
   UNIQUE (program_id, workout_key),
   UNIQUE (program_id, sort_order)
@@ -161,7 +410,7 @@ CREATE TABLE exercises (
   progression_enabled INTEGER NOT NULL DEFAULT 1 CHECK (progression_enabled IN (0, 1)),
   progression_step INTEGER NOT NULL DEFAULT 1 CHECK (progression_step > 0),
   deload_step INTEGER NOT NULL DEFAULT 1 CHECK (deload_step > 0),
-  created_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
   FOREIGN KEY (catalog_exercise_id) REFERENCES exercise_catalog(id) ON DELETE SET NULL,
   UNIQUE (program_id, exercise_key)
@@ -241,9 +490,9 @@ CREATE TABLE exercise_progression_state (
   current_sets INTEGER NOT NULL CHECK (current_sets > 0),
   current_target_min INTEGER NOT NULL CHECK (current_target_min > 0),
   current_target_max INTEGER NOT NULL CHECK (current_target_max >= current_target_min),
-  last_progression_at TEXT,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
+  last_progression_at TEXT CHECK (last_progression_at IS NULL OR last_progression_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
   FOREIGN KEY (program_id, exercise_id) REFERENCES exercises(program_id, id) ON DELETE CASCADE,
@@ -295,7 +544,7 @@ CREATE TABLE progression_events (
   after_sets INTEGER NOT NULL CHECK (after_sets > 0),
   after_target_min INTEGER NOT NULL CHECK (after_target_min > 0),
   after_target_max INTEGER NOT NULL CHECK (after_target_max >= after_target_min),
-  created_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
   FOREIGN KEY (program_id, exercise_id) REFERENCES exercises(program_id, id) ON DELETE CASCADE,
@@ -341,13 +590,13 @@ CREATE TABLE workout_sessions (
   user_id TEXT NOT NULL,
   program_id TEXT,
   workout_id TEXT,
-  session_date TEXT NOT NULL,
+  session_date TEXT NOT NULL CHECK (session_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
   workout_key TEXT,
   workout_name TEXT,
   note TEXT NOT NULL DEFAULT '',
   source TEXT NOT NULL CHECK (source IN ('json', 'text', 'legacy-kv')),
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE SET NULL,
   FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE SET NULL
@@ -364,8 +613,8 @@ CREATE TABLE workout_session_imports (
   session_id TEXT PRIMARY KEY,
   raw_text TEXT,
   unmatched_text TEXT,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
+  created_at TEXT NOT NULL CHECK (created_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
+  updated_at TEXT NOT NULL CHECK (updated_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*Z'),
   FOREIGN KEY (session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE
 );
 
@@ -797,10 +1046,131 @@ DROP TABLE programs_old;
 DROP TABLE user_profiles_old;
 DROP TABLE exercise_catalog_old;
 
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'programs') = (SELECT COUNT(*) FROM programs)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'user_profiles') = (SELECT COUNT(*) FROM user_profiles)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'exercise_catalog') = (SELECT COUNT(*) FROM exercise_catalog)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workouts') = (SELECT COUNT(*) FROM workouts)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'exercises') = (SELECT COUNT(*) FROM exercises)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workout_exercises') = (SELECT COUNT(*) FROM workout_exercises)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'program_schedule') = (SELECT COUNT(*) FROM program_schedule)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'exercise_progression_state') = (SELECT COUNT(*) FROM exercise_progression_state)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'progression_events') = (SELECT COUNT(*) FROM progression_events)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workout_sessions') = (SELECT COUNT(*) FROM workout_sessions)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workout_session_imports_source') = (SELECT COUNT(*) FROM workout_session_imports)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workout_session_exercises') = (SELECT COUNT(*) FROM workout_session_exercises)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT row_count FROM __migration_0004_counts WHERE name = 'workout_session_sets') = (SELECT COUNT(*) FROM workout_session_sets)
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_equipment)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.equipment_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_workout_tags)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.workout_tags_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_goal_tags)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.goal_tags_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_focus_areas)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.focus_areas_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_contraindication_tags)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.contraindication_tags_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM exercise_catalog_experience_levels)
+  = (SELECT COUNT(*) FROM exercise_catalog, json_each(exercise_catalog.experience_levels_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_profile_goal_tags)
+  = (
+    SELECT COUNT(*) FROM (
+      SELECT id, primary_goal AS tag FROM user_profiles
+      UNION ALL
+      SELECT user_profiles.id, json_each.value
+      FROM user_profiles, json_each(json_extract(user_profiles.profile_json, '$.secondaryGoals'))
+    )
+  )
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_profile_equipment)
+  = (SELECT COUNT(*) FROM user_profiles, json_each(user_profiles.equipment_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_profile_focus_areas)
+  = (SELECT COUNT(*) FROM user_profiles, json_each(user_profiles.focus_areas_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_profile_limitation_tags)
+  = (SELECT COUNT(*) FROM user_profiles, json_each(user_profiles.limitation_tags_json))
+THEN 1 ELSE 0 END;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM user_profile_preferred_styles)
+  = (SELECT COUNT(*) FROM user_profiles, json_each(user_profiles.preferred_styles_json))
+THEN 1 ELSE 0 END;
+
 -- Indexes for generation analytics without relying on JSON extraction.
 CREATE INDEX idx_generated_program_metadata_profile_created ON generated_program_metadata(profile_id, created_at DESC);
 CREATE INDEX idx_generated_program_metadata_generator_created ON generated_program_metadata(generator_version, created_at DESC);
 CREATE INDEX idx_generated_program_metadata_reason_created ON generated_program_metadata(generation_reason, created_at DESC);
 
-PRAGMA foreign_keys = ON;
+PRAGMA defer_foreign_keys = OFF;
+
+INSERT INTO __migration_0004_assertions
+SELECT CASE WHEN (SELECT COUNT(*) FROM pragma_foreign_key_check) = 0 THEN 1 ELSE 0 END;
+
+DROP TABLE __migration_0004_counts;
+DROP TABLE __migration_0004_assertions;
+
 PRAGMA legacy_alter_table = OFF;

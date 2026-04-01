@@ -145,6 +145,7 @@ Important distinctions:
 - `exercises.catalog_exercise_id` links a program snapshot back to the canonical catalog definition when possible
 - `workout_session_exercises` is the immutable execution snapshot layer and may carry both FK links and rendered exercise labels
 - `workout_session_imports` holds raw parser/import payloads so `workout_sessions` stays the canonical session header
+- rendered snapshot fields are immutable history; FK fields are linkage only
 - `users.onboarding_completed_at` is the user-level completion marker
 - `generated_program_metadata` links a generated program to generator and profile context
 - `users.username` should be treated as display data from Clerk context, not a guaranteed unique product handle
@@ -209,6 +210,7 @@ Guard rules:
 - do not query per-user program exercises as the master catalog
 - keep catalog metadata explicit enough for filtering: equipment, tags, contraindications, experience, and targets
 - for frequently filtered profile/catalog traits, keep normalized helper tables in sync with the JSON payload columns
+- for large table-rewrite migrations, prefer preflight/postflight verification queries and `foreign_key_check`
 
 ## Validation Rules
 
