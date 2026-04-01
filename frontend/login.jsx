@@ -1,6 +1,6 @@
 import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClerkLoaded, ClerkProvider, Show } from '@clerk/react';
+import { ClerkLoaded, ClerkProvider, Show, useClerk } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
 import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './clerk.jsx';
 
@@ -26,9 +26,34 @@ function MissingKeyNotice() {
 
 
 function SignedInRedirect() {
+  const { signOut } = useClerk();
+
   React.useEffect(() => {
-    window.location.replace('/');
-  }, []);
+    let isMounted = true;
+
+    async function syncSession() {
+      if (shouldForceReauth) {
+        try {
+          await signOut();
+        } catch (error) {
+          console.error('Failed to clear expired Clerk session:', error);
+        }
+
+        if (isMounted) {
+          window.location.replace('/login');
+        }
+        return;
+      }
+
+      window.location.replace('/');
+    }
+
+    syncSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [signOut]);
 
   return <AuthSkeleton label="session" />;
 }

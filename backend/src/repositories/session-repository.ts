@@ -124,6 +124,21 @@ export class SessionRepository {
     return this.loadSessionAggregate(session);
   }
 
+  async getLatestSessionByDate(userId: string, sessionDate: string): Promise<WorkoutSessionRecord | null> {
+    const session = await fetchFirst<SessionRow>(
+      this.env.DB.prepare(
+        `SELECT id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+         FROM workout_sessions
+         WHERE user_id = ? AND session_date = ?
+         ORDER BY created_at DESC
+         LIMIT 1`
+      ).bind(userId, sessionDate)
+    );
+
+    if (!session) return null;
+    return this.loadSessionAggregate(session);
+  }
+
   async listSessionsByDate(userId: string, sessionDate: string): Promise<WorkoutSessionRecord[]> {
     const sessions = await fetchAll<SessionRow>(
       this.env.DB.prepare(
