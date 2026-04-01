@@ -3,9 +3,12 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import type { AuthContext } from "./auth/clerk";
 import type { Env } from "./env";
+import { isAppError } from "./lib/app-error";
 import { createOpenApiDocument } from "./openapi/config";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerLogRoutes } from "./routes/log";
+import { registerMeRoutes } from "./routes/me";
+import { registerOnboardingRoutes } from "./routes/onboarding";
 import { registerProgramRoutes } from "./routes/program";
 import { registerProgressionRoutes } from "./routes/progression";
 import { registerSessionsRoutes } from "./routes/sessions";
@@ -44,6 +47,8 @@ app.use(
 app.options("*", c => c.body(null, 204));
 
 registerAuthRoutes(app);
+registerMeRoutes(app);
+registerOnboardingRoutes(app);
 registerWorkoutRoutes(app);
 registerProgramRoutes(app);
 registerProgressionRoutes(app);
@@ -69,6 +74,16 @@ app.notFound(c => {
 });
 
 app.onError((error, c) => {
+  if (isAppError(error)) {
+    return c.json(
+      {
+        error: error.message,
+        ...(error.detail ? { detail: error.detail } : {}),
+      },
+      error.status as 400 | 401 | 403 | 404 | 409 | 500 | 503
+    );
+  }
+
   return c.json(
     {
       error: "Internal server error",

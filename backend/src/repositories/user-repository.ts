@@ -2,10 +2,13 @@ import { fetchFirst } from "../db/d1";
 import { Env } from "../env";
 import { nowIso } from "../lib/time";
 
-interface UserRow {
+export interface UserRecord {
   user_id: string;
   username: string | null;
   legacy_kv_migrated_at: string | null;
+  onboarding_completed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export class UserRepository {
@@ -24,10 +27,12 @@ export class UserRepository {
       .run();
   }
 
-  async get(userId: string): Promise<UserRow | null> {
-    return fetchFirst<UserRow>(
+  async get(userId: string): Promise<UserRecord | null> {
+    return fetchFirst<UserRecord>(
       this.env.DB.prepare(
-        "SELECT user_id, username, legacy_kv_migrated_at FROM users WHERE user_id = ?"
+        `SELECT user_id, username, legacy_kv_migrated_at, onboarding_completed_at, created_at, updated_at
+         FROM users
+         WHERE user_id = ?`
       ).bind(userId)
     );
   }
@@ -36,5 +41,11 @@ export class UserRepository {
     await this.env.DB.prepare(
       "UPDATE users SET legacy_kv_migrated_at = ?, updated_at = ? WHERE user_id = ?"
     ).bind(migratedAt, migratedAt, userId).run();
+  }
+
+  async markOnboardingCompleted(userId: string, completedAt = nowIso()): Promise<void> {
+    await this.env.DB.prepare(
+      "UPDATE users SET onboarding_completed_at = ?, updated_at = ? WHERE user_id = ?"
+    ).bind(completedAt, completedAt, userId).run();
   }
 }

@@ -43,6 +43,14 @@ const workoutTodayRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Onboarding not completed or no active program exists.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
     503: {
       description: "Clerk JWKS unavailable.",
       content: {

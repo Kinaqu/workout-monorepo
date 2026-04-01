@@ -1,8 +1,9 @@
 import { ProgramTemplate } from "../domain/program";
 import { enrichSessionInput, parseLogText, sessionToLegacyLogResponse, SessionWriteInput, WorkoutSessionRecord } from "../domain/session";
+import { badRequest } from "../lib/app-error";
 import { isValidDate, todayDate } from "../lib/time";
 import { SessionRepository } from "../repositories/session-repository";
-import { UserBootstrapService } from "./user-bootstrap-service";
+import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class SessionAlreadyExistsError extends Error {
   constructor(
@@ -16,16 +17,16 @@ export class SessionAlreadyExistsError extends Error {
 
 export class SessionService {
   constructor(
-    private readonly bootstrap: UserBootstrapService,
+    private readonly lifecycle: UserLifecycleService,
     private readonly sessions: SessionRepository
   ) {}
 
   async createFromJson(userId: string, username: string, payload: unknown, requestedDate?: string) {
-    const program = await this.bootstrap.ensureUserReady(userId, username);
+    const program = await this.lifecycle.requireActiveProgram(userId, username);
     const body = validateJsonLogPayload(payload);
     const sessionDate = requestedDate ?? body.session_date ?? todayDate();
     if (!isValidDate(sessionDate)) {
-      throw new Error("Invalid date in X-Workout-Date header");
+      badRequest("Invalid date in X-Workout-Date header");
     }
 
     const created = await this.createSession(userId, program, {
@@ -48,13 +49,13 @@ export class SessionService {
 
   async createFromText(userId: string, username: string, text: string, requestedDate?: string) {
     if (!text.trim()) {
-      throw new Error("Empty body");
+      badRequest("Empty body");
     }
 
-    const program = await this.bootstrap.ensureUserReady(userId, username);
+    const program = await this.lifecycle.requireActiveProgram(userId, username);
     const sessionDate = requestedDate ?? todayDate();
     if (!isValidDate(sessionDate)) {
-      throw new Error("Invalid date in X-Workout-Date header");
+      badRequest("Invalid date in X-Workout-Date header");
     }
 
     const parsed = parseLogText(text, program);
@@ -78,10 +79,10 @@ export class SessionService {
 
   async getLegacyLogByDate(userId: string, username: string, date: string) {
     if (!isValidDate(date)) {
-      throw new Error("Invalid date. Use format: 2026-03-11");
+      badRequest("Invalid date. Use format: 2026-03-11");
     }
 
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     const sessions = await this.sessions.listSessionsByDate(userId, date);
     if (sessions.length === 0) {
       return null;
@@ -97,10 +98,10 @@ export class SessionService {
 
   async listSessions(userId: string, username: string, limit: number, date?: string) {
     if (date && !isValidDate(date)) {
-      throw new Error("Invalid date. Use format: 2026-03-11");
+      badRequest("Invalid date. Use format: 2026-03-11");
     }
 
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     const sessions = await this.sessions.listSessions(userId, limit, date);
     return {
       sessions,
@@ -109,12 +110,12 @@ export class SessionService {
   }
 
   async getSession(userId: string, username: string, sessionId: string): Promise<WorkoutSessionRecord | null> {
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     return this.sessions.getSession(userId, sessionId);
   }
 
   async listRecentPerformance(userId: string, username: string, sinceDate: string) {
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     return this.sessions.listRecentPerformance(userId, sinceDate);
   }
 
@@ -135,18 +136,18 @@ function validateJsonLogPayload(input: unknown): {
   exercises?: Array<{ id: string; name?: string; sets: number[] }>;
 } {
   if (typeof input !== "object" || input === null) {
-    throw new Error("Invalid JSON");
+    badRequest("Invalid JSON");
   }
 
   const body = input as Record<string, unknown>;
   const exercises = Array.isArray(body.exercises)
     ? body.exercises.map(exercise => {
         if (typeof exercise !== "object" || exercise === null) {
-          throw new Error("Invalid exercises payload");
+          badRequest("Invalid exercises payload");
         }
         const value = exercise as Record<string, unknown>;
         if (typeof value.id !== "string" || !Array.isArray(value.sets)) {
-          throw new Error("Invalid exercises payload");
+          badRequest("Invalid exercises payload");
         }
         return {
           id: value.id,

@@ -1,3 +1,4 @@
+import { badRequest } from "../lib/app-error";
 import { errorResponse } from "./response";
 
 export async function readJson<T>(request: Request): Promise<T | Response> {
@@ -5,6 +6,14 @@ export async function readJson<T>(request: Request): Promise<T | Response> {
     return await request.json<T>();
   } catch {
     return errorResponse("Invalid JSON", 400);
+  }
+}
+
+export async function readJsonOrThrow<T>(request: Request): Promise<T> {
+  try {
+    return await request.json<T>();
+  } catch {
+    badRequest("Invalid JSON");
   }
 }
 

@@ -48,8 +48,8 @@ interface WorkoutExerciseRow {
 export class ProgramRepository {
   constructor(private readonly env: Env) {}
 
-  async getActiveProgram(userId: string): Promise<ProgramTemplate | null> {
-    const program = await fetchFirst<ProgramRow>(
+  async getActiveProgramSummary(userId: string): Promise<ProgramRow | null> {
+    return fetchFirst<ProgramRow>(
       this.env.DB.prepare(
         `SELECT id, program_key, name, source, created_at, updated_at
          FROM programs
@@ -58,6 +58,10 @@ export class ProgramRepository {
          LIMIT 1`
       ).bind(userId)
     );
+  }
+
+  async getActiveProgram(userId: string): Promise<ProgramTemplate | null> {
+    const program = await this.getActiveProgramSummary(userId);
 
     if (!program) return null;
     return this.getProgramById(program.id);

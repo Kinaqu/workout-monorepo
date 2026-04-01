@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
+import { readJsonOrThrow } from "../http/request";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
 import {
@@ -125,6 +126,14 @@ const createLogRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Onboarding not completed or no active program exists.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
     503: {
       description: "Clerk JWKS unavailable.",
       content: {
@@ -142,26 +151,17 @@ export function registerLogRoutes(app: OpenAPIHono<AppEnv>) {
     const date = c.req.param("date");
     const { sessionService } = createAppContext(c.env);
 
-    try {
-      const log = await sessionService.getLegacyLogByDate(auth.userId, auth.username, date);
-      if (!log) {
-        return c.json(
-          {
-            error: "No log for this date",
-          },
-          404
-        );
-      }
-
-      return c.json(log as z.infer<typeof LegacyLogByDateResponseSchema>, 200);
-    } catch (error) {
+    const log = await sessionService.getLegacyLogByDate(auth.userId, auth.username, date);
+    if (!log) {
       return c.json(
         {
-          error: error instanceof Error ? error.message : "Invalid date",
+          error: "No log for this date",
         },
-        400
+        404
       );
     }
+
+    return c.json(log as z.infer<typeof LegacyLogByDateResponseSchema>, 200);
   });
 
   app.openapi(createLogRoute, async c => {
@@ -170,40 +170,24 @@ export function registerLogRoutes(app: OpenAPIHono<AppEnv>) {
     const contentType = c.req.header("Content-Type") ?? "";
     const { sessionService } = createAppContext(c.env);
 
-    try {
-      if (contentType.includes("application/json")) {
-        return c.json(
-          (await sessionService.createFromJson(auth.userId, auth.username, await c.req.json(), requestedDate)) as z.infer<
-            typeof LogCreateResponseSchema
-          >,
-          200
-        );
-      }
-
+    if (contentType.includes("application/json")) {
       return c.json(
-        (await sessionService.createFromText(auth.userId, auth.username, await c.req.text(), requestedDate)) as z.infer<
-          typeof LogCreateResponseSchema
-        >,
+        (await sessionService.createFromJson(
+          auth.userId,
+          auth.username,
+          await readJsonOrThrow(c.req.raw),
+          requestedDate
+        )) as z.infer<typeof LogCreateResponseSchema>,
         200
       );
-    } catch (error) {
-      if (error instanceof SessionAlreadyExistsError) {
-        return c.json(
-          {
-            error: error.message,
-            detail: `Existing session id: ${error.sessionId}`,
-          },
-          409
-        );
-      }
-
-      return c.json(
-        {
-          error: error instanceof Error ? error.message : "Invalid request",
-        },
-        400
-      );
     }
+
+    return c.json(
+      (await sessionService.createFromText(auth.userId, auth.username, await c.req.text(), requestedDate)) as z.infer<
+        typeof LogCreateResponseSchema
+      >,
+      200
+    );
   });
 
   app.all("/log", authMiddleware, c =>

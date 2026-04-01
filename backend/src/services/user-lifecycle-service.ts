@@ -1,15 +1,16 @@
 import { DEFAULT_PROGRAM } from "../domain/default-program";
-import { createProgramDraft } from "../domain/program";
+import { createProgramDraft, ProgramTemplate } from "../domain/program";
+import { seedProgressionStates } from "../domain/progression";
 import { enrichSessionInput } from "../domain/session";
+import { conflict } from "../lib/app-error";
+import { nowIso } from "../lib/time";
 import { LegacyKvRepository, LegacySnapshot } from "../repositories/legacy-kv-repository";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
 import { SessionRepository } from "../repositories/session-repository";
-import { UserRepository } from "../repositories/user-repository";
-import { seedProgressionStates } from "../domain/progression";
-import { nowIso } from "../lib/time";
+import { UserRecord, UserRepository } from "../repositories/user-repository";
 
-export class UserBootstrapService {
+export class UserLifecycleService {
   constructor(
     private readonly users: UserRepository,
     private readonly programs: ProgramRepository,
@@ -18,37 +19,73 @@ export class UserBootstrapService {
     private readonly legacy: LegacyKvRepository
   ) {}
 
-  async ensureUserReady(userId: string, username: string) {
+  async ensureUserExists(userId: string, username: string): Promise<UserRecord> {
     await this.users.upsert(userId, username);
     const user = await this.users.get(userId);
-
-    const existingProgram = await this.programs.getActiveProgram(userId);
-    if (existingProgram && user?.legacy_kv_migrated_at) {
-      return existingProgram;
+    if (!user) {
+      throw new Error("Failed to load user after upsert");
     }
 
-    if (existingProgram && !user?.legacy_kv_migrated_at) {
+    await this.ensureLegacyMigrationHandled(userId, user);
+    const refreshed = await this.users.get(userId);
+    if (!refreshed) {
+      throw new Error("Failed to reload user after bootstrap");
+    }
+
+    return refreshed;
+  }
+
+  async getActiveProgram(userId: string, username: string): Promise<ProgramTemplate | null> {
+    await this.ensureUserExists(userId, username);
+    return this.programs.getActiveProgram(userId);
+  }
+
+  async requireActiveProgram(userId: string, username: string): Promise<ProgramTemplate> {
+    const user = await this.ensureUserExists(userId, username);
+    const program = await this.programs.getActiveProgram(userId);
+    if (program) {
+      return program;
+    }
+
+    if (!user.onboarding_completed_at) {
+      conflict("Onboarding not completed");
+    }
+
+    conflict("Active program not found");
+  }
+
+  private async ensureLegacyMigrationHandled(userId: string, user: UserRecord): Promise<void> {
+    if (user.legacy_kv_migrated_at) {
+      return;
+    }
+
+    const existingProgram = await this.programs.getActiveProgram(userId);
+    if (existingProgram) {
       if (existingProgram.source === "legacy-kv") {
         const snapshot = await this.legacy.readUserSnapshot(userId);
         await this.importLegacyLogs(userId, existingProgram, snapshot.logs);
       }
 
       await this.users.markLegacyMigrated(userId);
-      return existingProgram;
+      return;
     }
 
     const snapshot = await this.legacy.readUserSnapshot(userId);
+    if (!hasLegacyData(snapshot)) {
+      await this.users.markLegacyMigrated(userId);
+      return;
+    }
+
     const sourceProgram = snapshot.program ?? DEFAULT_PROGRAM;
     const created = await this.programs.createProgramVersion(
       userId,
       createProgramDraft(sourceProgram),
-      snapshot.program ? "legacy-kv" : "default"
+      snapshot.program ? "legacy-kv" : "legacy-default"
     );
 
-    const previousStates = new Map<string, ReturnType<typeof seedProgressionStates>[number]>();
     const seeded = seedProgressionStates(
       created,
-      previousStates,
+      new Map(),
       nowIso(),
       snapshot.state?.last_progression ?? null
     ).map(state => ({
@@ -59,13 +96,9 @@ export class UserBootstrapService {
     await this.progression.replaceProgramStates(userId, created.versionId, seeded);
     await this.importLegacyLogs(userId, created, snapshot.logs);
     await this.users.markLegacyMigrated(userId);
-
-    return created;
   }
 
-  private async importLegacyLogs(userId: string, program: Awaited<ReturnType<ProgramRepository["getActiveProgram"]>>, logs: LegacySnapshot["logs"]) {
-    if (!program) return;
-
+  private async importLegacyLogs(userId: string, program: ProgramTemplate, logs: LegacySnapshot["logs"]) {
     for (const legacyLog of logs) {
       const session = enrichSessionInput(program, {
         sessionDate: legacyLog.date,
@@ -85,6 +118,11 @@ export class UserBootstrapService {
   }
 }
 
+function hasLegacyData(snapshot: LegacySnapshot): boolean {
+  return Boolean(snapshot.program || snapshot.state || snapshot.logs.length > 0);
+}
+
 function buildLegacySessionId(userId: string, date: string): string {
   return `legacy_${userId.replace(/[^a-zA-Z0-9]/g, "_")}_${date}`;
 }
+
