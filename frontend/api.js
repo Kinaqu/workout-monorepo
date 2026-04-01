@@ -1,22 +1,30 @@
+import { getToken as getClerkToken } from '@clerk/shared/getToken';
+
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+const LOGIN_PATH = '/login?reauth=1';
 
-function getCookieValue(name) {
-  if (typeof document === 'undefined') return null;
-
-  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`));
-
-  if (!match || match.length < 2) return null;
-
-  try {
-    return decodeURIComponent(match[1]);
-  } catch {
-    return match[1];
+export class AuthRedirectError extends Error {
+  constructor(message = 'Session expired. Please sign in again.') {
+    super(message);
+    this.name = 'AuthRedirectError';
   }
 }
 
-function getClerkTokenFromCookie() {
-  return getCookieValue('__session');
+export class ApiError extends Error {
+  constructor(message, status, data) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+function getClerkInstance() {
+  if (typeof window === 'undefined' || !('Clerk' in window)) {
+    return null;
+  }
+
+  return window.Clerk ?? null;
 }
 
 export function getToken() {
@@ -32,14 +40,52 @@ export function removeToken() {
 }
 
 export function hasClerkSession() {
-  return Boolean(getClerkTokenFromCookie());
+  const clerk = getClerkInstance();
+  return Boolean(clerk?.session || clerk?.isSignedIn);
 }
 
-async function resolveAuthToken() {
-  const localToken = getToken();
-  if (localToken) return localToken;
+async function resolveAuthToken(options) {
+  try {
+    const clerkToken = await getClerkToken(options);
+    if (clerkToken) return clerkToken;
+  } catch (error) {
+    console.warn('Unable to resolve Clerk token, falling back to legacy token storage.', error);
+  }
 
-  return getClerkTokenFromCookie();
+  return getToken();
+}
+
+function getErrorMessage(data, fallbackStatus) {
+  const message = typeof data?.message === 'string' && data.message.trim()
+    ? data.message.trim()
+    : typeof data?.error === 'string' && data.error.trim()
+      ? data.error.trim()
+      : '';
+
+  const detail = typeof data?.detail === 'string' && data.detail.trim() ? data.detail.trim() : '';
+  if (message && detail && detail !== message) return `${message}: ${detail}`;
+  if (message) return message;
+  if (detail) return detail;
+
+  return `API Error: ${fallbackStatus}`;
+}
+
+function isExpiredSession(response) {
+  return response.status === 401;
+}
+
+function hasStoredSession() {
+  return hasClerkSession() || Boolean(getToken());
+}
+
+function redirectToLogin(message) {
+  removeToken();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.replace(LOGIN_PATH);
+  }
+
+  throw new AuthRedirectError(message);
 }
 
 async function request(endpoint, options = {}) {
@@ -49,7 +95,7 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const token = await resolveAuthToken();
+  const token = options.authToken ?? await resolveAuthToken(options.authTokenOptions);
   if (token && !options.noAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -58,17 +104,30 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    if (response.status === 401) {
-      removeToken();
-      if (!hasClerkSession()) {
-        window.location.href = '/login';
-      }
-      return null;
-    }
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.message || data.error || `API Error: ${response.status}`);
+
+    if (isExpiredSession(response) && !options.noAuth) {
+      if (!options.__retriedWithFreshToken) {
+        const freshToken = await resolveAuthToken({ skipCache: true });
+        if (freshToken) {
+          return request(endpoint, {
+            ...options,
+            __retriedWithFreshToken: true,
+            authToken: freshToken,
+            authTokenOptions: { skipCache: true },
+          });
+        }
+      }
+
+      if (!hasStoredSession()) {
+        redirectToLogin(getErrorMessage(data, response.status));
+      }
     }
+
+    if (!response.ok) {
+      throw new ApiError(getErrorMessage(data, response.status), response.status, data);
+    }
+
     return data;
   } catch (error) {
     console.error('API Request failed:', error);

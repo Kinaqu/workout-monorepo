@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workout-app-v3';
+const CACHE_NAME = 'workout-app-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -28,6 +28,23 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Don't cache API requests
   if (event.request.url.includes('workout-api')) {
+    return;
+  }
+
+  const requestUrl = new URL(event.request.url);
+  const isNavigationRequest = event.request.mode === 'navigate';
+  const isAppShellAsset = urlsToCache.includes(requestUrl.pathname);
+
+  if (isNavigationRequest || isAppShellAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
   
