@@ -122,15 +122,32 @@ Onboarding-first additions:
 
 - `onboarding_answers`
 - `user_profiles`
+- `user_profile_goal_tags`
+- `user_profile_equipment`
+- `user_profile_focus_areas`
+- `user_profile_limitation_tags`
+- `user_profile_preferred_styles`
 - `exercise_catalog`
+- `exercise_catalog_equipment`
+- `exercise_catalog_workout_tags`
+- `exercise_catalog_goal_tags`
+- `exercise_catalog_focus_areas`
+- `exercise_catalog_contraindication_tags`
+- `exercise_catalog_experience_levels`
 - `generated_program_metadata`
+- `workout_session_imports`
 
 Important distinctions:
 
 - `exercise_catalog` is global and reusable
+- `programs` are explicit versions, not mutable-in-place rows
 - `programs/workouts/exercises/...` are per-user snapshots
+- `exercises.catalog_exercise_id` links a program snapshot back to the canonical catalog definition when possible
+- `workout_session_exercises` is the immutable execution snapshot layer and may carry both FK links and rendered exercise labels
+- `workout_session_imports` holds raw parser/import payloads so `workout_sessions` stays the canonical session header
 - `users.onboarding_completed_at` is the user-level completion marker
 - `generated_program_metadata` links a generated program to generator and profile context
+- `users.username` should be treated as display data from Clerk context, not a guaranteed unique product handle
 
 ## File Placement
 
@@ -191,6 +208,7 @@ Guard rules:
 - generated programs must be stored through the existing program snapshot architecture
 - do not query per-user program exercises as the master catalog
 - keep catalog metadata explicit enough for filtering: equipment, tags, contraindications, experience, and targets
+- for frequently filtered profile/catalog traits, keep normalized helper tables in sync with the JSON payload columns
 
 ## Validation Rules
 

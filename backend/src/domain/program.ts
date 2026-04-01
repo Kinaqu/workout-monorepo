@@ -13,6 +13,7 @@ export interface ProgramExerciseInput {
   name: string;
   type: ExerciseType;
   max_sets: number;
+  catalogExerciseId?: string | null;
   reps?: TargetRange;
   duration?: TargetRange;
   cycles?: TargetRange;
@@ -32,6 +33,7 @@ export interface ProgramDefinitionInput {
 
 export interface ExerciseDefinition {
   id: string;
+  catalogExerciseId: string | null;
   key: string;
   name: string;
   type: ExerciseType;
@@ -77,6 +79,7 @@ export interface ProgramDraft {
     name: string;
     sortOrder: number;
     exercises: Array<{
+      catalogExerciseId: string | null;
       exerciseKey: string;
       exerciseName: string;
       exerciseType: ExerciseType;
@@ -237,6 +240,7 @@ export function createProgramDraft(program: ProgramDefinitionInput): ProgramDraf
     exercises: workout.exercises.map((exercise, exerciseIndex) => {
       const range = getTargetRange(exercise);
       return {
+        catalogExerciseId: exercise.catalogExerciseId ?? null,
         exerciseKey: exercise.id,
         exerciseName: exercise.name,
         exerciseType: exercise.type,
