@@ -2,18 +2,9 @@ import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClerkLoaded, ClerkProvider, Show } from '@clerk/react';
 import { clerkAppearance } from './clerkAppearance.js';
+import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './clerk.jsx';
 
 const LazySignUp = lazy(() => import('@clerk/react').then(module => ({ default: module.SignUp })));
-
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
-
-const envDiagnostics = {
-  hasViteKey: Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY),
-  hasClerkKeyAlias: Boolean(import.meta.env.CLERK_PUBLISHABLE_KEY),
-  hasNextPublicAlias: Boolean(import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY),
-};
-
-const hasClerkKey = Boolean(clerkPublishableKey);
 
 function MissingKeyNotice() {
   return (
@@ -72,7 +63,7 @@ function RegisterPage() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {hasClerkKey ? (
-      <ClerkProvider afterSignOutUrl="/register">
+      <ClerkProvider publishableKey={clerkPublishableKey} afterSignOutUrl="/login">
         <RegisterPage />
       </ClerkProvider>
     ) : (

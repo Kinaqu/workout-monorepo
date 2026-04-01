@@ -480,17 +480,10 @@ body::-webkit-scrollbar-thumb:hover,
   border-radius: 12px;
 }
 
-#today-form-container {
-  position: sticky;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 5;
-  padding-top: 8px;
-  background: linear-gradient(180deg, rgba(18, 18, 18, 0), rgba(18, 18, 18, 0.94) 42%);
-}
-
-#save-workout-btn {
-  color: #fff;
-  box-shadow: 0 14px 24px rgba(187, 134, 252, 0.18);
+.today-status-card {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 640px) {
