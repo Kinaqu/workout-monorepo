@@ -39,7 +39,15 @@ interface SessionSetRow {
   value: number;
 }
 
+interface ColumnInfoRow {
+  name: string;
+}
+
+type SessionImportStorage = "inline" | "split";
+
 export class SessionRepository {
+  private sessionImportStoragePromise: Promise<SessionImportStorage> | null = null;
+
   constructor(private readonly env: Env) {}
 
   async createSession(
@@ -50,6 +58,7 @@ export class SessionRepository {
   ): Promise<WorkoutSessionRecord> {
     const now = nowIso();
     const sessionId = sessionIdOverride ?? createId("session");
+    const importStorage = await this.getSessionImportStorage();
     if (sessionIdOverride) {
       const existing = await this.getSession(userId, sessionIdOverride);
       if (existing) {
@@ -59,26 +68,46 @@ export class SessionRepository {
 
     const workout = session.workoutType ? program.workouts[session.workoutType] ?? null : null;
     const statements: D1PreparedStatement[] = [
-      this.env.DB.prepare(
-        `INSERT INTO workout_sessions (
-          id, user_id, program_id, workout_id, session_date, workout_key, workout_name, note, source, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).bind(
-        sessionId,
-        userId,
-        program.versionId,
-        workout?.id ?? null,
-        session.sessionDate,
-        session.workoutType,
-        session.workoutName,
-        session.note,
-        session.source,
-        now,
-        now
-      ),
+      importStorage === "split"
+        ? this.env.DB.prepare(
+            `INSERT INTO workout_sessions (
+              id, user_id, program_id, workout_id, session_date, workout_key, workout_name, note, source, created_at, updated_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            sessionId,
+            userId,
+            program.versionId,
+            workout?.id ?? null,
+            session.sessionDate,
+            session.workoutType,
+            session.workoutName,
+            session.note,
+            session.source,
+            now,
+            now
+          )
+        : this.env.DB.prepare(
+            `INSERT INTO workout_sessions (
+              id, user_id, program_id, workout_id, session_date, workout_key, workout_name, note, source, raw_text, unmatched_text, created_at, updated_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            sessionId,
+            userId,
+            program.versionId,
+            workout?.id ?? null,
+            session.sessionDate,
+            session.workoutType,
+            session.workoutName,
+            session.note,
+            session.source,
+            session.rawText,
+            session.unmatched.join("\n") || null,
+            now,
+            now
+          ),
     ];
 
-    if (session.rawText || session.unmatched.length > 0) {
+    if (importStorage === "split" && (session.rawText || session.unmatched.length > 0)) {
       statements.push(
         this.env.DB.prepare(
           `INSERT INTO workout_session_imports (session_id, raw_text, unmatched_text, created_at, updated_at)
@@ -248,6 +277,7 @@ export class SessionRepository {
   }
 
   private async loadSessionAggregate(session: SessionRow): Promise<WorkoutSessionRecord> {
+    const importStorage = await this.getSessionImportStorage();
     const [exerciseRows, importRow, setRows] = await Promise.all([
       fetchAll<SessionExerciseRow>(
         this.env.DB.prepare(
@@ -259,10 +289,18 @@ export class SessionRepository {
         ).bind(session.id)
       ),
       fetchFirst<SessionImportRow>(
-        this.env.DB.prepare(
-          `SELECT raw_text, unmatched_text
-           FROM workout_session_imports
-           WHERE session_id = ?`
+        (
+          importStorage === "split"
+            ? this.env.DB.prepare(
+                `SELECT raw_text, unmatched_text
+                 FROM workout_session_imports
+                 WHERE session_id = ?`
+              )
+            : this.env.DB.prepare(
+                `SELECT raw_text, unmatched_text
+                 FROM workout_sessions
+                 WHERE id = ?`
+              )
         ).bind(session.id)
       ),
       fetchAll<SessionSetRow>(
@@ -307,5 +345,34 @@ export class SessionRepository {
         sets: (setsByExercise.get(exercise.id) ?? []).filter(value => typeof value === "number"),
       })),
     };
+  }
+
+  private async getSessionImportStorage(): Promise<SessionImportStorage> {
+    if (!this.sessionImportStoragePromise) {
+      this.sessionImportStoragePromise = this.detectSessionImportStorage();
+    }
+
+    return this.sessionImportStoragePromise;
+  }
+
+  // Support both the pre-0004 inline columns and the split import table during staggered deploys.
+  private async detectSessionImportStorage(): Promise<SessionImportStorage> {
+    const [sessionColumns, importColumns] = await Promise.all([
+      fetchAll<ColumnInfoRow>(this.env.DB.prepare("PRAGMA table_info(workout_sessions)")),
+      fetchAll<ColumnInfoRow>(this.env.DB.prepare("PRAGMA table_info(workout_session_imports)")),
+    ]);
+
+    const workoutSessionColumnNames = new Set(sessionColumns.map(column => column.name));
+    const workoutSessionImportColumnNames = new Set(importColumns.map(column => column.name));
+
+    if (workoutSessionImportColumnNames.has("raw_text") && workoutSessionImportColumnNames.has("unmatched_text")) {
+      return "split";
+    }
+
+    if (workoutSessionColumnNames.has("raw_text") && workoutSessionColumnNames.has("unmatched_text")) {
+      return "inline";
+    }
+
+    throw new Error("Unsupported session import storage schema");
   }
 }
