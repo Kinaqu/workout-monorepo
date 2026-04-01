@@ -1,10 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { AppEnv } from "../app";
+import { readJsonOrThrow } from "../http/request";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
 import {
   ErrorResponseSchema,
+  GeneratedProgramResponseSchema,
   ProgramDefinitionSchema,
   ProgramMutationResponseSchema,
   ProgramResponseSchema,
@@ -32,6 +34,14 @@ const getProgramRoute = createRoute({
     },
     401: {
       description: "Missing or invalid Clerk Bearer token.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    409: {
+      description: "Onboarding not completed or no active program exists.",
       content: {
         "application/json": {
           schema: ErrorResponseSchema,
@@ -150,6 +160,51 @@ const resetProgramRoute = createRoute({
   },
 });
 
+const regenerateProgramRoute = createRoute({
+  method: "post",
+  path: "/program/regenerate",
+  middleware: authMiddleware,
+  security: bearerSecurity,
+  tags: ["Program"],
+  summary: "Regenerate active program from onboarding profile",
+  description:
+    "Uses the stored normalized profile and global exercise catalog to generate a fresh active program version without relying on frontend program composition.",
+  responses: {
+    200: {
+      description: "Program regenerated.",
+      content: {
+        "application/json": {
+          schema: GeneratedProgramResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Missing or invalid Clerk Bearer token.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    409: {
+      description: "Onboarding not completed or no normalized profile exists.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    503: {
+      description: "Clerk JWKS unavailable.",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 function methodNotAllowed(c: Context<AppEnv>) {
   return c.json(
     {
@@ -171,24 +226,13 @@ export function registerProgramRoutes(app: OpenAPIHono<AppEnv>) {
 
   app.openapi(saveProgramRoute, async c => {
     const auth = c.get("auth");
-    const body = await c.req.json();
     const { programService } = createAppContext(c.env);
-
-    try {
-      return c.json(
-        (await programService.saveProgram(auth.userId, auth.username, body)) as z.infer<
-          typeof ProgramMutationResponseSchema
-        >,
-        200
-      );
-    } catch (error) {
-      return c.json(
-        {
-          error: error instanceof Error ? error.message : "Invalid program body",
-        },
-        400
-      );
-    }
+    return c.json(
+      (await programService.saveProgram(auth.userId, auth.username, await readJsonOrThrow(c.req.raw))) as z.infer<
+        typeof ProgramMutationResponseSchema
+      >,
+      200
+    );
   });
 
   app.openapi(resetProgramRoute, async c => {
@@ -211,6 +255,18 @@ export function registerProgramRoutes(app: OpenAPIHono<AppEnv>) {
     );
   });
 
+  app.openapi(regenerateProgramRoute, async c => {
+    const auth = c.get("auth");
+    const { programGeneratorService } = createAppContext(c.env);
+    return c.json(
+      (await programGeneratorService.generateFromStoredProfile(auth.userId, auth.username, "regenerate")) as z.infer<
+        typeof GeneratedProgramResponseSchema
+      >,
+      200
+    );
+  });
+
   app.all("/program", authMiddleware, methodNotAllowed);
   app.all("/program/reset", authMiddleware, methodNotAllowed);
+  app.all("/program/regenerate", authMiddleware, methodNotAllowed);
 }

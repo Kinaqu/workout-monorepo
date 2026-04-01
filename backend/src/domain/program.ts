@@ -1,4 +1,5 @@
 import { ALL_DAY_NAMES, DayName } from "../lib/time";
+import { badRequest } from "../lib/app-error";
 
 export type ExerciseType = "reps" | "time" | "cycles";
 
@@ -96,7 +97,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function readString(value: unknown, fieldName: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`Invalid ${fieldName}`);
+    badRequest(`Invalid ${fieldName}`);
   }
 
   return value.trim();
@@ -104,7 +105,7 @@ function readString(value: unknown, fieldName: string): string {
 
 function readPositiveInteger(value: unknown, fieldName: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
-    throw new Error(`Invalid ${fieldName}`);
+    badRequest(`Invalid ${fieldName}`);
   }
 
   return value;
@@ -112,13 +113,13 @@ function readPositiveInteger(value: unknown, fieldName: string): number {
 
 function readRange(value: unknown, fieldName: string): TargetRange {
   if (!isObject(value)) {
-    throw new Error(`Invalid ${fieldName}`);
+    badRequest(`Invalid ${fieldName}`);
   }
 
   const min = readPositiveInteger(value.min, `${fieldName}.min`);
   const max = readPositiveInteger(value.max, `${fieldName}.max`);
   if (max < min) {
-    throw new Error(`Invalid ${fieldName}`);
+    badRequest(`Invalid ${fieldName}`);
   }
 
   return { min, max };
@@ -129,29 +130,29 @@ function readExerciseType(value: unknown): ExerciseType {
     return value;
   }
 
-  throw new Error("Invalid exercise type");
+  badRequest("Invalid exercise type");
 }
 
 export function validateProgramDefinition(input: unknown): ProgramDefinitionInput {
   if (!isObject(input)) {
-    throw new Error("Program body must be an object");
+    badRequest("Program body must be an object");
   }
 
   const id = readString(input.id, "id");
   const name = readString(input.name, "name");
 
   if (!isObject(input.schedule)) {
-    throw new Error("Invalid schedule");
+    badRequest("Invalid schedule");
   }
   if (!isObject(input.workouts)) {
-    throw new Error("Invalid workouts");
+    badRequest("Invalid workouts");
   }
 
   const schedule: Record<string, string> = {};
   for (const day of ALL_DAY_NAMES) {
     const raw = input.schedule[day];
     if (typeof raw !== "string" || raw.trim().length === 0) {
-      throw new Error(`Invalid schedule.${day}`);
+      badRequest(`Invalid schedule.${day}`);
     }
     schedule[day] = raw.trim();
   }
@@ -159,12 +160,12 @@ export function validateProgramDefinition(input: unknown): ProgramDefinitionInpu
   const workouts: Record<string, ProgramWorkoutInput> = {};
   for (const [workoutKey, workoutValue] of Object.entries(input.workouts)) {
     if (!isObject(workoutValue)) {
-      throw new Error(`Invalid workouts.${workoutKey}`);
+      badRequest(`Invalid workouts.${workoutKey}`);
     }
 
     const workoutName = readString(workoutValue.name, `workouts.${workoutKey}.name`);
     if (!Array.isArray(workoutValue.exercises) || workoutValue.exercises.length === 0) {
-      throw new Error(`Invalid workouts.${workoutKey}.exercises`);
+      badRequest(`Invalid workouts.${workoutKey}.exercises`);
     }
 
     workouts[workoutKey] = {
@@ -178,7 +179,7 @@ export function validateProgramDefinition(input: unknown): ProgramDefinitionInpu
 
 function validateProgramExercise(input: unknown, workoutKey: string, index: number): ProgramExerciseInput {
   if (!isObject(input)) {
-    throw new Error(`Invalid workouts.${workoutKey}.exercises[${index}]`);
+    badRequest(`Invalid workouts.${workoutKey}.exercises[${index}]`);
   }
 
   const type = readExerciseType(input.type);
@@ -204,7 +205,7 @@ function getTargetRange(exercise: ProgramExerciseInput): TargetRange {
   if (exercise.type === "reps" && exercise.reps) return exercise.reps;
   if (exercise.type === "time" && exercise.duration) return exercise.duration;
   if (exercise.type === "cycles" && exercise.cycles) return exercise.cycles;
-  throw new Error(`Missing target range for exercise ${exercise.id}`);
+  badRequest(`Missing target range for exercise ${exercise.id}`);
 }
 
 function defaultProgressionStep(type: ExerciseType): number {
@@ -223,7 +224,7 @@ export function createProgramDraft(program: ProgramDefinitionInput): ProgramDraf
     }
 
     if (!knownWorkoutKeys.has(workoutKey)) {
-      throw new Error(`schedule.${day} references unknown workout '${workoutKey}'`);
+      badRequest(`schedule.${day} references unknown workout '${workoutKey}'`);
     }
 
     schedule[day] = workoutKey;

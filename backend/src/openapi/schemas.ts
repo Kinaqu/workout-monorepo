@@ -1,4 +1,12 @@
 import { z } from "@hono/zod-openapi";
+import {
+  EQUIPMENT_ACCESS,
+  EXPERIENCE_LEVELS,
+  FOCUS_AREAS,
+  LIMITATION_TAGS,
+  ONBOARDING_GOALS,
+  PREFERRED_STYLES,
+} from "../domain/onboarding";
 
 const DateStringSchema = z
   .string()
@@ -100,6 +108,140 @@ export const ErrorResponseSchema = z
     detail: z.string().optional().openapi({ example: "Invalid date. Use format: 2026-03-11" }),
   })
   .openapi("ErrorResponse");
+
+const OnboardingGoalSchema = z.enum(ONBOARDING_GOALS).openapi("OnboardingGoal");
+const ExperienceLevelSchema = z.enum(EXPERIENCE_LEVELS).openapi("ExperienceLevel");
+const EquipmentAccessSchema = z.enum(EQUIPMENT_ACCESS).openapi("EquipmentAccess");
+const FocusAreaSchema = z.enum(FOCUS_AREAS).openapi("FocusArea");
+const LimitationTagSchema = z.enum(LIMITATION_TAGS).openapi("LimitationTag");
+const PreferredStyleSchema = z.enum(PREFERRED_STYLES).openapi("PreferredStyle");
+
+export const OnboardingDraftSchema = z
+  .object({
+    questionnaireVersion: z.string().optional().openapi({ example: "onboarding-v1" }),
+    goals: z.array(OnboardingGoalSchema).optional().openapi({ example: ["strength", "general_fitness"] }),
+    experienceLevel: ExperienceLevelSchema.optional(),
+    trainingDaysPerWeek: z.number().int().min(2).max(5).optional().openapi({ example: 3 }),
+    sessionDurationMinutes: z.number().int().min(20).max(75).optional().openapi({ example: 45 }),
+    equipmentAccess: z.array(EquipmentAccessSchema).optional().openapi({ example: ["bodyweight", "bands"] }),
+    focusAreas: z.array(FocusAreaSchema).optional().openapi({ example: ["upper_body", "core"] }),
+    limitations: z.array(LimitationTagSchema).optional().openapi({ example: ["wrist_sensitive"] }),
+    preferredStyles: z.array(PreferredStyleSchema).optional().openapi({ example: ["balanced", "low_impact"] }),
+  })
+  .openapi("OnboardingDraft");
+
+export const OnboardingAnswersSchema = OnboardingDraftSchema.required({
+  goals: true,
+  experienceLevel: true,
+  trainingDaysPerWeek: true,
+  sessionDurationMinutes: true,
+  equipmentAccess: true,
+  focusAreas: true,
+  preferredStyles: true,
+}).openapi("OnboardingAnswers");
+
+export const OnboardingProfileSummarySchema = z
+  .object({
+    version: z.string().openapi({ example: "profile-v1" }),
+    primary_goal: z.string().openapi({ example: "strength" }),
+    training_days_per_week: z.number().int().openapi({ example: 3 }),
+    session_duration_minutes: z.number().int().openapi({ example: 45 }),
+    updated_at: IsoDateTimeSchema,
+  })
+  .openapi("OnboardingProfileSummary");
+
+export const OnboardingStateResponseSchema = z
+  .object({
+    status: z.enum(["not_started", "draft", "completed"]),
+    completed: z.boolean(),
+    questionnaireVersion: z.string().nullable().openapi({ example: "onboarding-v1" }),
+    answersUpdatedAt: z.string().nullable().openapi({ example: "2026-04-01T12:00:00.000Z" }),
+    completedAt: z.string().nullable().openapi({ example: "2026-04-01T12:05:00.000Z" }),
+    answers: OnboardingDraftSchema.nullable(),
+    profile: OnboardingProfileSummarySchema.nullable(),
+  })
+  .openapi("OnboardingStateResponse");
+
+export const OnboardingDraftSaveResponseSchema = z
+  .object({
+    ok: z.literal(true),
+    message: z.string().openapi({ example: "Onboarding draft saved" }),
+    questionnaire_version: z.string().openapi({ example: "onboarding-v1" }),
+    updated_at: IsoDateTimeSchema,
+    completed_at: z.string().nullable().openapi({ example: null }),
+  })
+  .openapi("OnboardingDraftSaveResponse");
+
+const GeneratedProgramMetadataSchema = z
+  .object({
+    version: z.string().openapi({ example: "generator-v1" }),
+    catalog_seed_version: z.string().openapi({ example: "catalog-v1" }),
+  })
+  .openapi("GeneratedProgramMetadata");
+
+export const GeneratedProgramResponseSchema = z
+  .object({
+    ok: z.literal(true),
+    message: z.string().openapi({ example: "Program regenerated" }),
+    program: ProgramDefinitionSchema.extend({
+      version_id: z.string().openapi({ example: "program_123" }),
+      source: z.string().openapi({ example: "generated" }),
+    }),
+    generator: GeneratedProgramMetadataSchema,
+  })
+  .openapi("GeneratedProgramResponse");
+
+export const OnboardingCompleteResponseSchema = GeneratedProgramResponseSchema.extend({
+  onboarding: z.object({
+    completed: z.literal(true),
+    completed_at: IsoDateTimeSchema,
+    questionnaire_version: z.string().openapi({ example: "onboarding-v1" }),
+  }),
+  profile: OnboardingProfileSummarySchema.omit({ updated_at: true }),
+}).openapi("OnboardingCompleteResponse");
+
+export const MeResponseSchema = z
+  .object({
+    user: z.object({
+      id: z.string().openapi({ example: "user_123" }),
+      username: z.string().nullable().openapi({ example: "demo@example.com" }),
+      created_at: IsoDateTimeSchema,
+    }),
+    lifecycle: z.object({
+      user_exists: z.literal(true),
+      onboarding_completed: z.boolean(),
+      has_active_program: z.boolean(),
+      legacy_kv_migrated_at: z.string().nullable().openapi({ example: "2026-04-01T09:00:00.000Z" }),
+    }),
+    onboarding: z.object({
+      status: z.enum(["not_started", "draft", "completed"]),
+      completed: z.boolean(),
+      questionnaireVersion: z.string().nullable(),
+      answersUpdatedAt: z.string().nullable(),
+      completedAt: z.string().nullable(),
+      answers: OnboardingDraftSchema.nullable(),
+    }),
+    profile: z
+      .object({
+        version: z.string().openapi({ example: "profile-v1" }),
+        primary_goal: z.string().openapi({ example: "strength" }),
+        experience_level: z.string().openapi({ example: "beginner" }),
+        training_days_per_week: z.number().int().openapi({ example: 3 }),
+        session_duration_minutes: z.number().int().openapi({ example: 45 }),
+        updated_at: IsoDateTimeSchema,
+      })
+      .nullable(),
+    active_program: z
+      .object({
+        version_id: z.string().openapi({ example: "program_123" }),
+        key: z.string().openapi({ example: "generated_three_day_strength" }),
+        name: z.string().openapi({ example: "Strength Plan" }),
+        source: z.string().openapi({ example: "generated" }),
+        updated_at: IsoDateTimeSchema,
+      })
+      .nullable(),
+  })
+  .openapi("MeResponse");
 
 export const DisabledAuthResponseSchema = z
   .object({

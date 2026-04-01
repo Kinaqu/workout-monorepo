@@ -1,15 +1,15 @@
 import { createWorkoutPlan } from "../domain/progression";
 import { ProgressionRepository } from "../repositories/progression-repository";
-import { UserBootstrapService } from "./user-bootstrap-service";
+import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class WorkoutService {
   constructor(
-    private readonly bootstrap: UserBootstrapService,
+    private readonly lifecycle: UserLifecycleService,
     private readonly progression: ProgressionRepository
   ) {}
 
   async getWorkoutForDate(userId: string, username: string, date: string) {
-    const program = await this.bootstrap.ensureUserReady(userId, username);
+    const program = await this.lifecycle.requireActiveProgram(userId, username);
     const states = await this.progression.getByProgram(userId, program.versionId);
     const plan = createWorkoutPlan(program, date, states);
 

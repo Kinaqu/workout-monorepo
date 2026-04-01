@@ -1,297 +1,262 @@
-<div align="center">
-  <h1>⚙️ Workout Manager Backend</h1>
-  
-  <p>
-    <strong>Cloudflare Worker API for workout programs, progression tracking, workout history, and Clerk-based authentication.</strong>
-  </p>
-  
-  <p>
-    <a href="https://github.com/Kinaqu/workout-monorepo/stargazers">
-      <img src="https://img.shields.io/github/stars/Kinaqu/workout-monorepo?style=for-the-badge&color=yellow" alt="Stars" />
-    </a>
-    <a href="https://github.com/Kinaqu/workout-monorepo/issues">
-      <img src="https://img.shields.io/github/issues/Kinaqu/workout-monorepo?style=for-the-badge&color=blue" alt="Issues" />
-    </a>
-  </p>
-</div>
+# Workout Manager Backend
 
-<br />
+Cloudflare Worker API for Clerk-authenticated onboarding, backend-owned workout-program generation, workout delivery, session logging, and progression tracking.
 
-The backend powers the Workout Manager application with a serverless API running on Cloudflare Workers. It uses Hono for the HTTP layer, generates OpenAPI automatically with `@hono/zod-openapi`, serves Scalar API docs, verifies Clerk JWTs, stores normalized workout data in Cloudflare D1, preserves a temporary migration path from legacy KV storage, and exposes endpoints for workout generation, logging, sessions, programs, and progression updates.
+## What This Backend Owns
 
-## 📝 Table of Contents
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [API Endpoints](#-api-endpoints)
-- [Development Notes](#-development-notes)
-- [Future Improvements](#-future-improvements)
-- [Author](#-author)
+- Clerk authentication and canonical `user_id` via Clerk `sub`
+- onboarding draft and completion state
+- normalized user profiles in D1
+- global exercise catalog in D1
+- deterministic program generation on the backend
+- active program versioning and progression state
+- workout sessions, log compatibility, and progression events
+- legacy KV import only as a migration path
 
----
+The frontend collects answers and renders state. Product rules and program generation stay here.
 
-## ✨ Features
+## Architecture
 
-- **🔐 Authentication**
-  - Clerk is the only authentication provider.
-  - The Worker verifies Bearer JWTs and uses the Clerk `sub` as the canonical `user_id`.
-- **🏋️ Workout Generation**
-  - Returns a deterministic workout plan for the current day.
-  - Builds today's workout from the active program and stored progression state.
-- **📝 Workout Logging**
-  - Accepts structured JSON logs and plain-text compatibility logs.
-  - Stores append-only workout session history with exercises and sets in D1.
-- **📅 Training History**
-  - Returns workout history by date.
-  - Supports multi-session days and detailed session lookup.
-- **📈 Program & Progression**
-  - Stores normalized program templates, workouts, exercises, and schedule data.
-  - Recomputes progression state from workout history without mutating templates.
-- **☁️ Cloudflare-Native Deployment**
-  - Runs on Cloudflare Workers.
-  - Uses D1 as the primary datastore and KV only for staged legacy migration.
-- **📚 API Documentation**
-  - Generates OpenAPI at `/openapi.json`.
-  - Serves Scalar API Reference at `/docs`.
-
----
-
-## 🛠 Tech Stack
-
-### Backend Runtime & Storage
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
-![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
-![Cloudflare KV](https://img.shields.io/badge/Cloudflare_KV-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
-
-### Tooling & Auth
-![Wrangler](https://img.shields.io/badge/Wrangler-%23F38020.svg?style=for-the-badge&logo=Cloudflare&logoColor=white)
-![Clerk](https://img.shields.io/badge/Clerk-%236B4EFF.svg?style=for-the-badge)
-![Hono](https://img.shields.io/badge/Hono-E36002?style=for-the-badge)
-![OpenAPI](https://img.shields.io/badge/OpenAPI-6BA539?style=for-the-badge)
-
----
-
-## 🏗 Architecture
-
-The backend is a layered serverless API designed to keep HTTP routing, business logic, and persistence separate.
-
-**Data Flow:**  
-`Frontend UI` ➔ `Hono Worker Routes` ➔ `Services` ➔ `Repositories` ➔ `D1 / KV`
-
-**The backend automatically handles:**
-- Clerk token verification and request authentication
-- OpenAPI schema generation and Scalar docs publishing
-- Program storage and normalization into relational D1 tables
-- Workout generation from active program and progression state
-- Session logging, structured set storage, and history retrieval
-- Legacy KV import on first authenticated access when D1 data is missing
-
-> **Security Note:** The backend does not manage passwords or local sessions. Auth is delegated to Clerk, and protected endpoints require `Authorization: Bearer <clerk-jwt>`.
-
-### Live Infrastructure
-- **API Runtime:** Cloudflare Workers
-- **Primary Database:** Cloudflare D1
-- **Legacy Migration Store:** Cloudflare KV
-
-*This setup keeps the backend lightweight, scalable, and operationally simple while preserving a migration path from older data.*
-
----
-
-## 📂 Project Structure
+The backend is layered and should stay that way:
 
 ```text
-backend/
-├── migrations/           # D1 schema migrations
-├── src/
-│   ├── auth/             # Clerk JWT verification
-│   ├── db/               # Database helpers
-│   ├── domain/           # Program, progression, and session domain logic
-│   ├── http/             # Request/response helpers
-│   ├── lib/              # Shared utilities
-│   ├── middleware/       # Hono middleware such as Clerk auth glue
-│   ├── openapi/          # OpenAPI config and shared zod schemas
-│   ├── repositories/     # D1 and legacy KV persistence layer
-│   ├── routes/           # Hono route registration modules
-│   ├── services/         # Application services
-│   ├── app.ts            # Hono app composition and docs endpoints
-│   ├── env.ts            # Worker environment contract
-│   └── index.ts          # Worker entrypoint
-├── package.json
-├── tsconfig.json
-└── wrangler.toml
+routes -> services -> repositories -> D1/KV
 ```
 
----
+Responsibilities:
 
-## 🚀 Getting Started
+- `routes/`
+  Parse HTTP input, read auth context, return JSON, declare OpenAPI.
+- `services/`
+  Own business flow such as onboarding completion, generation, workout lookup, session writes, and progression runs.
+- `repositories/`
+  Own D1/KV reads and writes only.
+- `domain/`
+  Own validation, normalization, catalog filtering, deterministic generation, session parsing, and progression logic.
 
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your machine.
+## Current Product Lifecycle
 
-### Local Installation
+### New user
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Kinaqu/workout-monorepo.git
-   cd workout-monorepo/backend
-   ```
+1. Frontend authenticates with Clerk.
+2. First protected request upserts the user in `users`.
+3. `GET /me` returns product state with no onboarding and no active program.
+4. Frontend saves onboarding draft through `POST /onboarding`.
+5. Frontend completes onboarding through `POST /onboarding/complete`.
+6. Backend validates answers, stores draft answers, normalizes `user_profiles`, filters `exercise_catalog`, generates a program, persists it through existing `programs/workouts/exercises/program_schedule`, seeds progression state, and marks onboarding completed.
+7. Existing training routes continue from the active program:
+   - `GET /program`
+   - `GET /workout/today`
+   - `POST /log`
+   - `GET /sessions`
+   - `GET /sessions/:id`
+   - `POST /progression/run`
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Legacy user
 
-3. **Create local development variables**
-   Create a `.dev.vars` file in `backend/`:
-   ```bash
-   RESET_TOKEN=local-reset-token
-   CLERK_ISSUER=https://your-clerk-domain.clerk.accounts.dev
-   CLERK_AUDIENCE=
-   CLERK_JWKS_URL=
-   ```
-   > `RESET_TOKEN` and `CLERK_ISSUER` are required. `CLERK_AUDIENCE` and `CLERK_JWKS_URL` are optional.
+1. First protected request upserts the user in D1.
+2. If `legacy_kv_migrated_at` is missing, the backend checks KV once.
+3. If KV contains legacy program/state/log data, it imports that into D1 and marks the user as legacy-migrated.
+4. New onboarding flow does not depend on KV. KV remains only for backward migration.
 
-4. **Apply local D1 migrations**
-   ```bash
-   npx wrangler d1 migrations apply DB --local
-   ```
+## Data Model
 
-5. **Start the local Worker**
-   ```bash
-   npm run dev
-   ```
-   > The local API is typically available at `http://127.0.0.1:8787`.
-
-6. **Open the generated API docs**
-   - Scalar UI: `http://127.0.0.1:8787/docs`
-   - OpenAPI JSON: `http://127.0.0.1:8787/openapi.json`
-
-### Development Workflow
-
-For end-to-end local development with the frontend:
-
-1. Start the backend from `backend/`.
-2. Update `frontend/api.js` to point `BASE_URL` to `http://127.0.0.1:8787`.
-3. Start the frontend separately from `frontend/` with `npm run dev`.
-
-Useful backend commands:
-
-```bash
-# Run the Worker locally
-npm run dev
-
-# Type-check the project
-npm run typecheck
-
-# Regenerate Wrangler types
-npm run cf-typegen
-
-# Deploy the Worker
-npm run deploy
-```
-
-Documentation endpoints:
-
-- `GET /openapi.json` returns the generated OpenAPI document.
-- `GET /docs` serves the Scalar API Reference UI backed by `/openapi.json`.
-
-### Build & Deployment
-
-The backend is designed to be deployed through **Wrangler** using the configuration in `wrangler.toml`.
-
-```bash
-# Deploy to Cloudflare Workers
-npm run deploy
-```
-
-Before deploying:
-- Ensure Wrangler is authenticated with Cloudflare.
-- Confirm `wrangler.toml` points to the correct D1 and KV resources.
-- Apply pending migrations to the target database if required.
-- No D1 migration is required for the Hono/OpenAPI/Scalar HTTP-layer migration.
-
----
-
-## 🔌 API Endpoints
-
-The backend exposes a protected REST API for the Workout Manager application.
-
-> **Note:** All protected endpoints require the `Authorization: Bearer <clerk-jwt>` header.
-> **Docs:** The API reference is available at `/docs` and the generated OpenAPI document is available at `/openapi.json`.
-
-| HTTP Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/auth/register` | Legacy auth endpoint, intentionally disabled with `410` |
-| `POST` | `/auth/login` | Legacy auth endpoint, intentionally disabled with `410` |
-| `GET` | `/workout/today` | Fetch today's generated workout plan |
-| `GET` | `/program` | Retrieve the active program and progression metadata |
-| `POST` | `/program` | Save a new active program version |
-| `POST` | `/program/reset` | Reset to the built-in default program using `X-Reset-Token` |
-| `POST` | `/log` | Create a workout session from JSON or plain text |
-| `GET` | `/log/{date}` | Retrieve the latest workout log for a specific date |
-| `GET` | `/sessions` | List stored workout sessions with optional filters |
-| `GET` | `/sessions/{id}` | Retrieve a full session by ID |
-| `POST` | `/progression/run` | Recalculate progression state from recent session history |
-
----
-
-## 🧪 Development Notes
-
-### Environment Variables
-
-The Worker uses the following runtime variables:
-
-- `RESET_TOKEN`
-- `CLERK_ISSUER`
-- `CLERK_AUDIENCE` optional
-- `CLERK_JWKS_URL` optional
-
-### Database Model
-
-Primary storage is D1 with the following key tables:
+Existing execution tables still drive active training behavior:
 
 - `users`
 - `programs`
-- `program_schedule`
 - `workouts`
 - `exercises`
 - `workout_exercises`
+- `program_schedule`
 - `exercise_progression_state`
 - `workout_sessions`
 - `workout_session_exercises`
 - `workout_session_sets`
 - `progression_events`
 
-### Migration Notes
+New onboarding and generation tables:
 
-- D1 is the source of truth for active backend data.
-- KV is retained temporarily to import legacy programs, progression state, and logs.
-- On first authenticated access, the backend can bootstrap a user from KV when D1 is empty.
-- Current migrations live in `backend/migrations/`.
+- `onboarding_answers`
+- `user_profiles`
+- `exercise_catalog`
+- `generated_program_metadata`
 
----
+Notes:
 
-## 🔮 Future Improvements
+- `exercise_catalog` is the global source of truth for exercise selection.
+- `programs/workouts/exercises/...` remain the per-user active snapshot used by workout, logging, and progression flows.
+- `users.onboarding_completed_at` is the user-level completion marker.
+- `generated_program_metadata` links a created program version to generator version, catalog seed version, and source profile context.
 
-- [ ] Add automated backend tests for routes, services, and repositories.
-- [ ] Improve observability with structured logging and request tracing.
-- [ ] Remove KV migration support after the migration window closes.
-- [ ] Add rate limiting and stricter operational safeguards for admin-style endpoints.
+## Key Services
 
----
+- `UserLifecycleService`
+  Ensures user existence, handles one-time KV migration, and guards active-program requirements.
+- `OnboardingService`
+  Saves onboarding drafts and completes onboarding.
+- `ProgramGeneratorService`
+  Filters catalog, generates a deterministic program, persists a new active version, seeds progression, and stores generation metadata.
+- `ProgramService`
+  Preserves manual save/reset/get behavior for active programs.
+- `WorkoutService`, `SessionService`, `ProgressionService`
+  Continue to operate on the active program snapshot.
 
-## 👨‍💻 Author
+## Project Structure
 
-**Kinaqu**  
-*Full-stack web developer focused on building simple and functional web applications.*
+```text
+backend/
+├── migrations/
+├── src/
+│   ├── auth/
+│   ├── db/
+│   ├── domain/
+│   │   ├── onboarding.ts
+│   │   ├── profile.ts
+│   │   ├── catalog.ts
+│   │   ├── generator.ts
+│   │   ├── program.ts
+│   │   ├── progression.ts
+│   │   └── session.ts
+│   ├── middleware/
+│   ├── openapi/
+│   ├── repositories/
+│   │   ├── onboarding-repository.ts
+│   │   ├── profile-repository.ts
+│   │   ├── catalog-repository.ts
+│   │   ├── generated-program-metadata-repository.ts
+│   │   ├── program-repository.ts
+│   │   ├── progression-repository.ts
+│   │   ├── session-repository.ts
+│   │   ├── user-repository.ts
+│   │   └── legacy-kv-repository.ts
+│   ├── routes/
+│   │   ├── me.ts
+│   │   ├── onboarding.ts
+│   │   ├── program.ts
+│   │   ├── workout.ts
+│   │   ├── log.ts
+│   │   ├── sessions.ts
+│   │   └── progression.ts
+│   ├── services/
+│   │   ├── user-lifecycle-service.ts
+│   │   ├── onboarding-service.ts
+│   │   ├── program-generator-service.ts
+│   │   ├── program-service.ts
+│   │   ├── workout-service.ts
+│   │   ├── session-service.ts
+│   │   └── progression-service.ts
+│   ├── app.ts
+│   └── env.ts
+├── wrangler.toml
+└── package.json
+```
 
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Kinaqu)
+## API Surface
 
-<br />
+Protected endpoints require `Authorization: Bearer <clerk-jwt>`.
 
-<div align="center">
-  <sub>Built for the Workout Manager monorepo by <a href="https://github.com/Kinaqu">Kinaqu</a></sub>
-</div>
+### Product state and onboarding
+
+- `GET /me`
+- `GET /onboarding`
+- `POST /onboarding`
+- `POST /onboarding/complete`
+- `POST /program/regenerate`
+
+### Existing execution endpoints
+
+- `GET /program`
+- `POST /program`
+- `POST /program/reset`
+- `GET /workout/today`
+- `POST /log`
+- `GET /log/{date}`
+- `GET /sessions`
+- `GET /sessions/{id}`
+- `POST /progression/run`
+
+Guard semantics:
+
+- If a route needs an active program and the user has none:
+  - `409 { "error": "Onboarding not completed" }` when onboarding is still incomplete.
+  - `409 { "error": "Active program not found" }` when onboarding is completed but no active program exists.
+- Session-read routes only require an authenticated D1 user record.
+
+## Exercise Catalog Source Of Truth
+
+Initial catalog data is seeded by D1 migration `0003_onboarding_catalog_generation.sql`.
+
+This is the current seed path because it is:
+
+- deploy-friendly for Workers/D1
+- deterministic across local and remote environments
+- explicit in version control
+- independent from KV
+
+Future catalog changes should be additive:
+
+1. add a new migration
+2. insert/update catalog rows explicitly
+3. bump `seed_version` when the catalog meaningfully changes
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.dev.vars`:
+
+```bash
+RESET_TOKEN=local-reset-token
+CLERK_ISSUER=https://your-clerk-domain.clerk.accounts.dev
+CLERK_AUDIENCE=
+CLERK_JWKS_URL=
+```
+
+Apply local migrations:
+
+```bash
+npx wrangler d1 migrations apply DB --local
+```
+
+Run the Worker:
+
+```bash
+npm run dev
+```
+
+Useful commands:
+
+```bash
+npm run typecheck
+npm run cf-typegen
+npm run deploy
+```
+
+Docs:
+
+- `GET /openapi.json`
+- `GET /docs`
+
+## Development Rules
+
+- Keep routes thin.
+- Keep business rules in services and domain modules.
+- Do not move generation logic into the frontend.
+- Do not use KV for new product features.
+- Do not treat `exercise_catalog` and user program snapshots as the same thing.
+- Add new migrations; do not rewrite applied migrations.
+- Prefer additive, backward-safe schema changes.
+- Preserve existing training/session/progression behavior unless a product rule explicitly requires a change.
+
+## Verification Performed
+
+- `npm run typecheck`
+- `npx wrangler d1 migrations apply DB --local`
+- `npx wrangler d1 execute DB --local --command "SELECT COUNT(*) AS catalog_count FROM exercise_catalog; ..."`
+
+Current local catalog seed count: `19`.

@@ -2,7 +2,7 @@ export const apiInfo = {
   title: "Workout Manager Backend API",
   version: "1.0.0",
   description:
-    "Cloudflare Workers backend for workout programs, progression, workout logging, and Clerk-authenticated access.",
+    "Cloudflare Workers backend for Clerk-authenticated onboarding, backend-owned program generation, workouts, sessions, and progression.",
 };
 
 export const bearerSecurity = [{ bearerAuth: [] as string[] }];

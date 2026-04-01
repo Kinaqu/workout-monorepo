@@ -1,23 +1,24 @@
 import { evaluateProgression } from "../domain/progression";
+import { conflict } from "../lib/app-error";
 import { daysAgo, nowIso } from "../lib/time";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
 import { SessionRepository } from "../repositories/session-repository";
-import { UserBootstrapService } from "./user-bootstrap-service";
+import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class ProgressionService {
   constructor(
-    private readonly bootstrap: UserBootstrapService,
+    private readonly lifecycle: UserLifecycleService,
     private readonly programs: ProgramRepository,
     private readonly progression: ProgressionRepository,
     private readonly sessions: SessionRepository
   ) {}
 
   async run(userId: string, username: string, lookbackDays = 7) {
-    const program = await this.bootstrap.ensureUserReady(userId, username);
+    const program = await this.lifecycle.requireActiveProgram(userId, username);
     const activeProgram = await this.programs.getProgramById(program.versionId);
     if (!activeProgram) {
-      throw new Error("Active program not found");
+      conflict("Active program not found");
     }
 
     const states = await this.progression.getByProgram(userId, activeProgram.versionId);

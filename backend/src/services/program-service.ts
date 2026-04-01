@@ -4,17 +4,17 @@ import { seedProgressionStates } from "../domain/progression";
 import { nowIso } from "../lib/time";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
-import { UserBootstrapService } from "./user-bootstrap-service";
+import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class ProgramService {
   constructor(
-    private readonly bootstrap: UserBootstrapService,
+    private readonly lifecycle: UserLifecycleService,
     private readonly programs: ProgramRepository,
     private readonly progression: ProgressionRepository
   ) {}
 
   async getCurrentProgram(userId: string, username: string) {
-    const program = await this.bootstrap.ensureUserReady(userId, username);
+    const program = await this.lifecycle.requireActiveProgram(userId, username);
     const states = await this.progression.getByProgram(userId, program.versionId);
 
     return {
@@ -37,13 +37,13 @@ export class ProgramService {
   }
 
   async saveProgram(userId: string, username: string, input: unknown) {
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     const definition = validateProgramDefinition(input);
     return this.createProgramVersion(userId, definition, false, "api");
   }
 
   async resetProgram(userId: string, username: string) {
-    await this.bootstrap.ensureUserReady(userId, username);
+    await this.lifecycle.ensureUserExists(userId, username);
     return this.createProgramVersion(userId, DEFAULT_PROGRAM, true, "reset");
   }
 

@@ -114,16 +114,7 @@ export function registerSessionsRoutes(app: OpenAPIHono<AppEnv>) {
     const limit = Math.min(getNumberParam(url, "limit", 20), 100);
     const { sessionService } = createAppContext(c.env);
 
-    try {
-      return c.json(await sessionService.listSessions(auth.userId, auth.username, limit, date), 200);
-    } catch (error) {
-      return c.json(
-        {
-          error: error instanceof Error ? error.message : "Invalid request",
-        },
-        400
-      );
-    }
+    return c.json(await sessionService.listSessions(auth.userId, auth.username, limit, date), 200);
   });
 
   app.openapi(getSessionRoute, async c => {
