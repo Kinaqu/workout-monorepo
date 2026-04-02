@@ -1,7 +1,6 @@
 const CACHE_NAME = 'workout-app-v4';
 const urlsToCache = [
   '/',
-  '/index.html',
   '/login',
   '/register',
   '/style.css',
@@ -30,35 +29,49 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Don't cache API requests
-  if (event.request.url.includes('workout-api')) {
+  const request = event.request;
+
+  if (request.method !== 'GET') {
     return;
   }
 
-  const requestUrl = new URL(event.request.url);
-  const isNavigationRequest = event.request.mode === 'navigate';
-  const isAppShellAsset = urlsToCache.includes(requestUrl.pathname);
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isApiRequest = url.href.includes('workout-api');
+  const isStaticAsset = url.pathname.startsWith('/assets/')
+    || url.pathname.startsWith('/icons/')
+    || url.pathname === '/style.css'
+    || url.pathname === '/manifest.json'
+    || url.pathname === '/favicon.svg';
+  const isNavigationRequest = request.mode === 'navigate';
 
-  if (isNavigationRequest || isAppShellAsset) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
+  if (!isSameOrigin || isApiRequest || (!isNavigationRequest && !isStaticAsset)) {
     return;
   }
-  
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
+    caches.match(request).then(async cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      const networkResponse = await fetch(request);
+
+      if (networkResponse.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, networkResponse.clone());
+      }
+
+      return networkResponse;
+    }).catch(async () => {
+      if (isNavigationRequest) {
+        const fallback = await caches.match('/');
+        if (fallback) {
+          return fallback;
         }
-        return fetch(event.request);
-      })
+      }
+
+      throw new Error(`Failed to fetch ${url.pathname}`);
+    }),
   );
 });
