@@ -101,7 +101,7 @@ export function seedProgressionStates(
           ? previousByCatalogExerciseId.get(template.exercise.catalogExerciseId) ?? null
           : null) ?? previousByExerciseKey.get(template.exercise.key) ?? null;
     return {
-      id: previousState?.id ?? "",
+      id: "",
       exerciseId: template.exercise.id,
       catalogExerciseId: template.exercise.catalogExerciseId,
       exerciseKey: template.exercise.key,

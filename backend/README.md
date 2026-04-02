@@ -205,6 +205,8 @@ Guard semantics:
 Initial catalog data is seeded by D1 migration `0003_onboarding_catalog_generation.sql`.
 Schema hardening and normalized tag tables are added by `0004_schema_hardening.sql`.
 Date validation guards for legacy non-rewritten tables are added by `0005_date_validation_guards.sql`.
+Session import compatibility is preserved by `0006_session_import_compatibility.sql`.
+Foreign-key repair for generation metadata is applied by `0007_generated_program_metadata_fk_repair.sql`.
 
 This is the current seed path because it is:
 
@@ -254,11 +256,65 @@ Useful commands:
 
 ```bash
 npm run typecheck
+npm run test
+npm run check
 npm run d1:preflight-0004:local
 npm run d1:postflight-0004:local
 npm run cf-typegen
 npm run deploy
 ```
+
+## Testing
+
+This backend now uses Cloudflare's recommended Workers Vitest integration with local D1/KV bindings.
+
+Coverage currently includes:
+
+- domain validation and normalization
+- catalog filtering and deterministic program generation
+- date parsing and progression logic
+- authenticated HTTP flow for onboarding, program delivery, logging, sessions, progression, reset, and legacy KV import
+- dry-run Wrangler deploy validation
+
+Run the full local verification bundle:
+
+```bash
+npm run check
+```
+
+This runs:
+
+- `npm run typecheck`
+- `npm run test:ci`
+- `wrangler deploy --dry-run --strict`
+
+## CI/CD
+
+GitHub Actions is configured in [backend-ci.yml](/home/dev/repos/workout-monorepo/.github/workflows/backend-ci.yml).
+
+PR flow:
+
+- `backend-check` is the required gate and runs typecheck, Workers-runtime tests, and a strict Wrangler dry run.
+- `backend-preview` runs only on pull requests, applies migrations to the preview D1 database, and uploads a preview Worker version with a PR-scoped preview alias.
+- Production is not deployed from pull requests.
+
+Main branch flow:
+
+- `backend-check` runs again on `push` to `main`.
+- `backend-production` applies remote production D1 migrations and then deploys the Worker to production.
+
+Required repository secrets for deploy jobs:
+
+```text
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID
+```
+
+Recommended branch protection:
+
+- require `backend-check` before merge
+- protect the `production` environment
+- keep production deploys limited to `main`
 
 For `0004_schema_hardening.sql`, run preflight before applying to populated databases and postflight immediately after. The migration now uses deferred foreign-key enforcement plus in-migration assertions for orphaned progression rows, duplicate orderings, row-count preservation, normalized-tag parity, and final `foreign_key_check`. `wrangler d1 migrations apply` rolls back a failed migration file, but these checks are still important because they fail early with data-shape errors instead of leaving the root cause implicit.
 
