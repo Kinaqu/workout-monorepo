@@ -12,7 +12,6 @@ import {
   WorkoutDateHeaderSchema,
 } from "../openapi/schemas";
 import { createAppContext } from "../services/app-context";
-import { SessionAlreadyExistsError } from "../services/session-service";
 
 const getLogRoute = createRoute({
   method: "get",
@@ -103,14 +102,6 @@ const createLogRoute = createRoute({
     },
     400: {
       description: "Invalid request body or date header.",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-    409: {
-      description: "A workout log already exists for the requested date.",
       content: {
         "application/json": {
           schema: ErrorResponseSchema,
