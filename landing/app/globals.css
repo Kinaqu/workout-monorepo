@@ -6,7 +6,12 @@
   --accent: #125bff;
   --accent-soft: #8ab4ff;
   --panel: rgba(255, 255, 255, 0.05);
+  --surface-strong: #08111f;
+  --surface-soft: #f8fbff;
   --border: rgba(255, 255, 255, 0.1);
+  --copy-primary: rgba(255, 255, 255, 0.96);
+  --copy-secondary: rgba(255, 255, 255, 0.72);
+  --copy-muted: rgba(255, 255, 255, 0.52);
 }
 
 @theme inline {
@@ -51,6 +56,17 @@ body {
   pointer-events: none;
 }
 
+.hero-radial {
+  background:
+    radial-gradient(circle at top left, rgba(18, 91, 255, 0.26), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(180deg, #05070b 0%, #08111f 55%, #05070b 100%);
+}
+
+.hero-sheen {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .float-card {
   animation: card-float 10s ease-in-out infinite;
 }
@@ -63,8 +79,55 @@ body {
   animation: orb-shift 12s ease-in-out infinite;
 }
 
+.marquee-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.marquee-shell::before,
+.marquee-shell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.marquee-shell::before {
+  left: 0;
+  background: linear-gradient(90deg, #08111f 0%, rgba(8, 17, 31, 0) 100%);
+}
+
+.marquee-shell::after {
+  right: 0;
+  background: linear-gradient(270deg, #08111f 0%, rgba(8, 17, 31, 0) 100%);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  padding-inline: 1.25rem;
+  animation: marquee-scroll 28s linear infinite;
+}
+
 summary::-webkit-details-marker {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .float-card,
+  .float-badge,
+  .blue-orb,
+  .marquee-track {
+    animation: none !important;
+  }
 }
 
 @keyframes card-float {
@@ -97,5 +160,15 @@ summary::-webkit-details-marker {
 
   50% {
     transform: translate3d(10px, -12px, 0) scale(1.08);
+  }
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
   }
 }
