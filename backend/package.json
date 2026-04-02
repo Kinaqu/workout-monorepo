@@ -7,12 +7,18 @@
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --reporter=dot",
+    "check": "npm run typecheck && npm run test:ci && npm exec wrangler -- deploy --dry-run --strict",
     "d1:preflight-0004:local": "wrangler d1 execute DB --local --file scripts/sql/0004_schema_hardening_preflight.sql",
     "d1:postflight-0004:local": "wrangler d1 execute DB --local --file scripts/sql/0004_schema_hardening_postflight.sql"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.14.0",
     "@cloudflare/workers-types": "^4.20260312.1",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.2",
     "wrangler": "^4.72.0"
   },
   "dependencies": {

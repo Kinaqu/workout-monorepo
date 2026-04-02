@@ -1,6 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
-import { readJsonOrThrow } from "../http/request";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
 import {
@@ -180,9 +179,7 @@ export function registerOnboardingRoutes(app: OpenAPIHono<AppEnv>) {
     const auth = c.get("auth");
     const { onboardingService } = createAppContext(c.env);
     return c.json(
-      (await onboardingService.saveDraft(auth.userId, auth.username, await readJsonOrThrow(c.req.raw))) as z.infer<
-        typeof OnboardingDraftSaveResponseSchema
-      >,
+      (await onboardingService.saveDraft(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof OnboardingDraftSaveResponseSchema>,
       200
     );
   });
@@ -191,9 +188,7 @@ export function registerOnboardingRoutes(app: OpenAPIHono<AppEnv>) {
     const auth = c.get("auth");
     const { onboardingService } = createAppContext(c.env);
     return c.json(
-      (await onboardingService.complete(auth.userId, auth.username, await readJsonOrThrow(c.req.raw))) as z.infer<
-        typeof OnboardingCompleteResponseSchema
-      >,
+      (await onboardingService.complete(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof OnboardingCompleteResponseSchema>,
       200
     );
   });

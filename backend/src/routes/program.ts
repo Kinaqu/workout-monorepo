@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { AppEnv } from "../app";
-import { readJsonOrThrow } from "../http/request";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
 import {
@@ -228,9 +227,7 @@ export function registerProgramRoutes(app: OpenAPIHono<AppEnv>) {
     const auth = c.get("auth");
     const { programService } = createAppContext(c.env);
     return c.json(
-      (await programService.saveProgram(auth.userId, auth.username, await readJsonOrThrow(c.req.raw))) as z.infer<
-        typeof ProgramMutationResponseSchema
-      >,
+      (await programService.saveProgram(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof ProgramMutationResponseSchema>,
       200
     );
   });
