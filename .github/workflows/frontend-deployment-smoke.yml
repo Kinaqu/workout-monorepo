@@ -1,0 +1,110 @@
+name: Frontend Deployment Smoke
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  deployments: read
+  statuses: read
+
+concurrency:
+  group: frontend-deployment-smoke-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-deployment-smoke:
+    name: frontend-deployment-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECT_CLERK_PUBLISHABLE_KEY: "true"
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Require deployment bypass secret
+        run: |
+          if [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            echo "Missing GitHub secret: VERCEL_AUTOMATION_BYPASS_SECRET"
+            exit 1
+          fi
+
+      - name: Resolve Vercel deployment URL
+        env:
+          DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          DEPLOYMENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && 'Preview – workout-frontend' || 'Production – workout-frontend' }}
+        run: |
+          set -euo pipefail
+
+          deployment_id=""
+          base_url=""
+
+          for attempt in $(seq 1 30); do
+            deployments_json=$(gh api "repos/${GITHUB_REPOSITORY}/deployments?sha=${DEPLOYMENT_SHA}")
+
+            deployment_id=$(printf '%s' "$deployments_json" | jq -r --arg env "$DEPLOYMENT_ENVIRONMENT" '
+              map(select(.environment == $env))
+              | sort_by(.created_at)
+              | last
+              | .id // empty
+            ')
+
+            if [ -n "$deployment_id" ]; then
+              statuses_json=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${deployment_id}/statuses")
+              state=$(printf '%s' "$statuses_json" | jq -r '.[0].state // empty')
+              base_url=$(printf '%s' "$statuses_json" | jq -r '.[0].environment_url // .[0].target_url // empty')
+
+              if [ "$state" = "success" ] && [ -n "$base_url" ]; then
+                echo "Resolved deployment URL: $base_url"
+                echo "BASE_URL=$base_url" >> "$GITHUB_ENV"
+                exit 0
+              fi
+
+              if [ "$state" = "error" ] || [ "$state" = "failure" ]; then
+                echo "Vercel deployment entered state: $state"
+                exit 1
+              fi
+            fi
+
+            echo "Waiting for Vercel deployment for ${DEPLOYMENT_ENVIRONMENT} on ${DEPLOYMENT_SHA} (attempt ${attempt}/30)"
+            sleep 10
+          done
+
+          echo "Timed out waiting for a Vercel deployment URL"
+          exit 1
+
+      - name: Show deployment URL
+        run: echo "Testing $BASE_URL"
+
+      - name: Run deployment smoke tests
+        run: npm run test:smoke
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-deployment-playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
