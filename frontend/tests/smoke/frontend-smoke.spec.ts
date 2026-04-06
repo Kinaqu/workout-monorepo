@@ -21,7 +21,8 @@ function isIgnorableClerkPreviewIssue(message: string) {
     message.includes('clerk.accounts.dev') ||
     message.includes('Failed to load Clerk JS') ||
     message.includes('failed_to_load_clerk_js') ||
-    message.includes('Redirect is not allowed for a preflight request')
+    message.includes('Redirect is not allowed for a preflight request') ||
+    message.includes('Failed to load resource: net::ERR_FAILED')
   );
 }
 
