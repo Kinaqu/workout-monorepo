@@ -9,12 +9,12 @@ export function LandingFooter() {
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:px-12">
         <div className="max-w-md">
           <BrandLogo
-            subtitle="Adaptive training that fits real life"
+            subtitle="Adaptive training for real life"
             imageClassName="h-11"
           />
           <p className="mt-5 text-base leading-7 text-white/65">
-            Kinova helps users start at the right level, train with structure,
-            and keep progressing through a plan that adapts instead of breaking.
+            Kinova helps people train with structure, adapt after rough weeks,
+            and keep moving without gym-first assumptions.
           </p>
         </div>
 

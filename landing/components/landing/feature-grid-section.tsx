@@ -7,9 +7,9 @@ export function FeatureGridSection() {
     <section className="bg-[#07101a] text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12">
         <SectionHeading
-          eyebrow="Feature Architecture"
-          title="A landing page should sell a system, not a pile of vague benefits."
-          description="Kinova earns trust when the visitor can see how the plan adapts, what it optimizes for, and how it stays useful under real-life constraints."
+          eyebrow="Why It Sticks"
+          title="A plan that reacts like a system, not a content library."
+          description="The value is not more workouts. The value is a weekly plan that stays useful when real life hits."
           inverse
         />
 

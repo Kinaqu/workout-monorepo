@@ -6,12 +6,12 @@ import { SectionHeading } from "./section-heading";
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="bg-[#f4f8ff] text-[#05070b]">
+    <section id="early-access" className="bg-[#f4f8ff] text-[#05070b]">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12">
         <SectionHeading
           eyebrow="Early Access"
-          title="Give the page a clear next step and remove ambiguity about what happens after the click."
-          description="Kinova is in a prelaunch stage, so the right conversion is a focused early-access flow. The page should explain exactly what the user gets and what the team does next."
+          title="Apply for the first Kinova cohort."
+          description="Share your setup, your goal, and how you train now. Kinova reviews fit and invites new users in focused batches."
         />
 
         <div className="mt-14 grid gap-5 lg:grid-cols-2">
@@ -78,7 +78,7 @@ export function PricingSection() {
                   href={siteConfig.ctaHref}
                   className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#05070b] transition hover:bg-[#dbe7ff]"
                 >
-                  {siteConfig.ctaLabel}
+                  Join Early Access
                   <ArrowIcon />
                 </Link>
               ) : null}
