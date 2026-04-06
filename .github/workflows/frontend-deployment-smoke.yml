@@ -55,7 +55,7 @@ jobs:
       - name: Resolve Vercel deployment URL
         env:
           DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          DEPLOYMENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && 'Preview – workout-frontend' || 'Production – workout-frontend' }}
+          DEPLOYMENT_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'Production – workout-frontend' || 'Preview – workout-frontend' }}
         run: |
           set -euo pipefail
 
