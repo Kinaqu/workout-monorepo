@@ -13,59 +13,344 @@
 </head>
 <body>
   <div class="container">
-    <div id="tab-today" class="tab-content active">
-      <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></span><span>Today</span></h1>
-      <div id="today-loader" class="loader"></div>
-      <div id="today-error" class="error-message"></div>
-      <div id="today-content" class="hidden">
-        <div class="card today-overview-card">
-          <div id="today-workout-name" class="card-title"></div>
-          <div id="today-workout-type" class="card-subtitle"></div>
-        </div>
-        <div id="today-exercises"></div>
-        <div id="today-rest-message" class="hidden text-center mt-4">
-          <p>Today is a rest day. Recover!</p>
-        </div>
-        <div id="today-locked-message" class="card today-status-card hidden"></div>
-      </div>
-    </div>
-
-    <div id="tab-history" class="tab-content">
-      <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg></span><span>History</span></h1>
-      <input type="date" id="history-date">
-      <div id="history-loader" class="loader hidden"></div>
-      <div id="history-error" class="error-message"></div>
-      <div id="history-content">
-        <div id="history-empty" class="text-center mt-4 hidden">No data for this day</div>
-        <div id="history-data" class="hidden">
-          <div class="card history-summary-card">
-            <div id="history-workout-type" class="card-title"></div>
-          </div>
-          <div id="history-exercises"></div>
-          <div class="card history-note-card">
-            <div class="card-title">Note</div>
-            <div id="history-note"></div>
-          </div>
+    <section id="onboarding-shell" class="hidden" aria-labelledby="onboarding-title">
+      <div class="card onboarding-hero-card">
+        <div class="onboarding-kicker">3 quick steps</div>
+        <h1 id="onboarding-title" class="section-title mb-4">
+          <span class="section-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M12 4h9"></path>
+              <path d="M4 9h16"></path>
+              <path d="M4 15h16"></path>
+              <path d="M8 4v16"></path>
+            </svg>
+          </span>
+          <span>Set up your plan</span>
+        </h1>
+        <p class="onboarding-copy">Pick your goal, routine, and training preferences.</p>
+        <div class="onboarding-meta-row">
+          <div class="onboarding-meta-pill">About 1 minute</div>
+          <div id="onboarding-status-badge" class="onboarding-meta-pill hidden"></div>
         </div>
       </div>
-    </div>
 
-    <div id="tab-program" class="tab-content">
-      <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Program</span></h1>
-      <div id="program-loader" class="loader"></div>
-      <div id="program-error" class="error-message"></div>
-      <div id="program-content" class="hidden">
-        <div class="card mb-4">
-          <div class="card-title">Schedule</div>
-          <div id="program-schedule"></div>
+      <form id="onboarding-form" class="onboarding-form" novalidate>
+        <div id="onboarding-progress" class="card onboarding-progress-card" aria-label="Onboarding progress">
+          <div class="onboarding-progress-steps">
+            <div class="onboarding-progress-step active" data-onboarding-step-item="0">
+              <span class="onboarding-progress-index">1</span>
+              <span class="onboarding-progress-copy">Profile</span>
+            </div>
+            <div class="onboarding-progress-step" data-onboarding-step-item="1">
+              <span class="onboarding-progress-index">2</span>
+              <span class="onboarding-progress-copy">Schedule</span>
+            </div>
+            <div class="onboarding-progress-step" data-onboarding-step-item="2">
+              <span class="onboarding-progress-index">3</span>
+              <span class="onboarding-progress-copy">Preferences</span>
+            </div>
+          </div>
         </div>
-        <h2 class="mb-4">Workouts</h2>
-        <div id="program-workouts"></div>
+
+        <section class="card onboarding-card onboarding-step-panel" data-onboarding-step-panel="0">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 1 of 3</div>
+            <h2 class="card-title">Start with your goal</h2>
+            <p class="card-subtitle">Choose what matters most right now.</p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Goals</h3>
+            <p class="onboarding-group-copy">Pick one or more.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="strength">
+                <span><strong>Strength</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="muscle">
+                <span><strong>Muscle</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="general_fitness">
+                <span><strong>General fitness</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="mobility">
+                <span><strong>Mobility</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="goals"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Level</h3>
+            <p class="onboarding-group-copy">This sets your starting difficulty.</p>
+            <div class="choice-grid choice-grid-3">
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="beginner">
+                <span><strong>Beginner</strong><small>New to training</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="intermediate">
+                <span><strong>Intermediate</strong><small>Some experience</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="advanced">
+                <span><strong>Advanced</strong><small>Train regularly</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="experienceLevel"></p>
+          </div>
+        </section>
+
+        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="1">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 2 of 3</div>
+            <h2 class="card-title">Pick a routine</h2>
+            <p class="card-subtitle">Choose what you can realistically stick to.</p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Days per week</h3>
+            <div class="choice-grid choice-grid-4">
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="2">
+                <span><strong>2 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="3">
+                <span><strong>3 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="4">
+                <span><strong>4 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="5">
+                <span><strong>5 days</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="trainingDaysPerWeek"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Session length</h3>
+            <div class="choice-grid choice-grid-4">
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="20">
+                <span><strong>20 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="30">
+                <span><strong>30 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="45">
+                <span><strong>45 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="60">
+                <span><strong>60 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="75">
+                <span><strong>75 min</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="sessionDurationMinutes"></p>
+          </div>
+        </section>
+
+        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="2">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 3 of 3</div>
+            <h2 class="card-title">Fine-tune the plan</h2>
+            <p class="card-subtitle">Add equipment, focus areas, and anything to avoid.</p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Equipment</h3>
+            <p class="onboarding-group-copy">Pick what you want included.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bodyweight">
+                <span><strong>Bodyweight only</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="dumbbells">
+                <span><strong>Dumbbells</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bands">
+                <span><strong>Bands</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bench">
+                <span><strong>Bench</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="pullup_bar">
+                <span><strong>Pull-up bar</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="equipmentAccess"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Focus</h3>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="upper_body">
+                <span><strong>Upper body</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="lower_body">
+                <span><strong>Lower body</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="core">
+                <span><strong>Core</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="mobility">
+                <span><strong>Mobility</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="focusAreas"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <div class="onboarding-group-heading">
+              <h3 class="onboarding-group-title">Avoid</h3>
+              <span class="onboarding-group-meta">Optional</span>
+            </div>
+            <p class="onboarding-group-copy">We will try to avoid these.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="wrist_sensitive">
+                <span><strong>Wrist sensitive</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="knee_sensitive">
+                <span><strong>Knee sensitive</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="lower_back_sensitive">
+                <span><strong>Lower back sensitive</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="shoulder_sensitive">
+                <span><strong>Shoulder sensitive</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="limitations"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Style</h3>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="balanced">
+                <span><strong>Balanced</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="strength_bias">
+                <span><strong>Strength bias</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="mobility_bias">
+                <span><strong>Mobility bias</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="low_impact">
+                <span><strong>Low impact</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="preferredStyles"></p>
+          </div>
+        </section>
+
+        <section class="card onboarding-card onboarding-actions-card">
+          <div id="onboarding-review" class="onboarding-review onboarding-review-compact hidden"></div>
+          <p id="onboarding-save-status" class="onboarding-helper-text">Progress saves automatically.</p>
+          <div id="onboarding-submit-error" class="error-message onboarding-submit-error"></div>
+          <div class="onboarding-action-row">
+            <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
+            <button id="onboarding-next-button" type="button">Continue</button>
+            <button id="onboarding-complete-button" class="hidden" type="submit">Build plan</button>
+          </div>
+        </section>
+      </form>
+    </section>
+
+    <div id="app-shell" class="hidden">
+      <div id="tab-today" class="tab-content active">
+        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></span><span>Today</span></h1>
+        <div id="today-loader" class="loader"></div>
+        <div id="today-error" class="error-message"></div>
+        <div id="today-content" class="hidden">
+          <div class="card today-overview-card">
+            <div id="today-workout-name" class="card-title"></div>
+            <div id="today-workout-type" class="card-subtitle"></div>
+          </div>
+          <div id="today-guidance" class="card today-guidance-card hidden">
+            <div id="today-guidance-title" class="card-title"></div>
+            <p id="today-guidance-copy" class="card-subtitle"></p>
+          </div>
+          <div id="today-empty-state" class="card empty-state-card hidden"></div>
+          <div id="today-exercises"></div>
+          <div id="today-rest-message" class="hidden text-center mt-4">
+            <p>No workout today. Recover and come back tomorrow.</p>
+          </div>
+          <div id="today-locked-message" class="card today-status-card hidden"></div>
+        </div>
+      </div>
+
+      <div id="tab-history" class="tab-content">
+        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg></span><span>History</span></h1>
+        <input type="date" id="history-date">
+        <div id="history-loader" class="loader hidden"></div>
+        <div id="history-error" class="error-message"></div>
+        <div id="history-content">
+          <div id="history-empty" class="text-center mt-4 hidden">No data for this day</div>
+          <div id="history-data" class="hidden">
+            <div class="card history-summary-card">
+              <div id="history-workout-type" class="card-title"></div>
+            </div>
+            <div id="history-exercises"></div>
+            <div id="history-note-card" class="card history-note-card">
+              <div class="card-title">Note</div>
+              <div id="history-note"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-program" class="tab-content">
+        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Plan</span></h1>
+        <div class="program-toolbar">
+          <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
+        </div>
+        <div id="program-loader" class="loader"></div>
+        <div id="program-error" class="error-message"></div>
+        <div id="program-content" class="hidden">
+          <div id="program-empty-state" class="card empty-state-card hidden"></div>
+          <div id="program-main" class="hidden">
+            <div class="card mb-4">
+              <div class="card-title">Week</div>
+              <div id="program-schedule"></div>
+            </div>
+            <h2 class="mb-4">Sessions</h2>
+            <div id="program-workouts"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <nav class="bottom-nav">
+  <nav id="app-nav" class="bottom-nav hidden">
     <div class="nav-item active" data-tab="today">
       <div class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></div>
       <span>Today</span>
@@ -76,7 +361,7 @@
     </div>
     <div class="nav-item" data-tab="program">
       <div class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></div>
-      <span>Program</span>
+      <span>Plan</span>
     </div>
   </nav>
 

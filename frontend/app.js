@@ -1,34 +1,122 @@
 import { api, getToken, AuthRedirectError, ApiError } from '/api.js';
 import { ensureClerkReady } from '/clerk-bootstrap.js';
 
+const ONBOARDING_QUESTIONNAIRE_VERSION = 'onboarding-v1';
+const ONBOARDING_DEFAULTS = {
+  questionnaireVersion: ONBOARDING_QUESTIONNAIRE_VERSION,
+  goals: ['general_fitness'],
+  experienceLevel: 'beginner',
+  trainingDaysPerWeek: 3,
+  sessionDurationMinutes: 30,
+  equipmentAccess: ['bodyweight'],
+  focusAreas: ['upper_body', 'lower_body', 'core'],
+  limitations: [],
+  preferredStyles: ['balanced'],
+};
+
 let todayWorkoutType = null;
 let todayWorkoutDate = null;
 let todayWorkoutSaved = false;
 let todaySaveInFlight = false;
 let activeExerciseIndex = 0;
+let currentShellMode = 'loading';
+let onboardingDraftTimer = null;
+let onboardingLastSavedSignature = '';
+let onboardingHydrating = false;
+let onboardingSubmitting = false;
+let onboardingCurrentStep = 0;
 
+const appState = {
+  me: null,
+  onboarding: null,
+};
+
+const onboardingShell = document.getElementById('onboarding-shell');
+const onboardingForm = document.getElementById('onboarding-form');
+const onboardingSaveStatus = document.getElementById('onboarding-save-status');
+const onboardingSubmitError = document.getElementById('onboarding-submit-error');
+const onboardingStatusBadge = document.getElementById('onboarding-status-badge');
+const onboardingCompleteButton = document.getElementById('onboarding-complete-button');
+const onboardingBackButton = document.getElementById('onboarding-back-button');
+const onboardingNextButton = document.getElementById('onboarding-next-button');
+const onboardingReview = document.getElementById('onboarding-review');
+const onboardingStepPanels = Array.from(document.querySelectorAll('[data-onboarding-step-panel]'));
+const onboardingStepItems = Array.from(document.querySelectorAll('[data-onboarding-step-item]'));
+const appShell = document.getElementById('app-shell');
+const appNav = document.getElementById('app-nav');
 const tabs = document.querySelectorAll('.tab-content');
 const navItems = document.querySelectorAll('.nav-item');
+const todayEmptyState = document.getElementById('today-empty-state');
+const todayGuidance = document.getElementById('today-guidance');
+const todayGuidanceTitle = document.getElementById('today-guidance-title');
+const todayGuidanceCopy = document.getElementById('today-guidance-copy');
+const programEmptyState = document.getElementById('program-empty-state');
+const programMain = document.getElementById('program-main');
+const programRegenerateButton = document.getElementById('program-regenerate-button');
+const historyEmpty = document.getElementById('history-empty');
+const historyNoteCard = document.getElementById('history-note-card');
 
 navItems.forEach(item => {
   item.addEventListener('click', () => {
-    const tabId = item.getAttribute('data-tab');
-
-    navItems.forEach(nav => nav.classList.remove('active'));
-    item.classList.add('active');
-
-    tabs.forEach(tab => tab.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-
-    if (tabId === 'history' && !document.getElementById('history-date').value) {
-      const today = getTodayDateString();
-      document.getElementById('history-date').value = today;
-      loadHistory(today);
-    } else if (tabId === 'program' && document.getElementById('program-content').classList.contains('hidden')) {
-      loadProgram();
-    }
+    if (currentShellMode !== 'app') return;
+    activateTab(item.getAttribute('data-tab'));
   });
 });
+
+document.addEventListener('click', event => {
+  const actionTarget = event.target.closest('[data-action]');
+  if (!actionTarget) return;
+
+  if (actionTarget.dataset.action === 'regenerate-program') {
+    handleRegenerateProgram(actionTarget);
+    return;
+  }
+
+  if (actionTarget.dataset.action === 'open-tab' && currentShellMode === 'app') {
+    activateTab(actionTarget.dataset.targetTab);
+  }
+});
+
+if (onboardingForm) {
+  onboardingForm.addEventListener('change', handleOnboardingChange);
+  onboardingForm.addEventListener('submit', handleOnboardingSubmit);
+}
+
+if (onboardingBackButton) {
+  onboardingBackButton.addEventListener('click', () => {
+    goToOnboardingStep(onboardingCurrentStep - 1);
+  });
+}
+
+if (onboardingNextButton) {
+  onboardingNextButton.addEventListener('click', handleOnboardingNextStep);
+}
+
+function activateTab(tabId) {
+  if (!tabId) return;
+
+  navItems.forEach(nav => nav.classList.toggle('active', nav.getAttribute('data-tab') === tabId));
+  tabs.forEach(tab => tab.classList.toggle('active', tab.id === `tab-${tabId}`));
+
+  if (tabId === 'history' && !document.getElementById('history-date').value) {
+    const today = getTodayDateString();
+    document.getElementById('history-date').value = today;
+    loadHistory(today);
+    return;
+  }
+
+  if (tabId === 'program') {
+    loadProgram();
+  }
+}
+
+function setShellMode(mode) {
+  currentShellMode = mode;
+  const isOnboarding = mode === 'onboarding';
+  onboardingShell.classList.toggle('hidden', !isOnboarding);
+  appShell.classList.toggle('hidden', isOnboarding);
+  appNav.classList.toggle('hidden', isOnboarding);
+}
 
 function el(tag, className, text) {
   const element = document.createElement(tag);
@@ -49,23 +137,502 @@ function getTodayDateString() {
   return new Date().toISOString().split('T')[0];
 }
 
+function humanizeToken(value = '') {
+  return String(value)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, match => match.toUpperCase());
+}
+
+function formatWorkoutTypeLabel(type) {
+  if (!type) return '';
+  if (type === 'rest') return 'Rest day';
+  if (/^[A-Za-z]$/.test(type)) return `Day ${type.toUpperCase()}`;
+  return humanizeToken(type);
+}
+
+function formatPlanSlotLabel(type) {
+  if (!type || type === 'rest') return 'Rest';
+  if (/^[A-Za-z]$/.test(type)) return `Day ${type.toUpperCase()}`;
+  return humanizeToken(type);
+}
+
+function formatDateLabel(value) {
+  if (!value) return '';
+
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 function setTodayError(message = '') {
-  const errorEl = document.getElementById('today-error');
-  errorEl.textContent = message;
+  document.getElementById('today-error').textContent = message;
 }
 
 function setTodayLockedMessage(message = '') {
+  document.getElementById('today-locked-message').textContent = message;
+}
+
+function setProgramError(message = '') {
+  document.getElementById('program-error').textContent = message;
+}
+
+function setOnboardingSaveStatus(message, tone = 'neutral') {
+  onboardingSaveStatus.textContent = message;
+  onboardingSaveStatus.dataset.tone = tone;
+}
+
+function setOnboardingSubmitError(message = '') {
+  onboardingSubmitError.textContent = message;
+}
+
+function setTodayGuidance(title = '', copy = '') {
+  if (!todayGuidance || !todayGuidanceTitle || !todayGuidanceCopy) return;
+
+  const visible = Boolean(title || copy);
+  todayGuidance.classList.toggle('hidden', !visible);
+  todayGuidanceTitle.textContent = title;
+  todayGuidanceCopy.textContent = copy;
+}
+
+function getActiveTabId() {
+  const active = document.querySelector('.nav-item.active');
+  return active?.getAttribute('data-tab') || 'today';
+}
+
+function setProgramActionsVisible(visible) {
+  programRegenerateButton.classList.toggle('hidden', !visible);
+}
+
+function isOnboardingIncompleteError(error) {
+  return error instanceof ApiError && error.status === 409 && error.message.includes('Onboarding not completed');
+}
+
+function isMissingProgramError(error) {
+  return error instanceof ApiError && error.status === 409 && error.message.includes('Active program not found');
+}
+
+function createDefaultOnboardingData() {
+  return {
+    questionnaireVersion: ONBOARDING_DEFAULTS.questionnaireVersion,
+    goals: ONBOARDING_DEFAULTS.goals.slice(),
+    experienceLevel: ONBOARDING_DEFAULTS.experienceLevel,
+    trainingDaysPerWeek: ONBOARDING_DEFAULTS.trainingDaysPerWeek,
+    sessionDurationMinutes: ONBOARDING_DEFAULTS.sessionDurationMinutes,
+    equipmentAccess: ONBOARDING_DEFAULTS.equipmentAccess.slice(),
+    focusAreas: ONBOARDING_DEFAULTS.focusAreas.slice(),
+    limitations: ONBOARDING_DEFAULTS.limitations.slice(),
+    preferredStyles: ONBOARDING_DEFAULTS.preferredStyles.slice(),
+  };
+}
+
+function mergeOnboardingData(answers) {
+  const defaults = createDefaultOnboardingData();
+  const source = answers && typeof answers === 'object' ? answers : {};
+
+  return {
+    questionnaireVersion:
+      typeof source.questionnaireVersion === 'string' && source.questionnaireVersion.trim()
+        ? source.questionnaireVersion.trim()
+        : defaults.questionnaireVersion,
+    goals: Array.isArray(source.goals) ? source.goals.slice() : defaults.goals,
+    experienceLevel: typeof source.experienceLevel === 'string' ? source.experienceLevel : defaults.experienceLevel,
+    trainingDaysPerWeek:
+      Number.isInteger(source.trainingDaysPerWeek) ? source.trainingDaysPerWeek : defaults.trainingDaysPerWeek,
+    sessionDurationMinutes:
+      Number.isInteger(source.sessionDurationMinutes) ? source.sessionDurationMinutes : defaults.sessionDurationMinutes,
+    equipmentAccess: Array.isArray(source.equipmentAccess) ? source.equipmentAccess.slice() : defaults.equipmentAccess,
+    focusAreas: Array.isArray(source.focusAreas) ? source.focusAreas.slice() : defaults.focusAreas,
+    limitations: Array.isArray(source.limitations) ? source.limitations.slice() : defaults.limitations,
+    preferredStyles: Array.isArray(source.preferredStyles) ? source.preferredStyles.slice() : defaults.preferredStyles,
+  };
+}
+
+function setCheckedValues(name, values) {
+  const allowed = new Set(values);
+  document
+    .querySelectorAll(`input[name="${name}"]`)
+    .forEach(input => {
+      input.checked = allowed.has(input.value);
+    });
+}
+
+function setRadioValue(name, value) {
+  document
+    .querySelectorAll(`input[name="${name}"]`)
+    .forEach(input => {
+      input.checked = input.value === String(value);
+    });
+}
+
+function getCheckedValues(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(input => input.value);
+}
+
+function getRadioValue(name) {
+  return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+}
+
+function getNumberValue(name) {
+  const value = Number.parseInt(getRadioValue(name), 10);
+  return Number.isInteger(value) ? value : null;
+}
+
+function getOnboardingLastStepIndex() {
+  return Math.max(onboardingStepPanels.length - 1, 0);
+}
+
+function getOnboardingStepFieldNames(stepIndex) {
+  const stepFields = {
+    0: ['goals', 'experienceLevel'],
+    1: ['trainingDaysPerWeek', 'sessionDurationMinutes'],
+    2: ['equipmentAccess', 'focusAreas', 'preferredStyles'],
+  };
+
+  return stepFields[stepIndex] || [];
+}
+
+function filterErrorsForCurrentStep(errors, stepIndex = onboardingCurrentStep) {
+  if (stepIndex >= getOnboardingLastStepIndex()) {
+    return errors;
+  }
+
+  const allowedFields = new Set(getOnboardingStepFieldNames(stepIndex));
+  return Object.fromEntries(Object.entries(errors).filter(([field]) => allowedFields.has(field)));
+}
+
+function isOnboardingStepValid(stepIndex, payload) {
+  const errors = filterErrorsForCurrentStep(validateOnboardingPayload(payload), stepIndex);
+  renderOnboardingErrors(errors);
+  return Object.keys(errors).length === 0;
+}
+
+function isOnboardingStepComplete(stepIndex, payload) {
+  return Object.keys(filterErrorsForCurrentStep(validateOnboardingPayload(payload), stepIndex)).length === 0;
+}
+
+function resolveDraftOnboardingStep(payload) {
+  for (let index = 0; index < getOnboardingLastStepIndex(); index += 1) {
+    if (!isOnboardingStepComplete(index, payload)) {
+      return index;
+    }
+  }
+
+  return getOnboardingLastStepIndex();
+}
+
+function getChoiceLabel(name, value) {
+  const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  const label = input?.closest('label');
+  const strong = label?.querySelector('strong');
+  return strong?.textContent?.trim() || value;
+}
+
+function formatOnboardingReviewValues(name, values) {
+  if (Array.isArray(values)) {
+    if (values.length === 0) return ['None'];
+    return values.map(value => getChoiceLabel(name, value));
+  }
+
+  if (!values) return ['Not set'];
+  return [getChoiceLabel(name, String(values))];
+}
+
+function renderOnboardingReview(payload = buildOnboardingPayload()) {
+  if (!onboardingReview) return;
+
+  const sections = [
+    { title: 'Goal', values: formatOnboardingReviewValues('goals', payload.goals) },
+    { title: 'Level', values: formatOnboardingReviewValues('experienceLevel', payload.experienceLevel) },
+    { title: 'Days', values: formatOnboardingReviewValues('trainingDaysPerWeek', String(payload.trainingDaysPerWeek)) },
+    { title: 'Length', values: formatOnboardingReviewValues('sessionDurationMinutes', String(payload.sessionDurationMinutes)) },
+    { title: 'Equipment', values: formatOnboardingReviewValues('equipmentAccess', payload.equipmentAccess) },
+    { title: 'Focus', values: formatOnboardingReviewValues('focusAreas', payload.focusAreas) },
+    { title: 'Avoid', values: formatOnboardingReviewValues('limitations', payload.limitations) },
+    { title: 'Style', values: formatOnboardingReviewValues('preferredStyles', payload.preferredStyles) },
+  ];
+
+  onboardingReview.innerHTML = '';
+  sections.forEach(section => {
+    const container = el('section', 'onboarding-review-section');
+    container.appendChild(el('div', 'onboarding-review-title', section.title));
+
+    const values = el('div', 'onboarding-review-values');
+    section.values.forEach(value => {
+      values.appendChild(el('span', 'onboarding-review-pill', value));
+    });
+
+    container.appendChild(values);
+    onboardingReview.appendChild(container);
+  });
+}
+
+function syncOnboardingStepUI() {
+  const lastStep = getOnboardingLastStepIndex();
+
+  onboardingStepPanels.forEach((panel, index) => {
+    panel.classList.toggle('hidden', index !== onboardingCurrentStep);
+  });
+
+  onboardingStepItems.forEach((item, index) => {
+    item.classList.toggle('active', index === onboardingCurrentStep);
+    item.classList.toggle('complete', index < onboardingCurrentStep);
+  });
+
+  if (onboardingBackButton) {
+    onboardingBackButton.classList.toggle('hidden', onboardingCurrentStep === 0);
+  }
+
+  if (onboardingNextButton) {
+    onboardingNextButton.classList.toggle('hidden', onboardingCurrentStep === lastStep);
+    onboardingNextButton.textContent = 'Continue';
+  }
+
+  if (onboardingCompleteButton) {
+    onboardingCompleteButton.classList.toggle('hidden', onboardingCurrentStep !== lastStep);
+  }
+
+  if (onboardingReview) {
+    onboardingReview.classList.toggle('hidden', onboardingCurrentStep !== lastStep);
+  }
+
+  renderOnboardingReview();
+}
+
+function goToOnboardingStep(nextStep) {
+  onboardingCurrentStep = Math.max(0, Math.min(nextStep, getOnboardingLastStepIndex()));
+  setOnboardingSubmitError('');
+  renderOnboardingErrors(filterErrorsForCurrentStep(validateOnboardingPayload(buildOnboardingPayload())));
+  syncOnboardingStepUI();
+  onboardingShell.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function clearOnboardingErrors() {
+  document.querySelectorAll('[data-error-for]').forEach(node => {
+    node.textContent = '';
+  });
+}
+
+function renderOnboardingErrors(errors) {
+  clearOnboardingErrors();
+  Object.entries(errors).forEach(([field, message]) => {
+    const target = document.querySelector(`[data-error-for="${field}"]`);
+    if (target) target.textContent = message;
+  });
+}
+
+function buildOnboardingPayload() {
+  return {
+    questionnaireVersion:
+      appState.onboarding?.questionnaireVersion ||
+      appState.me?.onboarding?.questionnaireVersion ||
+      ONBOARDING_QUESTIONNAIRE_VERSION,
+    goals: getCheckedValues('goals'),
+    experienceLevel: getRadioValue('experienceLevel'),
+    trainingDaysPerWeek: getNumberValue('trainingDaysPerWeek'),
+    sessionDurationMinutes: getNumberValue('sessionDurationMinutes'),
+    equipmentAccess: getCheckedValues('equipmentAccess'),
+    focusAreas: getCheckedValues('focusAreas'),
+    limitations: getCheckedValues('limitations'),
+    preferredStyles: getCheckedValues('preferredStyles'),
+  };
+}
+
+function validateOnboardingPayload(payload) {
+  const errors = {};
+
+  if (payload.goals.length === 0) {
+    errors.goals = 'Pick at least one goal.';
+  }
+  if (!payload.experienceLevel) {
+    errors.experienceLevel = 'Choose your level.';
+  }
+  if (!payload.trainingDaysPerWeek || payload.trainingDaysPerWeek < 2 || payload.trainingDaysPerWeek > 5) {
+    errors.trainingDaysPerWeek = 'Choose between 2 and 5 days.';
+  }
+  if (
+    !payload.sessionDurationMinutes ||
+    payload.sessionDurationMinutes < 20 ||
+    payload.sessionDurationMinutes > 75
+  ) {
+    errors.sessionDurationMinutes = 'Choose between 20 and 75 minutes.';
+  }
+  if (payload.equipmentAccess.length === 0) {
+    errors.equipmentAccess = 'Pick at least one equipment option.';
+  }
+  if (payload.focusAreas.length === 0) {
+    errors.focusAreas = 'Pick at least one focus area.';
+  }
+  if (payload.preferredStyles.length === 0) {
+    errors.preferredStyles = 'Pick at least one style.';
+  }
+
+  return errors;
+}
+
+function updateOnboardingBadge(onboarding) {
+  const status = onboarding?.status || 'not_started';
+
+  if (status === 'draft') {
+    onboardingStatusBadge.textContent = 'Draft saved';
+    onboardingStatusBadge.classList.remove('hidden');
+    return;
+  }
+
+  if (status === 'completed') {
+    onboardingStatusBadge.textContent = 'Completed';
+    onboardingStatusBadge.classList.remove('hidden');
+    return;
+  }
+
+  onboardingStatusBadge.classList.add('hidden');
+}
+
+function hydrateOnboardingForm(onboarding) {
+  const data = mergeOnboardingData(onboarding?.answers);
+
+  onboardingHydrating = true;
+  setCheckedValues('goals', data.goals);
+  setRadioValue('experienceLevel', data.experienceLevel);
+  setRadioValue('trainingDaysPerWeek', data.trainingDaysPerWeek);
+  setRadioValue('sessionDurationMinutes', data.sessionDurationMinutes);
+  setCheckedValues('equipmentAccess', data.equipmentAccess);
+  setCheckedValues('focusAreas', data.focusAreas);
+  setCheckedValues('limitations', data.limitations);
+  setCheckedValues('preferredStyles', data.preferredStyles);
+  onboardingHydrating = false;
+
+  appState.onboarding = {
+    ...onboarding,
+    questionnaireVersion: onboarding?.questionnaireVersion || data.questionnaireVersion,
+  };
+  onboardingLastSavedSignature = JSON.stringify(buildOnboardingPayload());
+  updateOnboardingBadge(appState.onboarding);
+  clearOnboardingErrors();
+  setOnboardingSubmitError('');
+  onboardingCurrentStep = onboarding?.status === 'draft' ? resolveDraftOnboardingStep(data) : 0;
+  syncOnboardingStepUI();
+  setOnboardingSaveStatus(
+    onboarding?.status === 'draft' ? 'Draft restored.' : 'Progress saves automatically.',
+    'neutral'
+  );
+}
+
+async function loadOnboardingState() {
+  try {
+    const onboarding = ensureApiObject(await api.getOnboarding(), 'onboarding');
+    hydrateOnboardingForm(onboarding);
+  } catch (error) {
+    if (error instanceof AuthRedirectError) throw error;
+
+    hydrateOnboardingForm({
+      status: 'not_started',
+      completed: false,
+      questionnaireVersion: ONBOARDING_QUESTIONNAIRE_VERSION,
+      answersUpdatedAt: null,
+      completedAt: null,
+      answers: createDefaultOnboardingData(),
+    });
+    setOnboardingSaveStatus('Could not load saved progress.', 'error');
+  }
+}
+
+async function enterOnboardingMode() {
+  setShellMode('onboarding');
+  await loadOnboardingState();
+}
+
+function renderEmptyState(container, title, message, action = null) {
+  container.innerHTML = '';
+  container.classList.remove('hidden');
+
+  const titleEl = el('div', 'empty-state-title', title);
+  const copyEl = el('p', 'empty-state-copy', message);
+  container.appendChild(titleEl);
+  container.appendChild(copyEl);
+
+  if (action?.text) {
+    const button = el('button', 'secondary-button', action.text);
+    button.type = 'button';
+    button.dataset.action = action.type;
+    if (action.targetTab) {
+      button.dataset.targetTab = action.targetTab;
+    }
+    container.appendChild(button);
+  }
+}
+
+function clearTodayEmptyState() {
+  todayEmptyState.innerHTML = '';
+  todayEmptyState.classList.add('hidden');
+}
+
+function clearProgramEmptyState() {
+  programEmptyState.innerHTML = '';
+  programEmptyState.classList.add('hidden');
+}
+
+function renderTodayRecoveryState() {
+  const loader = document.getElementById('today-loader');
+  const content = document.getElementById('today-content');
+  const exercisesContainer = document.getElementById('today-exercises');
+  const restMessage = document.getElementById('today-rest-message');
   const lockedMessage = document.getElementById('today-locked-message');
-  lockedMessage.textContent = message;
+
+  loader.classList.add('hidden');
+  content.classList.remove('hidden');
+  document.getElementById('today-workout-name').textContent = 'No plan yet';
+  document.getElementById('today-workout-type').textContent = 'Build one to start';
+  exercisesContainer.classList.add('hidden');
+  restMessage.classList.add('hidden');
+  lockedMessage.classList.add('hidden');
+  setTodayError('');
+  setTodayLockedMessage('');
+  renderEmptyState(
+    todayEmptyState,
+    'No plan yet',
+    'Build a plan first, then today’s workout will appear here.',
+    { text: 'Open Plan', type: 'open-tab', targetTab: 'program' }
+  );
+  setTodayGuidance('', '');
+}
+
+function renderProgramRecoveryState() {
+  const loader = document.getElementById('program-loader');
+  const content = document.getElementById('program-content');
+
+  loader.classList.add('hidden');
+  content.classList.remove('hidden');
+  programMain.classList.add('hidden');
+  setProgramError('');
+  renderEmptyState(
+    programEmptyState,
+    'No plan available',
+    'Use your saved preferences to build a fresh plan.',
+    { text: 'Build plan', type: 'regenerate-program' }
+  );
+}
+
+function renderHistoryRecoveryState() {
+  document.getElementById('history-loader').classList.add('hidden');
+  document.getElementById('history-data').classList.add('hidden');
+  historyEmpty.textContent = 'No plan yet. Build one first to start logging workouts.';
+  historyEmpty.classList.remove('hidden');
+  document.getElementById('history-error').textContent = '';
 }
 
 async function getExistingLog(date) {
   try {
     return await api.getLog(date);
-  } catch (err) {
-    if (err instanceof AuthRedirectError) throw err;
-    if (err instanceof ApiError && err.status === 404) return null;
-    throw err;
+  } catch (error) {
+    if (error instanceof AuthRedirectError) throw error;
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
   }
 }
 
@@ -94,7 +661,7 @@ async function saveTodayWorkout(triggerBtn, footerHint) {
   todaySaveInFlight = true;
 
   if (triggerBtn) triggerBtn.disabled = true;
-  if (footerHint) footerHint.textContent = 'Saving workout...';
+  if (footerHint) footerHint.textContent = 'Saving...';
 
   try {
     const existingLog = await getExistingLog(todayWorkoutDate);
@@ -114,26 +681,23 @@ async function saveTodayWorkout(triggerBtn, footerHint) {
     }
 
     await loadToday();
-  } catch (err) {
-    if (err instanceof AuthRedirectError) return;
+  } catch (error) {
+    if (error instanceof AuthRedirectError) return;
 
-    if (err instanceof ApiError && err.status === 409) {
+    if (error instanceof ApiError && error.status === 409) {
       todayWorkoutSaved = true;
       await loadToday();
       return;
     }
 
-    setTodayError('Save error: ' + err.message);
+    setTodayError('Could not save workout: ' + error.message);
   } finally {
     todaySaveInFlight = false;
     if (triggerBtn && triggerBtn.isConnected) triggerBtn.disabled = false;
-    if (footerHint && footerHint.isConnected) footerHint.textContent = '';
+    if (footerHint && footerHint.isConnected) footerHint.textContent = footerHint.dataset.defaultText || '';
   }
 }
 
-// ==========================================
-// TAB 1: TODAY
-// ==========================================
 async function loadToday() {
   const loader = document.getElementById('today-loader');
   const content = document.getElementById('today-content');
@@ -143,8 +707,18 @@ async function loadToday() {
 
   setTodayError('');
   setTodayLockedMessage('');
+  setTodayGuidance('', '');
+  clearTodayEmptyState();
   loader.classList.remove('hidden');
   content.classList.add('hidden');
+  exercisesContainer.classList.remove('hidden');
+  restMessage.classList.add('hidden');
+  lockedMessage.classList.add('hidden');
+
+  if (!appState.me?.lifecycle?.has_active_program) {
+    renderTodayRecoveryState();
+    return;
+  }
 
   try {
     const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
@@ -157,20 +731,19 @@ async function loadToday() {
     todayWorkoutType = data.type === 'rest' ? null : data.type;
     todayWorkoutSaved = Boolean(existingLog);
 
-    document.getElementById('today-workout-name').textContent = data.name || 'Workout';
-    document.getElementById('today-workout-type').textContent = `Type: ${data.type}`;
+    document.getElementById('today-workout-name').textContent = data.name || 'Today’s workout';
+    document.getElementById('today-workout-type').textContent = formatWorkoutTypeLabel(data.type);
 
     exercisesContainer.classList.remove('hidden');
     exercisesContainer.innerHTML = '';
-    restMessage.classList.add('hidden');
-    lockedMessage.classList.add('hidden');
 
     if (todayWorkoutSaved) {
       exercisesContainer.classList.add('hidden');
+      setTodayGuidance('Workout already logged', 'Open History if you want to review the saved sets.');
       setTodayLockedMessage(
         data.date === getTodayDateString()
-          ? "Today's workout is already saved. Open History to review it."
-          : `Workout for ${data.date} is already saved.`
+          ? 'Today is already done.'
+          : `${formatDateLabel(data.date)} is already logged.`
       );
       lockedMessage.classList.remove('hidden');
       return;
@@ -178,56 +751,72 @@ async function loadToday() {
 
     if (data.type === 'rest') {
       exercisesContainer.classList.add('hidden');
+      setTodayGuidance('Recovery day', 'No logging needed today.');
       restMessage.classList.remove('hidden');
       return;
     }
 
     if (!data.exercises || data.exercises.length === 0) {
       exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
+      setTodayGuidance('Nothing to log', 'Today’s workout is empty.');
       return;
     }
 
+    setTodayGuidance('Log each set', 'Enter reps or seconds, then move to the next exercise.');
     activeExerciseIndex = 0;
 
-    data.exercises.forEach((ex, index) => {
+    data.exercises.forEach((exercise, index) => {
+      const isLastExercise = index === data.exercises.length - 1;
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
-      card.dataset.id = ex.id;
+      card.dataset.id = exercise.id;
       card.dataset.index = String(index);
       card.dataset.total = String(data.exercises.length);
 
       let targetText = '';
-      if (ex.type === 'reps' && ex.reps) targetText = `${ex.reps.max} reps`;
-      else if (ex.type === 'time' && ex.duration) targetText = `${ex.duration.max} sec`;
-      else if (ex.type === 'cycles' && ex.cycles) targetText = `${ex.cycles.max} cycles`;
+      if (exercise.type === 'reps' && exercise.reps) targetText = `${exercise.reps.max} reps`;
+      else if (exercise.type === 'time' && exercise.duration) targetText = `${exercise.duration.max} sec`;
+      else if (exercise.type === 'cycles' && exercise.cycles) targetText = `${exercise.cycles.max} cycles`;
 
       const progress = el('div', 'exercise-progress');
       progress.appendChild(el('span', 'exercise-progress-current', `${index + 1}/${data.exercises.length}`));
-      progress.appendChild(el('span', 'exercise-progress-label', 'Current exercise'));
+      progress.appendChild(el('span', 'exercise-progress-label', 'Exercise'));
       card.appendChild(progress);
 
-      card.appendChild(el('div', 'card-title exercise-title', ex.name || ex.id));
+      card.appendChild(el('div', 'card-title exercise-title', exercise.name || exercise.id));
 
       const chips = el('div', 'exercise-header-chips');
       if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
-      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${ex.sets || 1} sets`));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${exercise.max_sets || 1} sets`));
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
-      helper.textContent = '';
+      helper.textContent =
+        exercise.type === 'time'
+          ? 'Enter seconds for each set.'
+          : exercise.type === 'cycles'
+            ? 'Enter cycles for each set.'
+            : 'Enter reps for each set.';
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
-      for (let i = 0; i < (ex.sets || 1); i++) {
-        const row = createSetRow(i + 1, ex.type);
-        setsContainer.appendChild(row);
+      for (let indexOfSet = 0; indexOfSet < (exercise.max_sets || 1); indexOfSet += 1) {
+        setsContainer.appendChild(createSetRow(indexOfSet + 1, exercise.type));
       }
       card.appendChild(setsContainer);
 
       const footer = el('div', 'exercise-card-footer');
-      const footerHint = el('div', 'exercise-footer-hint', '');
-      const confirmBtn = el('button', 'exercise-complete-btn', '✓');
+      const footerHint = el(
+        'div',
+        'exercise-footer-hint',
+        isLastExercise ? 'Fill every set to save.' : 'Fill every set to continue.'
+      );
+      footerHint.dataset.defaultText = footerHint.textContent;
+      const confirmBtn = el('button', 'exercise-complete-btn', isLastExercise ? 'Save workout' : 'Next exercise');
       confirmBtn.type = 'button';
-      confirmBtn.setAttribute('aria-label', index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise');
+      confirmBtn.setAttribute(
+        'aria-label',
+        isLastExercise ? 'Save workout' : 'Open next exercise'
+      );
       confirmBtn.addEventListener('click', async () => {
         await advanceExercise(card);
       });
@@ -239,10 +828,36 @@ async function loadToday() {
     });
 
     syncExerciseStack();
-  } catch (err) {
+  } catch (error) {
     loader.classList.add('hidden');
-    if (err instanceof AuthRedirectError) return;
-    setTodayError('Error loading workout: ' + err.message);
+    if (error instanceof AuthRedirectError) return;
+
+    if (isOnboardingIncompleteError(error)) {
+      appState.me = {
+        ...appState.me,
+        lifecycle: {
+          ...appState.me.lifecycle,
+          onboarding_completed: false,
+        },
+      };
+      await enterOnboardingMode();
+      return;
+    }
+
+    if (isMissingProgramError(error)) {
+      appState.me = {
+        ...appState.me,
+        lifecycle: {
+          ...appState.me.lifecycle,
+          has_active_program: false,
+        },
+      };
+      setProgramActionsVisible(false);
+      renderTodayRecoveryState();
+      return;
+    }
+
+    setTodayError('Could not load today: ' + error.message);
   }
 }
 
@@ -253,7 +868,7 @@ function createSetRow(index, type) {
   const input = el('input', 'set-input');
   input.type = 'number';
   input.min = '0';
-  input.placeholder = type === 'time' ? 'Sec' : 'Reps';
+  input.placeholder = type === 'time' ? 'Sec' : type === 'cycles' ? 'Cycles' : 'Reps';
   row.appendChild(input);
 
   return row;
@@ -287,8 +902,17 @@ async function advanceExercise(card) {
   if (!card.classList.contains('active') || todaySaveInFlight) return;
 
   const inputs = Array.from(card.querySelectorAll('.set-input'));
+  const footerHint = card.querySelector('.exercise-footer-hint');
   const isComplete = inputs.every(input => input.value.trim() !== '');
   if (!isComplete) {
+    if (footerHint) {
+      footerHint.textContent = 'Enter every set first.';
+      window.setTimeout(() => {
+        if (footerHint.isConnected) {
+          footerHint.textContent = footerHint.dataset.defaultText || '';
+        }
+      }, 1400);
+    }
     card.classList.add('exercise-card-invalid');
     window.setTimeout(() => card.classList.remove('exercise-card-invalid'), 380);
     return;
@@ -306,7 +930,6 @@ async function advanceExercise(card) {
   card.classList.add('completed-pulse');
   window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
   const confirmBtn = card.querySelector('.exercise-complete-btn');
-  const footerHint = card.querySelector('.exercise-footer-hint');
   await saveTodayWorkout(confirmBtn, footerHint);
 }
 
@@ -319,11 +942,8 @@ function syncExerciseStack() {
   container.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
 }
 
-// ==========================================
-// TAB 2: HISTORY
-// ==========================================
-document.getElementById('history-date').addEventListener('change', e => {
-  loadHistory(e.target.value);
+document.getElementById('history-date').addEventListener('change', event => {
+  loadHistory(event.target.value);
 });
 
 async function loadHistory(date) {
@@ -337,126 +957,369 @@ async function loadHistory(date) {
   empty.classList.add('hidden');
   errorEl.textContent = '';
 
+  if (!appState.me?.lifecycle?.has_active_program) {
+    renderHistoryRecoveryState();
+    return;
+  }
+
   try {
     const data = await api.getLog(date);
     loader.classList.add('hidden');
 
     if (!data || !data.workout_type) {
+      empty.textContent = 'No workout logged for this day.';
       empty.classList.remove('hidden');
       return;
     }
 
     content.classList.remove('hidden');
-    document.getElementById('history-workout-type').textContent = data.workout_type;
+    document.getElementById('history-workout-type').textContent =
+      `${formatWorkoutTypeLabel(data.workout_type)} · ${formatDateLabel(date)}`;
 
     const exercisesContainer = document.getElementById('history-exercises');
     exercisesContainer.innerHTML = '';
 
     if (data.exercises && data.exercises.length > 0) {
-      data.exercises.forEach((ex, index) => {
+      data.exercises.forEach((exercise, index) => {
         const card = el('article', 'card history-exercise-card');
 
         const header = el('div', 'history-exercise-header');
         header.appendChild(el('div', 'history-exercise-index', `#${index + 1}`));
-        header.appendChild(el('div', 'card-title', ex.id));
+        header.appendChild(el('div', 'card-title', humanizeToken(exercise.id)));
         card.appendChild(header);
 
         const chips = el('div', 'history-set-chips');
-        ex.sets.forEach((setValue, setIndex) => {
+        exercise.sets.forEach((setValue, setIndex) => {
           chips.appendChild(el('div', 'history-set-chip', `Set ${setIndex + 1}: ${setValue}`));
         });
         card.appendChild(chips);
         exercisesContainer.appendChild(card);
       });
     } else {
-      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises</div>';
+      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises logged.</div>';
     }
 
-    document.getElementById('history-note').textContent = data.note || 'No notes added for this workout.';
-  } catch (err) {
+    historyNoteCard?.classList.toggle('hidden', !data.note);
+    document.getElementById('history-note').textContent = data.note || '';
+  } catch (error) {
     loader.classList.add('hidden');
-    if (err instanceof AuthRedirectError) return;
-    if (err instanceof ApiError && err.status === 404) {
+    if (error instanceof AuthRedirectError) return;
+
+    if (isOnboardingIncompleteError(error)) {
+      await enterOnboardingMode();
+      return;
+    }
+
+    if (isMissingProgramError(error)) {
+      appState.me = {
+        ...appState.me,
+        lifecycle: {
+          ...appState.me.lifecycle,
+          has_active_program: false,
+        },
+      };
+      setProgramActionsVisible(false);
+      renderHistoryRecoveryState();
+      return;
+    }
+
+    if (error instanceof ApiError && error.status === 404) {
+      empty.textContent = 'No workout logged for this day.';
       empty.classList.remove('hidden');
     } else {
-      errorEl.textContent = 'Error loading history: ' + err.message;
+      errorEl.textContent = 'Could not load history: ' + error.message;
     }
   }
 }
 
-// ==========================================
-// TAB 3: PROGRAM
-// ==========================================
+function formatProgramTarget(exercise, progressionState) {
+  const min = progressionState?.min;
+  const max = progressionState?.max;
+
+  if (exercise.type === 'reps') {
+    const fallback = exercise.reps;
+    const from = Number.isInteger(min) ? min : fallback?.min;
+    const to = Number.isInteger(max) ? max : fallback?.max;
+    return from && to ? `${from}-${to} reps` : 'Custom target';
+  }
+
+  if (exercise.type === 'time') {
+    const fallback = exercise.duration;
+    const from = Number.isInteger(min) ? min : fallback?.min;
+    const to = Number.isInteger(max) ? max : fallback?.max;
+    return from && to ? `${from}-${to} sec` : 'Custom target';
+  }
+
+  const fallback = exercise.cycles;
+  const from = Number.isInteger(min) ? min : fallback?.min;
+  const to = Number.isInteger(max) ? max : fallback?.max;
+  return from && to ? `${from}-${to} cycles` : 'Custom target';
+}
+
+function formatProgramProgressionNote(progressionState) {
+  if (!progressionState?.last_progression) {
+    return 'No recent changes';
+  }
+
+  return `Updated ${progressionState.last_progression}`;
+}
+
 async function loadProgram() {
   const loader = document.getElementById('program-loader');
-  const errorEl = document.getElementById('program-error');
   const content = document.getElementById('program-content');
+  const scheduleContainer = document.getElementById('program-schedule');
+  const workoutsContainer = document.getElementById('program-workouts');
+
+  setProgramError('');
+  clearProgramEmptyState();
+  setProgramActionsVisible(Boolean(appState.me?.lifecycle?.onboarding_completed && appState.me?.lifecycle?.has_active_program));
+
+  if (!appState.me?.lifecycle?.has_active_program) {
+    renderProgramRecoveryState();
+    return;
+  }
+
+  loader.classList.remove('hidden');
+  content.classList.add('hidden');
+  programMain.classList.add('hidden');
 
   try {
     const data = ensureApiObject(await api.getProgram(), 'program');
     loader.classList.add('hidden');
     content.classList.remove('hidden');
+    programMain.classList.remove('hidden');
 
     const userSets = data.userSets ?? {};
-
-    const scheduleContainer = document.getElementById('program-schedule');
+    const progressionState = data.progressionState ?? {};
     scheduleContainer.innerHTML = '';
+    workoutsContainer.innerHTML = '';
+
     if (data.schedule) {
       const days = [
-        ['monday', 'Mon'], ['tuesday', 'Tue'], ['wednesday', 'Wed'],
-        ['thursday', 'Thu'], ['friday', 'Fri'], ['saturday', 'Sat'], ['sunday', 'Sun']
+        ['monday', 'Mon'],
+        ['tuesday', 'Tue'],
+        ['wednesday', 'Wed'],
+        ['thursday', 'Thu'],
+        ['friday', 'Fri'],
+        ['saturday', 'Sat'],
+        ['sunday', 'Sun'],
       ];
+
       days.forEach(([key, label]) => {
         const row = el('div', 'program-schedule-row');
         row.appendChild(el('span', 'program-day', label));
-        row.appendChild(el('span', 'program-day-value', data.schedule[key] || 'Rest'));
+        row.appendChild(el('span', 'program-day-value', formatPlanSlotLabel(data.schedule[key] || 'rest')));
         scheduleContainer.appendChild(row);
       });
     }
 
-    const workoutsContainer = document.getElementById('program-workouts');
-    workoutsContainer.innerHTML = '';
     if (data.workouts) {
       Object.entries(data.workouts).forEach(([type, workout]) => {
         const card = el('section', 'card program-workout-card');
 
         const header = el('div', 'program-workout-header');
         header.appendChild(el('div', 'card-title', workout.name || type));
-        header.appendChild(el('div', 'program-workout-type', type.toUpperCase()));
+        header.appendChild(el('div', 'program-workout-type', formatWorkoutTypeLabel(type)));
         card.appendChild(header);
 
         if (workout.exercises && workout.exercises.length > 0) {
           const list = el('div', 'program-exercise-list');
-          workout.exercises.forEach(ex => {
+          workout.exercises.forEach(exercise => {
             const row = el('div', 'program-exercise-row');
             const main = el('div', 'program-exercise-main');
-            main.appendChild(el('div', 'program-exercise-name', ex.name || ex.id));
+            main.appendChild(el('div', 'program-exercise-name', exercise.name || humanizeToken(exercise.id)));
 
-            let target = '';
-            if (ex.type === 'reps' && ex.reps) target = `${ex.reps.max} reps`;
-            else if (ex.type === 'time' && ex.duration) target = `${ex.duration.max} sec`;
-            else if (ex.type === 'cycles' && ex.cycles) target = `${ex.cycles.max} cycles`;
-
-            const detail = el('div', 'program-exercise-detail', target || 'Custom target');
-            main.appendChild(detail);
+            const exerciseProgression = progressionState[exercise.id] ?? null;
+            main.appendChild(el('div', 'program-exercise-detail', formatProgramTarget(exercise, exerciseProgression)));
+            main.appendChild(el('div', 'program-exercise-meta', formatProgramProgressionNote(exerciseProgression)));
             row.appendChild(main);
 
-            const currentSets = userSets[ex.id] ?? 1;
-            row.appendChild(el('div', 'program-sets-pill', `${currentSets}/${ex.max_sets} sets`));
+            const currentSets = exerciseProgression?.sets ?? userSets[exercise.id] ?? 1;
+            row.appendChild(el('div', 'program-sets-pill', `${currentSets}/${exercise.max_sets} sets`));
             list.appendChild(row);
           });
           card.appendChild(list);
         } else {
-          card.appendChild(el('div', 'text-secondary', 'No exercises'));
+          card.appendChild(el('div', 'text-secondary', 'No exercises in this session.'));
         }
+
         workoutsContainer.appendChild(card);
       });
     }
-  } catch (err) {
+  } catch (error) {
     loader.classList.add('hidden');
-    if (err instanceof AuthRedirectError) return;
-    errorEl.textContent = 'Error loading program: ' + err.message;
+    if (error instanceof AuthRedirectError) return;
+
+    if (isOnboardingIncompleteError(error)) {
+      await enterOnboardingMode();
+      return;
+    }
+
+    if (isMissingProgramError(error)) {
+      appState.me = {
+        ...appState.me,
+        lifecycle: {
+          ...appState.me.lifecycle,
+          has_active_program: false,
+        },
+      };
+      setProgramActionsVisible(false);
+      renderProgramRecoveryState();
+      return;
+    }
+
+    setProgramError('Could not load plan: ' + error.message);
   }
+}
+
+function handleOnboardingChange() {
+  if (onboardingHydrating) return;
+
+  if (onboardingSubmitError.textContent) {
+    renderOnboardingErrors(filterErrorsForCurrentStep(validateOnboardingPayload(buildOnboardingPayload())));
+  }
+
+  setOnboardingSubmitError('');
+  renderOnboardingReview();
+  scheduleOnboardingDraftSave();
+}
+
+function handleOnboardingNextStep() {
+  const payload = buildOnboardingPayload();
+  if (!isOnboardingStepValid(onboardingCurrentStep, payload)) {
+    setOnboardingSubmitError('Finish this step to continue.');
+    return;
+  }
+
+  setOnboardingSubmitError('');
+  goToOnboardingStep(onboardingCurrentStep + 1);
+}
+
+function scheduleOnboardingDraftSave() {
+  if (currentShellMode !== 'onboarding') return;
+  window.clearTimeout(onboardingDraftTimer);
+  setOnboardingSaveStatus('Saving...', 'pending');
+
+  onboardingDraftTimer = window.setTimeout(async () => {
+    const payload = buildOnboardingPayload();
+    const signature = JSON.stringify(payload);
+
+    if (signature === onboardingLastSavedSignature) {
+      setOnboardingSaveStatus('All changes saved.', 'neutral');
+      return;
+    }
+
+    try {
+      await api.saveOnboardingDraft(payload);
+      onboardingLastSavedSignature = signature;
+      appState.onboarding = {
+        ...(appState.onboarding || {}),
+        status: 'draft',
+        completed: false,
+        questionnaireVersion: payload.questionnaireVersion,
+        answers: payload,
+      };
+      updateOnboardingBadge(appState.onboarding);
+      setOnboardingSaveStatus('Saved.', 'success');
+    } catch (error) {
+      if (error instanceof AuthRedirectError) return;
+      setOnboardingSaveStatus('Could not save right now.', 'error');
+    }
+  }, 450);
+}
+
+async function handleOnboardingSubmit(event) {
+  event.preventDefault();
+  if (onboardingSubmitting) return;
+
+  if (onboardingCurrentStep < getOnboardingLastStepIndex()) {
+    handleOnboardingNextStep();
+    return;
+  }
+
+  window.clearTimeout(onboardingDraftTimer);
+  const payload = buildOnboardingPayload();
+  const errors = validateOnboardingPayload(payload);
+
+  renderOnboardingErrors(errors);
+  if (Object.keys(errors).length > 0) {
+    setOnboardingSubmitError('Fill the highlighted fields before building your plan.');
+    return;
+  }
+
+  onboardingSubmitting = true;
+  onboardingCompleteButton.disabled = true;
+  setOnboardingSubmitError('');
+  setOnboardingSaveStatus('Building your plan...', 'pending');
+
+  try {
+    await api.completeOnboarding(payload);
+    onboardingLastSavedSignature = JSON.stringify(payload);
+    await refreshProductState();
+  } catch (error) {
+    if (error instanceof AuthRedirectError) return;
+    setOnboardingSubmitError(error.message || 'Could not complete onboarding.');
+    setOnboardingSaveStatus('We could not build the plan yet.', 'error');
+  } finally {
+    onboardingSubmitting = false;
+    onboardingCompleteButton.disabled = false;
+  }
+}
+
+async function handleRegenerateProgram(trigger) {
+  if (!appState.me?.lifecycle?.onboarding_completed) return;
+  if (trigger.disabled) return;
+
+  const confirmed = window.confirm('Build a new plan from your saved preferences?');
+  if (!confirmed) return;
+
+  trigger.disabled = true;
+  setProgramError('');
+  setTodayError('');
+
+  try {
+    await api.regenerateProgram();
+    await refreshProductState();
+
+    if (getActiveTabId() === 'program') {
+      await loadProgram();
+    }
+  } catch (error) {
+    if (error instanceof AuthRedirectError) return;
+
+    if (isOnboardingIncompleteError(error)) {
+      await enterOnboardingMode();
+      return;
+    }
+
+    setProgramError('Could not build a new plan: ' + error.message);
+  } finally {
+    trigger.disabled = false;
+  }
+}
+
+async function refreshProductState() {
+  const me = ensureApiObject(await api.getMe(), 'product state');
+  appState.me = me;
+
+  if (!me.lifecycle.onboarding_completed) {
+    await enterOnboardingMode();
+    return;
+  }
+
+  setShellMode('app');
+  setProgramActionsVisible(Boolean(me.lifecycle.has_active_program));
+  activateTab(getActiveTabId());
+
+  if (!me.lifecycle.has_active_program) {
+    renderTodayRecoveryState();
+    if (getActiveTabId() === 'program') {
+      renderProgramRecoveryState();
+    }
+    return;
+  }
+
+  await loadToday();
 }
 
 async function bootstrapApp() {
@@ -476,7 +1339,26 @@ async function bootstrapApp() {
     }
   }
 
-  await loadToday();
+  try {
+    await refreshProductState();
+  } catch (error) {
+    if (error instanceof AuthRedirectError) return;
+
+    if (isOnboardingIncompleteError(error)) {
+      await enterOnboardingMode();
+      return;
+    }
+
+    if (isMissingProgramError(error)) {
+      setShellMode('app');
+      setProgramActionsVisible(false);
+      renderTodayRecoveryState();
+      return;
+    }
+
+    setShellMode('app');
+    setTodayError('Error loading app: ' + error.message);
+  }
 }
 
 bootstrapApp();
