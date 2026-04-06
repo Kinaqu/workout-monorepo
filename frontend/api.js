@@ -45,6 +45,11 @@ export function hasClerkSession() {
 }
 
 async function resolveAuthToken(options) {
+  const clerk = getClerkInstance();
+  if (!clerk) {
+    return getToken();
+  }
+
   try {
     const clerkToken = await getClerkToken(options);
     if (clerkToken) return clerkToken;
@@ -130,7 +135,9 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (error) {
-    console.error('API Request failed:', error);
+    if (!(error instanceof AuthRedirectError) && !(error instanceof ApiError)) {
+      console.error('API Request failed:', error);
+    }
     throw error;
   }
 }
@@ -146,6 +153,16 @@ export const api = {
     body: JSON.stringify({ username, password }),
     noAuth: true
   }),
+  getMe: () => request('/me'),
+  getOnboarding: () => request('/onboarding'),
+  saveOnboardingDraft: (payload) => request('/onboarding', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  completeOnboarding: (payload) => request('/onboarding/complete', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
   getTodayWorkout: () => request('/workout/today'),
   logWorkout: (data, date) => {
     const headers = {};
@@ -158,5 +175,6 @@ export const api = {
   },
   getLog: (date) => request(`/log/${date}`),
   getProgram: () => request('/program'),
+  regenerateProgram: () => request('/program/regenerate', { method: 'POST' }),
   runProgression: () => request('/progression/run', { method: 'POST' })
 };

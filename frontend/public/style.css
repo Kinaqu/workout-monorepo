@@ -54,6 +54,17 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.secondary-button {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid rgba(187, 134, 252, 0.32);
+  box-shadow: none;
+}
+
+.secondary-button:disabled {
+  border-color: var(--border-color);
+}
+
 input, textarea {
   width: 100%;
   background-color: var(--surface-color);
@@ -198,6 +209,174 @@ input:focus, textarea:focus {
   color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+.empty-state-card {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.96), rgba(21, 21, 27, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.empty-state-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.empty-state-copy {
+  color: var(--text-secondary);
+}
+
+.program-toolbar {
+  margin-bottom: 12px;
+}
+
+.program-toolbar .secondary-button {
+  width: auto;
+}
+
+.onboarding-form {
+  display: grid;
+  gap: 14px;
+}
+
+.onboarding-hero-card,
+.onboarding-card {
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.97), rgba(21, 21, 27, 0.99));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.onboarding-hero-card {
+  margin-bottom: 16px;
+}
+
+.onboarding-kicker {
+  margin-bottom: 12px;
+  color: var(--secondary-color);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.onboarding-copy {
+  color: var(--text-secondary);
+}
+
+.onboarding-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.onboarding-meta-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.onboarding-actions-card {
+  gap: 10px;
+}
+
+.onboarding-helper-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.onboarding-helper-text[data-tone="pending"] {
+  color: #dbc7ff;
+}
+
+.onboarding-helper-text[data-tone="success"] {
+  color: var(--success-color);
+}
+
+.onboarding-helper-text[data-tone="error"] {
+  color: var(--error-color);
+}
+
+.onboarding-submit-error {
+  margin-bottom: 0;
+  min-height: 0;
+  text-align: left;
+}
+
+.choice-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.choice-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.choice-pill {
+  display: block;
+}
+
+.choice-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice-pill span {
+  display: grid;
+  gap: 4px;
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.choice-pill strong {
+  font-size: 14px;
+}
+
+.choice-pill small {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.choice-pill-compact span {
+  min-height: auto;
+  padding: 12px;
+}
+
+.choice-input:checked + span {
+  border-color: rgba(187, 134, 252, 0.45);
+  background: rgba(187, 134, 252, 0.12);
+  transform: translateY(-1px);
+}
+
+.choice-input:checked + span small {
+  color: #ddd1ef;
+}
+
+.choice-input:focus-visible + span {
+  outline: 2px solid rgba(187, 134, 252, 0.6);
+  outline-offset: 2px;
+}
+
+.field-error {
+  min-height: 18px;
+  margin-top: 10px;
+  color: var(--error-color);
+  font-size: 13px;
 }
 
 /* Exercise inputs */
@@ -487,6 +666,16 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 @media (max-width: 640px) {
+  .choice-grid,
+  .choice-grid-3,
+  .choice-grid-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .choice-pill span {
+    min-height: 84px;
+  }
+
   #today-exercises {
     min-height: 390px;
     padding-bottom: calc(var(--stack-depth) * 16px + 10px);
@@ -775,6 +964,10 @@ body::-webkit-scrollbar-thumb:hover,
   .today-overview-card {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .program-toolbar .secondary-button {
+    width: 100%;
   }
 
   .program-workout-header,
