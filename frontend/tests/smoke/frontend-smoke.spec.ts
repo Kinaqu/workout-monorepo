@@ -16,23 +16,7 @@ async function enableVercelProtectionBypass(page: Page) {
     return;
   }
 
-  const origin = new URL(configuredBaseUrl).origin;
-
-  await page.route('**/*', async route => {
-    const request = route.request();
-
-    if (request.url().startsWith(origin)) {
-      await route.continue({
-        headers: {
-          ...request.headers(),
-          ...bypassHeaders,
-        },
-      });
-      return;
-    }
-
-    await route.continue();
-  });
+  await page.setExtraHTTPHeaders(bypassHeaders);
 }
 
 function attachClientIssueCollector(page: Page) {
