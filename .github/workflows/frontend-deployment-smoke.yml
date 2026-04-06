@@ -2,6 +2,7 @@ name: Frontend Deployment Smoke
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -9,7 +10,7 @@ on:
 permissions:
   contents: read
   deployments: read
-  statuses: read
+  statuses: write
 
 concurrency:
   group: frontend-deployment-smoke-${{ github.event.pull_request.head.sha || github.sha }}
@@ -17,7 +18,7 @@ concurrency:
 
 jobs:
   frontend-deployment-smoke:
-    name: frontend-deployment-smoke
+    name: frontend-deployment-smoke-job
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -25,11 +26,20 @@ jobs:
         working-directory: frontend
     env:
       GH_TOKEN: ${{ github.token }}
+      STATUS_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       EXPECT_CLERK_PUBLISHABLE_KEY: "true"
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Mark frontend-deployment-smoke pending
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=pending
+          -f context=frontend-deployment-smoke
+          -f description="Frontend deployment smoke is running"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -54,7 +64,7 @@ jobs:
       - name: Resolve Vercel deployment URL
         env:
           DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          DEPLOYMENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && 'Preview – workout-frontend' || 'Production – workout-frontend' }}
+          DEPLOYMENT_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'Production – workout-frontend' || 'Preview – workout-frontend' }}
         run: |
           set -euo pipefail
 
@@ -108,3 +118,30 @@ jobs:
           name: frontend-deployment-playwright-report
           path: frontend/playwright-report
           if-no-files-found: ignore
+
+      - name: Report frontend-deployment-smoke success
+        if: success()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=success
+          -f context=frontend-deployment-smoke
+          -f description="Frontend deployment smoke passed"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Report frontend-deployment-smoke failure
+        if: failure()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=failure
+          -f context=frontend-deployment-smoke
+          -f description="Frontend deployment smoke failed"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Report frontend-deployment-smoke cancellation
+        if: cancelled()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=error
+          -f context=frontend-deployment-smoke
+          -f description="Frontend deployment smoke was cancelled"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

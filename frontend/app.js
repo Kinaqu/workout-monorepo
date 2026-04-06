@@ -24,6 +24,7 @@ let onboardingDraftTimer = null;
 let onboardingLastSavedSignature = '';
 let onboardingHydrating = false;
 let onboardingSubmitting = false;
+let onboardingCurrentStep = 0;
 
 const appState = {
   me: null,
@@ -36,6 +37,11 @@ const onboardingSaveStatus = document.getElementById('onboarding-save-status');
 const onboardingSubmitError = document.getElementById('onboarding-submit-error');
 const onboardingStatusBadge = document.getElementById('onboarding-status-badge');
 const onboardingCompleteButton = document.getElementById('onboarding-complete-button');
+const onboardingBackButton = document.getElementById('onboarding-back-button');
+const onboardingNextButton = document.getElementById('onboarding-next-button');
+const onboardingReview = document.getElementById('onboarding-review');
+const onboardingStepPanels = Array.from(document.querySelectorAll('[data-onboarding-step-panel]'));
+const onboardingStepItems = Array.from(document.querySelectorAll('[data-onboarding-step-item]'));
 const appShell = document.getElementById('app-shell');
 const appNav = document.getElementById('app-nav');
 const tabs = document.querySelectorAll('.tab-content');
@@ -59,12 +65,27 @@ document.addEventListener('click', event => {
 
   if (actionTarget.dataset.action === 'regenerate-program') {
     handleRegenerateProgram(actionTarget);
+    return;
+  }
+
+  if (actionTarget.dataset.action === 'open-tab' && currentShellMode === 'app') {
+    activateTab(actionTarget.dataset.targetTab);
   }
 });
 
 if (onboardingForm) {
   onboardingForm.addEventListener('change', handleOnboardingChange);
   onboardingForm.addEventListener('submit', handleOnboardingSubmit);
+}
+
+if (onboardingBackButton) {
+  onboardingBackButton.addEventListener('click', () => {
+    goToOnboardingStep(onboardingCurrentStep - 1);
+  });
+}
+
+if (onboardingNextButton) {
+  onboardingNextButton.addEventListener('click', handleOnboardingNextStep);
 }
 
 function activateTab(tabId) {
@@ -216,6 +237,131 @@ function getNumberValue(name) {
   return Number.isInteger(value) ? value : null;
 }
 
+function getOnboardingLastStepIndex() {
+  return Math.max(onboardingStepPanels.length - 1, 0);
+}
+
+function getOnboardingStepFieldNames(stepIndex) {
+  const stepFields = {
+    0: ['goals', 'experienceLevel'],
+    1: ['trainingDaysPerWeek', 'sessionDurationMinutes'],
+    2: ['equipmentAccess', 'focusAreas', 'preferredStyles'],
+  };
+
+  return stepFields[stepIndex] || [];
+}
+
+function filterErrorsForCurrentStep(errors, stepIndex = onboardingCurrentStep) {
+  if (stepIndex >= getOnboardingLastStepIndex()) {
+    return errors;
+  }
+
+  const allowedFields = new Set(getOnboardingStepFieldNames(stepIndex));
+  return Object.fromEntries(Object.entries(errors).filter(([field]) => allowedFields.has(field)));
+}
+
+function isOnboardingStepValid(stepIndex, payload) {
+  const errors = filterErrorsForCurrentStep(validateOnboardingPayload(payload), stepIndex);
+  renderOnboardingErrors(errors);
+  return Object.keys(errors).length === 0;
+}
+
+function isOnboardingStepComplete(stepIndex, payload) {
+  return Object.keys(filterErrorsForCurrentStep(validateOnboardingPayload(payload), stepIndex)).length === 0;
+}
+
+function resolveDraftOnboardingStep(payload) {
+  for (let index = 0; index < getOnboardingLastStepIndex(); index += 1) {
+    if (!isOnboardingStepComplete(index, payload)) {
+      return index;
+    }
+  }
+
+  return getOnboardingLastStepIndex();
+}
+
+function getChoiceLabel(name, value) {
+  const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  const label = input?.closest('label');
+  const strong = label?.querySelector('strong');
+  return strong?.textContent?.trim() || value;
+}
+
+function formatOnboardingReviewValues(name, values) {
+  if (Array.isArray(values)) {
+    if (values.length === 0) return ['None'];
+    return values.map(value => getChoiceLabel(name, value));
+  }
+
+  if (!values) return ['Not set'];
+  return [getChoiceLabel(name, String(values))];
+}
+
+function renderOnboardingReview(payload = buildOnboardingPayload()) {
+  if (!onboardingReview) return;
+
+  const sections = [
+    { title: 'Goals', values: formatOnboardingReviewValues('goals', payload.goals) },
+    { title: 'Experience', values: formatOnboardingReviewValues('experienceLevel', payload.experienceLevel) },
+    { title: 'Weekly rhythm', values: formatOnboardingReviewValues('trainingDaysPerWeek', String(payload.trainingDaysPerWeek)) },
+    { title: 'Session length', values: formatOnboardingReviewValues('sessionDurationMinutes', String(payload.sessionDurationMinutes)) },
+    { title: 'Equipment', values: formatOnboardingReviewValues('equipmentAccess', payload.equipmentAccess) },
+    { title: 'Focus areas', values: formatOnboardingReviewValues('focusAreas', payload.focusAreas) },
+    { title: 'Limitations', values: formatOnboardingReviewValues('limitations', payload.limitations) },
+    { title: 'Style preferences', values: formatOnboardingReviewValues('preferredStyles', payload.preferredStyles) },
+  ];
+
+  onboardingReview.innerHTML = '';
+  sections.forEach(section => {
+    const container = el('section', 'onboarding-review-section');
+    container.appendChild(el('div', 'onboarding-review-title', section.title));
+
+    const values = el('div', 'onboarding-review-values');
+    section.values.forEach(value => {
+      values.appendChild(el('span', 'onboarding-review-pill', value));
+    });
+
+    container.appendChild(values);
+    onboardingReview.appendChild(container);
+  });
+}
+
+function syncOnboardingStepUI() {
+  const lastStep = getOnboardingLastStepIndex();
+
+  onboardingStepPanels.forEach((panel, index) => {
+    panel.classList.toggle('hidden', index !== onboardingCurrentStep);
+  });
+
+  onboardingStepItems.forEach((item, index) => {
+    item.classList.toggle('active', index === onboardingCurrentStep);
+    item.classList.toggle('complete', index < onboardingCurrentStep);
+  });
+
+  if (onboardingBackButton) {
+    onboardingBackButton.classList.toggle('hidden', onboardingCurrentStep === 0);
+  }
+
+  if (onboardingNextButton) {
+    onboardingNextButton.classList.toggle('hidden', onboardingCurrentStep === lastStep);
+    onboardingNextButton.textContent = onboardingCurrentStep === lastStep - 1 ? 'Review plan' : 'Continue';
+  }
+
+  if (onboardingCompleteButton) {
+    onboardingCompleteButton.classList.toggle('hidden', onboardingCurrentStep !== lastStep);
+  }
+
+  renderOnboardingReview();
+}
+
+function goToOnboardingStep(nextStep) {
+  onboardingCurrentStep = Math.max(0, Math.min(nextStep, getOnboardingLastStepIndex()));
+  setOnboardingSubmitError('');
+  renderOnboardingErrors(filterErrorsForCurrentStep(validateOnboardingPayload(buildOnboardingPayload())));
+  syncOnboardingStepUI();
+  onboardingShell.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
 function clearOnboardingErrors() {
   document.querySelectorAll('[data-error-for]').forEach(node => {
     node.textContent = '';
@@ -319,6 +465,8 @@ function hydrateOnboardingForm(onboarding) {
   updateOnboardingBadge(appState.onboarding);
   clearOnboardingErrors();
   setOnboardingSubmitError('');
+  onboardingCurrentStep = onboarding?.status === 'draft' ? resolveDraftOnboardingStep(data) : 0;
+  syncOnboardingStepUI();
   setOnboardingSaveStatus(
     onboarding?.status === 'draft' ? 'Draft restored. We save updates as you go.' : 'We save your setup as you go.',
     'neutral'
@@ -349,7 +497,7 @@ async function enterOnboardingMode() {
   await loadOnboardingState();
 }
 
-function renderEmptyState(container, title, message, actionText = '') {
+function renderEmptyState(container, title, message, action = null) {
   container.innerHTML = '';
   container.classList.remove('hidden');
 
@@ -358,11 +506,14 @@ function renderEmptyState(container, title, message, actionText = '') {
   container.appendChild(titleEl);
   container.appendChild(copyEl);
 
-  if (actionText) {
-    const action = el('button', 'secondary-button', actionText);
-    action.type = 'button';
-    action.dataset.action = 'regenerate-program';
-    container.appendChild(action);
+  if (action?.text) {
+    const button = el('button', 'secondary-button', action.text);
+    button.type = 'button';
+    button.dataset.action = action.type;
+    if (action.targetTab) {
+      button.dataset.targetTab = action.targetTab;
+    }
+    container.appendChild(button);
   }
 }
 
@@ -395,8 +546,8 @@ function renderTodayRecoveryState() {
   renderEmptyState(
     todayEmptyState,
     'No active program yet',
-    'Your preferences are saved, but there is no active plan to train from right now. Regenerate a plan from your saved setup and the main app will pick it up.',
-    'Regenerate from preferences'
+    'Your preferences are saved, but there is no active plan to train from right now. Open Program to rebuild one from your saved setup.',
+    { text: 'Open Program', type: 'open-tab', targetTab: 'program' }
   );
 }
 
@@ -411,15 +562,15 @@ function renderProgramRecoveryState() {
   renderEmptyState(
     programEmptyState,
     'Program not available',
-    'We have your onboarding profile, but no active program is currently stored. Regenerate it from your saved preferences.',
-    'Regenerate from preferences'
+    'We have your onboarding profile, but no active program is currently stored. Rebuild one from your saved preferences.',
+    { text: 'Rebuild plan', type: 'regenerate-program' }
   );
 }
 
 function renderHistoryRecoveryState() {
   document.getElementById('history-loader').classList.add('hidden');
   document.getElementById('history-data').classList.add('hidden');
-  historyEmpty.textContent = 'No active program yet. Regenerate your plan first.';
+  historyEmpty.textContent = 'No active program yet. Open Program to rebuild your plan.';
   historyEmpty.classList.remove('hidden');
   document.getElementById('history-error').textContent = '';
 }
@@ -634,6 +785,7 @@ async function loadToday() {
           has_active_program: false,
         },
       };
+      setProgramActionsVisible(false);
       renderTodayRecoveryState();
       return;
     }
@@ -789,6 +941,7 @@ async function loadHistory(date) {
           has_active_program: false,
         },
       };
+      setProgramActionsVisible(false);
       renderHistoryRecoveryState();
       return;
     }
@@ -802,6 +955,38 @@ async function loadHistory(date) {
   }
 }
 
+function formatProgramTarget(exercise, progressionState) {
+  const min = progressionState?.min;
+  const max = progressionState?.max;
+
+  if (exercise.type === 'reps') {
+    const fallback = exercise.reps;
+    const from = Number.isInteger(min) ? min : fallback?.min;
+    const to = Number.isInteger(max) ? max : fallback?.max;
+    return from && to ? `${from}-${to} reps` : 'Custom target';
+  }
+
+  if (exercise.type === 'time') {
+    const fallback = exercise.duration;
+    const from = Number.isInteger(min) ? min : fallback?.min;
+    const to = Number.isInteger(max) ? max : fallback?.max;
+    return from && to ? `${from}-${to} sec` : 'Custom target';
+  }
+
+  const fallback = exercise.cycles;
+  const from = Number.isInteger(min) ? min : fallback?.min;
+  const to = Number.isInteger(max) ? max : fallback?.max;
+  return from && to ? `${from}-${to} cycles` : 'Custom target';
+}
+
+function formatProgramProgressionNote(progressionState) {
+  if (!progressionState?.last_progression) {
+    return 'No progression changes yet';
+  }
+
+  return `Last adjusted ${progressionState.last_progression}`;
+}
+
 async function loadProgram() {
   const loader = document.getElementById('program-loader');
   const content = document.getElementById('program-content');
@@ -810,7 +995,7 @@ async function loadProgram() {
 
   setProgramError('');
   clearProgramEmptyState();
-  setProgramActionsVisible(Boolean(appState.me?.lifecycle?.onboarding_completed));
+  setProgramActionsVisible(Boolean(appState.me?.lifecycle?.onboarding_completed && appState.me?.lifecycle?.has_active_program));
 
   if (!appState.me?.lifecycle?.has_active_program) {
     renderProgramRecoveryState();
@@ -828,6 +1013,7 @@ async function loadProgram() {
     programMain.classList.remove('hidden');
 
     const userSets = data.userSets ?? {};
+    const progressionState = data.progressionState ?? {};
     scheduleContainer.innerHTML = '';
     workoutsContainer.innerHTML = '';
 
@@ -866,15 +1052,12 @@ async function loadProgram() {
             const main = el('div', 'program-exercise-main');
             main.appendChild(el('div', 'program-exercise-name', exercise.name || exercise.id));
 
-            let target = '';
-            if (exercise.type === 'reps' && exercise.reps) target = `${exercise.reps.max} reps`;
-            else if (exercise.type === 'time' && exercise.duration) target = `${exercise.duration.max} sec`;
-            else if (exercise.type === 'cycles' && exercise.cycles) target = `${exercise.cycles.max} cycles`;
-
-            main.appendChild(el('div', 'program-exercise-detail', target || 'Custom target'));
+            const exerciseProgression = progressionState[exercise.id] ?? null;
+            main.appendChild(el('div', 'program-exercise-detail', formatProgramTarget(exercise, exerciseProgression)));
+            main.appendChild(el('div', 'program-exercise-meta', formatProgramProgressionNote(exerciseProgression)));
             row.appendChild(main);
 
-            const currentSets = userSets[exercise.id] ?? 1;
+            const currentSets = exerciseProgression?.sets ?? userSets[exercise.id] ?? 1;
             row.appendChild(el('div', 'program-sets-pill', `${currentSets}/${exercise.max_sets} sets`));
             list.appendChild(row);
           });
@@ -903,6 +1086,7 @@ async function loadProgram() {
           has_active_program: false,
         },
       };
+      setProgramActionsVisible(false);
       renderProgramRecoveryState();
       return;
     }
@@ -915,11 +1099,23 @@ function handleOnboardingChange() {
   if (onboardingHydrating) return;
 
   if (onboardingSubmitError.textContent) {
-    renderOnboardingErrors(validateOnboardingPayload(buildOnboardingPayload()));
+    renderOnboardingErrors(filterErrorsForCurrentStep(validateOnboardingPayload(buildOnboardingPayload())));
   }
 
   setOnboardingSubmitError('');
+  renderOnboardingReview();
   scheduleOnboardingDraftSave();
+}
+
+function handleOnboardingNextStep() {
+  const payload = buildOnboardingPayload();
+  if (!isOnboardingStepValid(onboardingCurrentStep, payload)) {
+    setOnboardingSubmitError('Complete this step before moving on.');
+    return;
+  }
+
+  setOnboardingSubmitError('');
+  goToOnboardingStep(onboardingCurrentStep + 1);
 }
 
 function scheduleOnboardingDraftSave() {
@@ -959,6 +1155,11 @@ async function handleOnboardingSubmit(event) {
   event.preventDefault();
   if (onboardingSubmitting) return;
 
+  if (onboardingCurrentStep < getOnboardingLastStepIndex()) {
+    handleOnboardingNextStep();
+    return;
+  }
+
   window.clearTimeout(onboardingDraftTimer);
   const payload = buildOnboardingPayload();
   const errors = validateOnboardingPayload(payload);
@@ -992,7 +1193,7 @@ async function handleRegenerateProgram(trigger) {
   if (!appState.me?.lifecycle?.onboarding_completed) return;
   if (trigger.disabled) return;
 
-  const confirmed = window.confirm('Regenerate your current program from your saved preferences?');
+  const confirmed = window.confirm('Replace your current plan with one rebuilt from your saved preferences?');
   if (!confirmed) return;
 
   trigger.disabled = true;
@@ -1030,7 +1231,7 @@ async function refreshProductState() {
   }
 
   setShellMode('app');
-  setProgramActionsVisible(true);
+  setProgramActionsVisible(Boolean(me.lifecycle.has_active_program));
   activateTab(getActiveTabId());
 
   if (!me.lifecycle.has_active_program) {
@@ -1073,7 +1274,7 @@ async function bootstrapApp() {
 
     if (isMissingProgramError(error)) {
       setShellMode('app');
-      setProgramActionsVisible(true);
+      setProgramActionsVisible(false);
       renderTodayRecoveryState();
       return;
     }

@@ -39,206 +39,264 @@
       </div>
 
       <form id="onboarding-form" class="onboarding-form" novalidate>
-        <section class="card onboarding-card">
-          <h2 class="card-title">Goals</h2>
-          <p class="card-subtitle">Pick one or more outcomes you care about most.</p>
-          <div class="choice-grid">
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="goals" value="strength">
-              <span><strong>Strength</strong><small>Bias the plan toward getting stronger at home.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="goals" value="muscle">
-              <span><strong>Muscle</strong><small>Lean toward extra volume and muscle-building work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="goals" value="general_fitness">
-              <span><strong>General fitness</strong><small>Keep things balanced, sustainable, and beginner-friendly.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="goals" value="mobility">
-              <span><strong>Mobility</strong><small>Bias sessions toward movement quality and recovery.</small></span>
-            </label>
+        <div id="onboarding-progress" class="card onboarding-progress-card" aria-label="Onboarding progress">
+          <div class="onboarding-progress-steps">
+            <div class="onboarding-progress-step active" data-onboarding-step-item="0">
+              <span class="onboarding-progress-index">1</span>
+              <span class="onboarding-progress-copy">Profile</span>
+            </div>
+            <div class="onboarding-progress-step" data-onboarding-step-item="1">
+              <span class="onboarding-progress-index">2</span>
+              <span class="onboarding-progress-copy">Schedule</span>
+            </div>
+            <div class="onboarding-progress-step" data-onboarding-step-item="2">
+              <span class="onboarding-progress-index">3</span>
+              <span class="onboarding-progress-copy">Preferences</span>
+            </div>
+            <div class="onboarding-progress-step" data-onboarding-step-item="3">
+              <span class="onboarding-progress-index">4</span>
+              <span class="onboarding-progress-copy">Review</span>
+            </div>
           </div>
-          <p class="field-error" data-error-for="goals"></p>
+        </div>
+
+        <section class="card onboarding-card onboarding-step-panel" data-onboarding-step-panel="0">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 1 of 4</div>
+            <h2 class="card-title">Who this plan is for</h2>
+            <p class="card-subtitle">Start with your goal and current level so the plan opens in the right place.</p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Goals</h3>
+            <p class="onboarding-group-copy">Pick one or more outcomes you care about most.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="strength">
+                <span><strong>Strength</strong><small>Bias the plan toward getting stronger at home.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="muscle">
+                <span><strong>Muscle</strong><small>Lean toward extra volume and muscle-building work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="general_fitness">
+                <span><strong>General fitness</strong><small>Keep things balanced, sustainable, and beginner-friendly.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="goals" value="mobility">
+                <span><strong>Mobility</strong><small>Bias sessions toward movement quality and recovery.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="goals"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Experience</h3>
+            <p class="onboarding-group-copy">This mainly changes the starting difficulty, not your long-term ceiling.</p>
+            <div class="choice-grid choice-grid-3">
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="beginner">
+                <span><strong>Beginner</strong><small>Simple home-friendly starting point.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="intermediate">
+                <span><strong>Intermediate</strong><small>More challenge and slightly denser sessions.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="radio" name="experienceLevel" value="advanced">
+                <span><strong>Advanced</strong><small>Higher targets and less hand-holding.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="experienceLevel"></p>
+          </div>
         </section>
 
-        <section class="card onboarding-card">
-          <h2 class="card-title">Experience</h2>
-          <p class="card-subtitle">This mainly changes the starting difficulty, not your long-term ceiling.</p>
-          <div class="choice-grid choice-grid-3">
-            <label class="choice-pill">
-              <input class="choice-input" type="radio" name="experienceLevel" value="beginner">
-              <span><strong>Beginner</strong><small>Simple home-friendly starting point.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="radio" name="experienceLevel" value="intermediate">
-              <span><strong>Intermediate</strong><small>More challenge and slightly denser sessions.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="radio" name="experienceLevel" value="advanced">
-              <span><strong>Advanced</strong><small>Higher targets and less hand-holding.</small></span>
-            </label>
+        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="1">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 2 of 4</div>
+            <h2 class="card-title">Build a realistic week</h2>
+            <p class="card-subtitle">Set the rhythm and session length you can actually maintain.</p>
           </div>
-          <p class="field-error" data-error-for="experienceLevel"></p>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Weekly rhythm</h3>
+            <p class="onboarding-group-copy">Choose a realistic training rhythm you can actually keep.</p>
+            <div class="choice-grid choice-grid-4">
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="2">
+                <span><strong>2 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="3">
+                <span><strong>3 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="4">
+                <span><strong>4 days</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="5">
+                <span><strong>5 days</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="trainingDaysPerWeek"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Session length</h3>
+            <p class="onboarding-group-copy">We’ll use this to keep the plan practical, not overloaded.</p>
+            <div class="choice-grid choice-grid-4">
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="20">
+                <span><strong>20 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="30">
+                <span><strong>30 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="45">
+                <span><strong>45 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="60">
+                <span><strong>60 min</strong></span>
+              </label>
+              <label class="choice-pill choice-pill-compact">
+                <input class="choice-input" type="radio" name="sessionDurationMinutes" value="75">
+                <span><strong>75 min</strong></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="sessionDurationMinutes"></p>
+          </div>
         </section>
 
-        <section class="card onboarding-card">
-          <h2 class="card-title">Weekly rhythm</h2>
-          <p class="card-subtitle">Choose a realistic training rhythm you can actually keep.</p>
-          <div class="choice-grid choice-grid-4">
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="2">
-              <span><strong>2 days</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="3">
-              <span><strong>3 days</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="4">
-              <span><strong>4 days</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="trainingDaysPerWeek" value="5">
-              <span><strong>5 days</strong></span>
-            </label>
+        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="2">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 3 of 4</div>
+            <h2 class="card-title">Bias the plan</h2>
+            <p class="card-subtitle">Tell us what equipment you have, what to emphasize, and what to avoid.</p>
           </div>
-          <p class="field-error" data-error-for="trainingDaysPerWeek"></p>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Equipment access</h3>
+            <p class="onboarding-group-copy">Bodyweight is a great starting point. Add gear only if you want it considered.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bodyweight">
+                <span><strong>Bodyweight only</strong><small>No equipment needed.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="dumbbells">
+                <span><strong>Dumbbells</strong><small>Use them when they improve the plan.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bands">
+                <span><strong>Bands</strong><small>Helpful for simple rows and mobility work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="bench">
+                <span><strong>Bench</strong><small>Useful for incline push-ups and support work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="equipmentAccess" value="pullup_bar">
+                <span><strong>Pull-up bar</strong><small>Optional upper-body variety.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="equipmentAccess"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Focus areas</h3>
+            <p class="onboarding-group-copy">Choose the areas you want to bias a little more often.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="upper_body">
+                <span><strong>Upper body</strong><small>Push and pull emphasis.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="lower_body">
+                <span><strong>Lower body</strong><small>Squats, bridges, and leg work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="core">
+                <span><strong>Core</strong><small>Stability, trunk strength, and control.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="focusAreas" value="mobility">
+                <span><strong>Mobility</strong><small>Recovery, flexibility, and range of motion.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="focusAreas"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Limitations or discomfort</h3>
+            <p class="onboarding-group-copy">Optional. We’ll use this to avoid movements that tend to aggravate them.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="wrist_sensitive">
+                <span><strong>Wrist sensitive</strong><small>Reduce wrist-loaded moves where possible.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="knee_sensitive">
+                <span><strong>Knee sensitive</strong><small>Bias away from knee-dominant work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="lower_back_sensitive">
+                <span><strong>Lower back sensitive</strong><small>Prefer gentler hinge loading.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="limitations" value="shoulder_sensitive">
+                <span><strong>Shoulder sensitive</strong><small>Bias away from aggravating overhead work.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="limitations"></p>
+          </div>
+
+          <div class="onboarding-step-group">
+            <h3 class="onboarding-group-title">Style preferences</h3>
+            <p class="onboarding-group-copy">These guide the tone of the program, not every single exercise choice.</p>
+            <div class="choice-grid">
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="balanced">
+                <span><strong>Balanced</strong><small>Keep sessions steady and well-rounded.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="strength_bias">
+                <span><strong>Strength bias</strong><small>Lean toward strength-focused work.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="mobility_bias">
+                <span><strong>Mobility bias</strong><small>Include more movement quality and recovery.</small></span>
+              </label>
+              <label class="choice-pill">
+                <input class="choice-input" type="checkbox" name="preferredStyles" value="low_impact">
+                <span><strong>Low impact</strong><small>Favor gentler home-friendly movement patterns.</small></span>
+              </label>
+            </div>
+            <p class="field-error" data-error-for="preferredStyles"></p>
+          </div>
         </section>
 
-        <section class="card onboarding-card">
-          <h2 class="card-title">Session length</h2>
-          <p class="card-subtitle">We’ll use this to keep the plan practical, not overloaded.</p>
-          <div class="choice-grid choice-grid-4">
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="sessionDurationMinutes" value="20">
-              <span><strong>20 min</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="sessionDurationMinutes" value="30">
-              <span><strong>30 min</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="sessionDurationMinutes" value="45">
-              <span><strong>45 min</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="sessionDurationMinutes" value="60">
-              <span><strong>60 min</strong></span>
-            </label>
-            <label class="choice-pill choice-pill-compact">
-              <input class="choice-input" type="radio" name="sessionDurationMinutes" value="75">
-              <span><strong>75 min</strong></span>
-            </label>
+        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="3">
+          <div class="onboarding-step-header">
+            <div class="onboarding-step-kicker">Step 4 of 4</div>
+            <h2 class="card-title">Review before generating</h2>
+            <p class="card-subtitle">Check the setup one last time. You can still go back and adjust anything.</p>
           </div>
-          <p class="field-error" data-error-for="sessionDurationMinutes"></p>
-        </section>
-
-        <section class="card onboarding-card">
-          <h2 class="card-title">Equipment access</h2>
-          <p class="card-subtitle">Bodyweight is a great starting point. Add gear only if you want it considered.</p>
-          <div class="choice-grid">
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="equipmentAccess" value="bodyweight">
-              <span><strong>Bodyweight only</strong><small>No equipment needed.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="equipmentAccess" value="dumbbells">
-              <span><strong>Dumbbells</strong><small>Use them when they improve the plan.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="equipmentAccess" value="bands">
-              <span><strong>Bands</strong><small>Helpful for simple rows and mobility work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="equipmentAccess" value="bench">
-              <span><strong>Bench</strong><small>Useful for incline push-ups and support work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="equipmentAccess" value="pullup_bar">
-              <span><strong>Pull-up bar</strong><small>Optional upper-body variety.</small></span>
-            </label>
-          </div>
-          <p class="field-error" data-error-for="equipmentAccess"></p>
-        </section>
-
-        <section class="card onboarding-card">
-          <h2 class="card-title">Focus areas</h2>
-          <p class="card-subtitle">Choose the areas you want to bias a little more often.</p>
-          <div class="choice-grid">
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="focusAreas" value="upper_body">
-              <span><strong>Upper body</strong><small>Push and pull emphasis.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="focusAreas" value="lower_body">
-              <span><strong>Lower body</strong><small>Squats, bridges, and leg work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="focusAreas" value="core">
-              <span><strong>Core</strong><small>Stability, trunk strength, and control.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="focusAreas" value="mobility">
-              <span><strong>Mobility</strong><small>Recovery, flexibility, and range of motion.</small></span>
-            </label>
-          </div>
-          <p class="field-error" data-error-for="focusAreas"></p>
-        </section>
-
-        <section class="card onboarding-card">
-          <h2 class="card-title">Limitations or discomfort</h2>
-          <p class="card-subtitle">Optional. We’ll use this to avoid movements that tend to aggravate them.</p>
-          <div class="choice-grid">
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="limitations" value="wrist_sensitive">
-              <span><strong>Wrist sensitive</strong><small>Reduce wrist-loaded moves where possible.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="limitations" value="knee_sensitive">
-              <span><strong>Knee sensitive</strong><small>Bias away from knee-dominant work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="limitations" value="lower_back_sensitive">
-              <span><strong>Lower back sensitive</strong><small>Prefer gentler hinge loading.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="limitations" value="shoulder_sensitive">
-              <span><strong>Shoulder sensitive</strong><small>Bias away from aggravating overhead work.</small></span>
-            </label>
-          </div>
-          <p class="field-error" data-error-for="limitations"></p>
-        </section>
-
-        <section class="card onboarding-card">
-          <h2 class="card-title">Style preferences</h2>
-          <p class="card-subtitle">These guide the tone of the program, not every single exercise choice.</p>
-          <div class="choice-grid">
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="preferredStyles" value="balanced">
-              <span><strong>Balanced</strong><small>Keep sessions steady and well-rounded.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="preferredStyles" value="strength_bias">
-              <span><strong>Strength bias</strong><small>Lean toward strength-focused work.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="preferredStyles" value="mobility_bias">
-              <span><strong>Mobility bias</strong><small>Include more movement quality and recovery.</small></span>
-            </label>
-            <label class="choice-pill">
-              <input class="choice-input" type="checkbox" name="preferredStyles" value="low_impact">
-              <span><strong>Low impact</strong><small>Favor gentler home-friendly movement patterns.</small></span>
-            </label>
-          </div>
-          <p class="field-error" data-error-for="preferredStyles"></p>
+          <div id="onboarding-review" class="onboarding-review"></div>
         </section>
 
         <section class="card onboarding-card onboarding-actions-card">
           <p id="onboarding-save-status" class="onboarding-helper-text">We save your setup as you go.</p>
           <div id="onboarding-submit-error" class="error-message onboarding-submit-error"></div>
-          <button id="onboarding-complete-button" type="submit">Generate my plan</button>
+          <div class="onboarding-action-row">
+            <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
+            <button id="onboarding-next-button" class="secondary-button" type="button">Continue</button>
+            <button id="onboarding-complete-button" class="hidden" type="submit">Generate my plan</button>
+          </div>
         </section>
       </form>
     </section>
@@ -285,7 +343,7 @@
       <div id="tab-program" class="tab-content">
         <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Program</span></h1>
         <div class="program-toolbar">
-          <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Regenerate from preferences</button>
+          <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Rebuild plan</button>
         </div>
         <div id="program-loader" class="loader"></div>
         <div id="program-error" class="error-message"></div>

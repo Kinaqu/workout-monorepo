@@ -241,6 +241,61 @@ input:focus, textarea:focus {
   gap: 14px;
 }
 
+.onboarding-progress-card {
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(29, 29, 34, 0.96), rgba(20, 20, 24, 0.99));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.onboarding-progress-steps {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.onboarding-progress-step {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.onboarding-progress-step.active {
+  border-color: rgba(187, 134, 252, 0.36);
+  background: rgba(187, 134, 252, 0.1);
+  color: var(--text-primary);
+}
+
+.onboarding-progress-step.complete {
+  border-color: rgba(3, 218, 198, 0.22);
+  color: #d7fbf6;
+}
+
+.onboarding-progress-index {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.onboarding-progress-step.active .onboarding-progress-index {
+  background: rgba(187, 134, 252, 0.24);
+  color: #f2e8ff;
+}
+
+.onboarding-progress-copy {
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .onboarding-hero-card,
 .onboarding-card {
   background: linear-gradient(180deg, rgba(31, 31, 37, 0.97), rgba(21, 21, 27, 0.99));
@@ -282,6 +337,80 @@ input:focus, textarea:focus {
 
 .onboarding-actions-card {
   gap: 10px;
+}
+
+.onboarding-step-header {
+  margin-bottom: 18px;
+}
+
+.onboarding-step-kicker {
+  margin-bottom: 10px;
+  color: var(--secondary-color);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.onboarding-step-group + .onboarding-step-group {
+  margin-top: 22px;
+}
+
+.onboarding-group-title {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.onboarding-group-copy {
+  margin-bottom: 14px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.onboarding-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-action-row button {
+  width: auto;
+  flex: 1 1 0;
+}
+
+.onboarding-review {
+  display: grid;
+  gap: 14px;
+}
+
+.onboarding-review-section {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.onboarding-review-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.onboarding-review-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onboarding-review-pill {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(187, 134, 252, 0.12);
+  color: #ebdcff;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .onboarding-helper-text {
@@ -950,6 +1079,12 @@ body::-webkit-scrollbar-thumb:hover,
   font-size: 13px;
 }
 
+.program-exercise-meta {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 12px;
+}
+
 .program-sets-pill {
   flex-shrink: 0;
   padding: 8px 10px;
@@ -961,12 +1096,24 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 @media (max-width: 640px) {
+  .onboarding-progress-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .today-overview-card {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .program-toolbar .secondary-button {
+    width: 100%;
+  }
+
+  .onboarding-action-row {
+    flex-direction: column-reverse;
+  }
+
+  .onboarding-action-row button {
     width: 100%;
   }
 
