@@ -1,179 +1,152 @@
 export const navLinks = [
   { label: "How It Works", href: "#how-it-works" },
-  { label: "For You", href: "#for-you" },
-  { label: "Results", href: "#results" },
+  { label: "Who It's For", href: "#for-you" },
+  { label: "Early Access", href: "#early-access" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
 export const heroHighlights = [
-  "Starts from your real level",
+  "Starts from your current level",
   "Works at home, outdoors, or with minimal equipment",
-  "Adjusts when life or recovery gets messy",
+  "Adjusts after missed sessions or low-recovery weeks",
 ] as const;
 
 export const trustItems = [
-  "Adaptive progression instead of generic plans",
-  "Bodyweight, minimal-equipment, and outdoor-ready",
+  "Built for bodyweight, bands, rings, bars, and compact home setups",
+  "Structured around 20 to 45 minute sessions",
   "Designed for beginners and returning athletes",
-  "Structured weekly plans with clear next steps",
-  "Recovery-aware adjustments that keep momentum alive",
-  "Prelaunch early access for focused beta users",
 ] as const;
 
 export const trustStats = [
   {
-    label: "Plan style",
-    value: "Adaptive weekly structure",
-    detail: "Assessment-led and adjusted by session feedback",
+    label: "Session length",
+    value: "20 to 45 minutes",
+    detail: "Short enough for weekdays, structured enough to matter.",
   },
   {
-    label: "Built for",
-    value: "Home, outdoors, minimal equipment",
-    detail: "No gym-first assumptions in the core flow",
+    label: "Setup fit",
+    value: "Home, park, or minimal gear",
+    detail: "No gym-first assumptions in the core plan.",
   },
   {
-    label: "Session rhythm",
-    value: "20 to 45 minute training blocks",
-    detail: "Made for real schedules instead of ideal ones",
+    label: "Plan response",
+    value: "Advance, hold, or scale back",
+    detail: "The next session reacts to what actually happened.",
   },
 ] as const;
 
 export const flowSteps = [
   {
     number: "01",
-    title: "Run a quick fit check",
+    title: "Start with a fast fit check",
     description:
-      "Tell Kinova your current level, goals, available equipment, weekly schedule, and any movement limits.",
-    detailLabel: "Assessment snapshot",
+      "Tell Kinova your level, goal, available equipment, schedule, and any movement limits.",
+    detailLabel: "Example input",
     detailValue: "Beginner, 3x per week, pull-up goal, bands + floor space",
   },
   {
     number: "02",
-    title: "Get a weekly plan that fits now",
+    title: "Get a plan that fits this week",
     description:
-      "Kinova maps your training week with focused sessions, progression targets, and volume that matches your current capacity.",
-    detailLabel: "Week example",
+      "Kinova maps a week of focused sessions around your actual capacity instead of an ideal routine.",
+    detailLabel: "Week view",
     detailValue: "Pull, lower body, mobility reset, optional outdoor conditioning",
   },
   {
     number: "03",
-    title: "Train and log what actually happened",
+    title: "Train and log the signal",
     description:
-      "Complete the session, mark what felt strong or heavy, and keep a useful record instead of vague notes you never revisit.",
-    detailLabel: "Session note",
-    detailValue: "Grip fatigue high, core felt strong, finished in 31 minutes",
+      "Complete the session and note what felt smooth, heavy, or incomplete so the plan stays useful.",
+    detailLabel: "Session signal",
+    detailValue: "Grip fatigue high, core strong, finished in 31 minutes",
   },
   {
     number: "04",
-    title: "Let the next step adjust",
+    title: "Let the next step adapt",
     description:
-      "When you are ready, Kinova advances the path. If the week is rough, it regresses intelligently and keeps momentum alive.",
+      "Strong sessions move you forward. Rough weeks trigger smarter regressions without breaking momentum.",
     detailLabel: "Adaptive update",
-    detailValue: "Volume reduced, progression path preserved, next session still on track",
+    detailValue: "Volume trimmed, progression path preserved, next workout still clear",
   },
 ] as const;
 
 export const featureCards = [
   {
-    title: "Adaptive difficulty",
-    body: "Kinova raises the challenge when you are ready and scales intelligently when you are not, so progress stays sustainable.",
-    eyebrow: "Core system",
+    title: "Progression that meets the day",
+    body: "Kinova raises difficulty when the signal is good and scales back when recovery, adherence, or form says it should.",
+    eyebrow: "Adaptive engine",
     accent: "from-[#125bff]/30 via-[#125bff]/10 to-transparent",
     span: "lg:col-span-2 lg:row-span-2",
     bullets: [
-      "Progression steps instead of all-or-nothing intensity",
-      "Recovery-aware adjustments after difficult sessions",
+      "Advance, hold, or regress with purpose",
+      "Protects consistency after rough sessions",
     ],
   },
   {
-    title: "Weekly structure with a clear purpose",
-    body: "Every session connects to a bigger goal, so users always know what they are doing and why it matters.",
-    eyebrow: "Training flow",
+    title: "A real weekly structure",
+    body: "Every session has a job inside the week, so users stop guessing what to do next.",
+    eyebrow: "Weekly plan",
     accent: "from-white/14 via-white/6 to-transparent",
     span: "lg:col-span-2",
-    bullets: [
-      "Pull, push, lower body, mobility, conditioning",
-      "No random workout roulette",
-    ],
+    bullets: ["Clear training split", "No workout roulette"],
   },
   {
-    title: "Built for real-world constraints",
-    body: "Home setups, park sessions, small spaces, and limited time are treated as first-class inputs, not edge cases.",
+    title: "Constraint-aware by default",
+    body: "Small spaces, simple tools, and uneven schedules are built into the plan from the start.",
     eyebrow: "Practical fit",
     accent: "from-[#8ab4ff]/25 via-[#8ab4ff]/8 to-transparent",
     span: "lg:col-span-1",
     bullets: ["Minimal-equipment friendly", "Short-session ready"],
   },
   {
-    title: "Smarter regressions",
-    body: "Missing a movement or struggling with a session does not break the plan. Kinova gives the next best step and keeps the line moving.",
-    eyebrow: "Momentum",
+    title: "Useful feedback, not noise",
+    body: "A few honest session signals are enough to keep the route moving in the right direction.",
+    eyebrow: "Feedback loop",
     accent: "from-[#7cf2c8]/18 via-[#7cf2c8]/5 to-transparent",
     span: "lg:col-span-1",
-    bullets: ["Treats setbacks as strategy", "Protects consistency"],
-  },
-  {
-    title: "Guidance for normal people, not ideal athletes",
-    body: "The system is made for beginners, returners, and people who need structure without being overpowered by a coach voice.",
-    eyebrow: "Tone",
-    accent: "from-[#ffd66b]/18 via-[#ffd66b]/6 to-transparent",
-    span: "lg:col-span-2",
-    bullets: [
-      "Clear prompts instead of fitness jargon",
-      "Designed for confidence as much as performance",
-    ],
+    bullets: ["Logs what matters", "Keeps the next step clear"],
   },
 ] as const;
 
 export const comparisonRows = [
   {
-    generic: "Generic content libraries and random sessions",
-    kinova: "One evolving plan shaped around your current level and target",
+    generic: "Random workouts picked session by session",
+    kinova: "One weekly plan shaped around your current level and goal",
   },
   {
-    generic: "Intensity that is too hard, too easy, or both",
-    kinova: "Progression that adapts to performance and readiness",
+    generic: "Gym-first defaults",
+    kinova: "Home, park, bodyweight, and minimal-equipment ready",
   },
   {
-    generic: "A missed week breaks the rhythm",
-    kinova: "The route adjusts and keeps momentum alive",
+    generic: "A rough week breaks the rhythm",
+    kinova: "The route adapts and keeps momentum alive",
   },
   {
-    generic: "Gym-first assumptions",
-    kinova: "Home, park, bodyweight, and minimal-equipment ready by default",
+    generic: "Progression feels unclear",
+    kinova: "Each next step reacts to performance and readiness",
   },
 ] as const;
 
 export const audienceCards = [
   {
-    title: "New to training",
+    title: "Beginners",
     description:
-      "Start with accessible progressions, confident instructions, and sessions that teach you how to build the base correctly.",
+      "Start from progressions you can actually complete instead of plans that overshoot day one.",
   },
   {
     title: "Returning after a break",
     description:
-      "Rebuild without rushing, using structure that respects where your body is now instead of where it used to be.",
+      "Rebuild with structure that respects your current capacity instead of your old numbers.",
   },
   {
     title: "Home training users",
     description:
-      "Train in small spaces with simple tools, bodyweight variations, and weekly plans that do not assume a full gym.",
+      "Use bodyweight, bands, a pull-up bar, or a compact setup without losing plan quality.",
   },
   {
     title: "Outdoor and calisthenics users",
     description:
-      "Use parks, bars, rings, and bodyweight patterns while still following a plan with clear progression logic.",
-  },
-  {
-    title: "People short on time",
-    description:
-      "Keep sessions concise and useful, with 20 to 45 minute blocks that fit a real calendar instead of an aspirational one.",
-  },
-  {
-    title: "People who need structure",
-    description:
-      "Stop guessing what to do next and follow a route that connects each session to a larger outcome.",
+      "Train with bars, rings, and park sessions while still following a progression-based weekly plan.",
   },
 ] as const;
 
@@ -181,61 +154,61 @@ export const progressionStates = [
   {
     title: "Advance when the signal is strong",
     description:
-      "Good form, stable volume, and strong session feedback unlock the next variation or load target gradually.",
+      "Good form, stable volume, and strong session feedback unlock the next progression step.",
   },
   {
-    title: "Regress intelligently when a session is rough",
+    title: "Hold or scale back when needed",
     description:
-      "Kinova drops to a smarter step when needed, so users still complete productive work instead of forcing misses.",
+      "Kinova can reduce load or complexity without making the user feel like they lost the whole week.",
   },
   {
-    title: "Protect the streak after imperfect weeks",
+    title: "Protect momentum after imperfect weeks",
     description:
-      "Schedule breaks, life friction, and low-energy sessions do not reset everything. The plan bends and keeps moving forward.",
+      "Schedule breaks and uneven recovery change the route, not the overall direction.",
   },
 ] as const;
 
 export const outcomeCards = [
   {
-    title: "Consistency feels realistic",
-    body: "Users stop negotiating with random workouts and start following a plan that fits the week they actually have.",
+    title: "Training feels easier to stick to",
+    body: "The plan fits the week you actually have, so consistency stops feeling fragile.",
   },
   {
-    title: "Progression stops feeling chaotic",
-    body: "Strength, movement quality, and skill development build from one step to the next instead of stalling in place.",
+    title: "Progression stops feeling random",
+    body: "Users can see why a session moved forward, stayed steady, or scaled back.",
   },
   {
-    title: "Confidence increases with every session",
-    body: "When the plan meets the level correctly, training feels less intimidating and more repeatable.",
+    title: "Confidence grows session by session",
+    body: "Better fit means less second-guessing and more useful reps over time.",
   },
 ] as const;
 
 export const testimonials = [
   {
     quote:
-      "The biggest difference is that it does not punish an imperfect week. I still know what the next right step is.",
-    name: "Early beta user",
+      "The biggest change is that a rough week no longer breaks the plan. I still know what to do next.",
+    name: "Pilot user",
     role: "Returning to training",
   },
   {
     quote:
-      "It feels built for actual life. Small apartment, bands, pull-up bar, 30 minutes. The plan still makes sense.",
-    name: "Pilot user",
-    role: "Home and bodyweight training",
+      "Small apartment, bands, pull-up bar, 30 minutes. It still feels like a real program instead of a compromise.",
+    name: "Early access applicant",
+    role: "Home training setup",
   },
   {
     quote:
-      "Instead of telling me to push harder, it adjusts and keeps me progressing. That alone changes adherence.",
-    name: "Coach feedback",
-    role: "Movement and progression review",
+      "The logic is clear. It adapts without turning every session into a negotiation.",
+    name: "Coach review",
+    role: "Movement and progression feedback",
   },
 ] as const;
 
 export const methodologyPoints = [
-  "Assessment-led planning before the first week starts",
-  "Progression logic that respects readiness, not ego",
+  "Assessment-led planning before week one starts",
+  "Progression logic tied to readiness and session signal",
   "Movement quality, strength, and consistency treated as one system",
-  "Designed for people without ideal schedules or ideal equipment",
+  "Designed for limited time and limited equipment",
 ] as const;
 
 export const pricingTiers = [
@@ -243,23 +216,23 @@ export const pricingTiers = [
     name: "Early Access",
     price: "Free",
     description:
-      "Join the first wave, shape the product, and get direct access to early Kinova updates.",
+      "Join the first Kinova cohort and help shape the adaptive planning experience from the start.",
     points: [
-      "Priority access to the adaptive planning beta",
-      "Early product walkthrough and fit-check flow",
-      "Feedback channel with the Kinova team",
+      "Access to the early planning flow",
+      "Product updates as new capabilities ship",
+      "Direct feedback channel with the Kinova team",
     ],
     highlighted: true,
   },
   {
-    name: "What happens next",
-    price: "Fast follow-up",
+    name: "What to expect",
+    price: "Small batch onboarding",
     description:
-      "After you apply, Kinova reviews fit, sends onboarding details, and shares next-step access as new slots open.",
+      "Apply once, share your setup, and get a clear follow-up instead of disappearing into a generic waitlist.",
     points: [
-      "No generic mailing-list dead end",
-      "Clear signal on timing and availability",
-      "Built for focused early adopters, not mass signups",
+      "We review goal, setup, and current fit",
+      "You get a clear next step by email",
+      "New users are invited in focused batches",
     ],
     highlighted: false,
   },
@@ -269,41 +242,31 @@ export const faqs = [
   {
     question: "Is Kinova for complete beginners?",
     answer:
-      "Yes. The first step is a fit check that places users at a realistic starting point, so the plan begins with movements and volume they can actually handle.",
+      "Yes. The fit check places you at a realistic starting point so the plan begins with work you can handle.",
   },
   {
-    question: "How does Kinova adapt difficulty?",
+    question: "Do I need a full gym?",
     answer:
-      "Kinova uses training inputs like completed work, session feel, readiness, and progression state to decide whether to advance, hold, or regress the next step.",
+      "No. Kinova is designed for bodyweight, minimal equipment, and simple home or outdoor setups.",
   },
   {
-    question: "What if I miss a week or have a rough session?",
+    question: "What happens after a rough week?",
     answer:
-      "The plan does not assume perfect adherence. Kinova adjusts the route and protects momentum instead of treating a difficult week like failure.",
-  },
-  {
-    question: "Do I need equipment?",
-    answer:
-      "No full gym is required. Kinova is designed to work with bodyweight, minimal equipment, and simple home or outdoor setups.",
+      "The plan adapts. Kinova can hold or scale back the next step without erasing momentum.",
   },
   {
     question: "How long are sessions?",
     answer:
-      "Most sessions are designed to land in a practical range, typically around 20 to 45 minutes depending on the user profile and training block.",
+      "Most sessions are built to land in a practical 20 to 45 minute range.",
   },
   {
     question: "Is this replacing a coach?",
     answer:
-      "Kinova is closer to an adaptive planning system than a motivational coach feed. It gives users structure, progression, and next-step clarity they can actually follow.",
+      "No. Kinova is an adaptive planning system for people who want structure and a clear next step.",
   },
   {
-    question: "What happens after I request early access?",
+    question: "What happens after I request access?",
     answer:
-      "You land in the early-access flow, share your training context, and the team uses that signal to open beta spots with clearer product fit.",
-  },
-  {
-    question: "What about privacy?",
-    answer:
-      "Only the information needed for onboarding and adaptive planning should be collected. Privacy and usage details are documented in the dedicated policy pages.",
+      "You share your training context, the team reviews fit, and new spots open in small batches.",
   },
 ] as const;

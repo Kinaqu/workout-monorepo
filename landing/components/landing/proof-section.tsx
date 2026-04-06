@@ -7,9 +7,9 @@ export function ProofSection() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
           <SectionHeading
-            eyebrow="Results"
-            title="The win is not just intensity. The win is staying on a route that keeps working."
-            description="A stronger plan changes how training feels week after week. The user knows what to do next, recovers without panic, and sees progress without fighting the product."
+            eyebrow="What Changes"
+            title="The win is a plan you can keep following."
+            description="Kinova is built to make consistency feel realistic, progression feel legible, and rough weeks less expensive."
           />
 
           <div className="grid gap-4">
@@ -32,13 +32,13 @@ export function ProofSection() {
               ))}
             </div>
 
-            <div className="rounded-[1.75rem] bg-[#08111f] p-6 text-white shadow-[0_30px_90px_rgba(5,7,11,0.2)]">
-              <p className="text-xs tracking-[0.26em] text-[#8ab4ff] uppercase">
-                Proof layer
+            <div className="rounded-[1.75rem] border border-[#dbe4f2] bg-[#f8fbff] p-6">
+              <p className="text-xs tracking-[0.26em] text-[#125bff] uppercase">
+                Early-access focus
               </p>
-              <p className="mt-4 max-w-3xl font-display text-3xl leading-tight font-semibold tracking-[-0.04em] sm:text-4xl">
-                Kinova should feel like the first workout product that adapts
-                with the user instead of silently assuming they can keep up.
+              <p className="mt-4 max-w-3xl font-display text-3xl leading-tight font-semibold tracking-[-0.04em] text-[#09111d] sm:text-4xl">
+                Built for people who need the next right session, not another
+                endless workout feed.
               </p>
             </div>
 

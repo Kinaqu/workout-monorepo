@@ -7,8 +7,8 @@ export function HowItWorksSection() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
         <SectionHeading
           eyebrow="How It Works"
-          title="A product flow that starts with the user, then adapts the route."
-          description="Kinova is not a content feed disguised as a plan. It begins with a fit check, builds a week that matches reality, and uses session signals to shape what comes next."
+          title="From fit check to next step in four moves."
+          description="Kinova keeps the loop simple: place the user correctly, map the week, log the signal, and adapt the route."
         />
 
         <div className="mt-14 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
@@ -21,9 +21,6 @@ export function HowItWorksSection() {
                 <p className="text-xs font-semibold tracking-[0.28em] text-[#125bff] uppercase">
                   {step.number}
                 </p>
-                <div className="rounded-full border border-[#cfe0ff] bg-white px-3 py-1 text-[0.68rem] font-semibold tracking-[0.2em] text-[#125bff] uppercase">
-                  Product state
-                </div>
               </div>
               <h3 className="mt-5 font-display text-2xl leading-tight font-semibold tracking-[-0.04em]">
                 {step.title}

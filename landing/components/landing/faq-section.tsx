@@ -7,8 +7,8 @@ export function FaqSection() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12">
         <SectionHeading
           eyebrow="FAQ"
-          title="Practical answers for the objections that actually stop signup."
-          description="The FAQ should not repeat the headline. It should remove uncertainty around fit, equipment, time, adaptation logic, and what happens after someone requests access."
+          title="Answers to the questions that usually block signup."
+          description="Short answers on fit, equipment, session length, and what happens after you apply."
         />
 
         <div className="mt-14 grid gap-4">
@@ -23,7 +23,7 @@ export function FaqSection() {
                   +
                 </span>
               </summary>
-              <p className="mt-4 max-w-3xl pr-10 text-base leading-8 text-[#556274]">
+              <p className="mt-4 max-w-3xl pr-10 text-base leading-7 text-[#556274]">
                 {item.answer}
               </p>
             </details>

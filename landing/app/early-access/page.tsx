@@ -31,10 +31,30 @@ export default function EarlyAccessPage() {
             Tell Kinova how you train now.
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
-            This flow is built for focused prelaunch users. Share your context,
-            equipment, and goal so Kinova can prioritize early access with
-            better fit and clearer onboarding.
+            Share your goal, setup, and current routine. Kinova uses that
+            signal to prioritize fit and onboard new users in focused batches.
           </p>
+
+          <div className="mt-8 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 text-sm text-white/72 sm:grid-cols-3">
+            <div>
+              <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
+                01
+              </p>
+              <p className="mt-2">Share your current setup and goal.</p>
+            </div>
+            <div>
+              <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
+                02
+              </p>
+              <p className="mt-2">Kinova reviews fit for the next cohort.</p>
+            </div>
+            <div>
+              <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
+                03
+              </p>
+              <p className="mt-2">You get a clear follow-up by email.</p>
+            </div>
+          </div>
 
           <form
             action={`mailto:${siteConfig.email}`}
@@ -117,8 +137,7 @@ export default function EarlyAccessPage() {
               >
                 {siteConfig.email}
               </a>
-              . Replace this address in `data/site-config.ts` if the project
-              uses a different contact inbox.
+              . If you prefer, you can also email the same details directly.
             </div>
 
             <button

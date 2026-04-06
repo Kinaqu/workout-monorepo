@@ -23,11 +23,11 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   keywords: [
-    "adaptive workout app",
+    "adaptive strength training",
     "bodyweight training plan",
-    "home workout progression",
-    "fitness landing page",
-    "personalized training",
+    "home workout plan",
+    "minimal equipment workout app",
+    "personalized workout progression",
   ],
   openGraph: {
     title: siteConfig.title,
