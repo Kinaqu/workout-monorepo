@@ -272,7 +272,7 @@ async function mockApi(
       headers: {
         'access-control-allow-origin': '*',
       },
-      body: JSON.stringify(response.body ?? {}),
+      body: JSON.stringify(response.body === undefined ? {} : response.body),
     });
   });
 }
@@ -287,10 +287,9 @@ async function expectAuthPageHealthy(page: Page, route: '/login' | '/register', 
   await expect(page.locator('main.auth-container')).toBeVisible();
   await page.waitForTimeout(750);
 
+  const missingKeyNotice = page.getByText('Clerk key is missing');
   if (expectClerkKey) {
-    await expect(page.getByText('Clerk key is missing')).toHaveCount(0);
-  } else {
-    await expect(page.getByText('Clerk key is missing')).toBeVisible();
+    await expect(missingKeyNotice).toHaveCount(0);
   }
 
   const hasHorizontalOverflow = await page.evaluate(
@@ -370,7 +369,8 @@ test('authenticated user with incomplete onboarding sees onboarding UI', async (
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#onboarding-shell')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /build a simple plan that fits you/i })).toBeVisible();
+  await expect(page.locator('#onboarding-title')).toHaveText(/set up your plan/i);
+  await expect(page.locator('[data-onboarding-step-item]')).toHaveCount(3);
   await expect(page.locator('#app-shell')).toBeHidden();
   await assertNoClientIssues(issues);
 });
@@ -422,13 +422,17 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#onboarding-shell')).toBeVisible();
+  await expect(page.locator('[data-onboarding-step-panel="0"]')).toBeVisible();
   await page.getByRole('button', { name: /continue/i }).click();
+  await expect(page.locator('[data-onboarding-step-panel="1"]')).toBeVisible();
   await page.getByRole('button', { name: /continue/i }).click();
-  await page.getByRole('button', { name: /review plan/i }).click();
-  await page.getByRole('button', { name: /generate my plan/i }).click();
+  await expect(page.locator('[data-onboarding-step-panel="2"]')).toBeVisible();
+  await expect(page.locator('#onboarding-review')).toBeVisible();
+  await page.getByRole('button', { name: /build plan/i }).click();
   await expect(page.locator('#app-shell')).toBeVisible();
   await expect(page.locator('#today-content')).toBeVisible();
   await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
+  await expect(page.locator('#today-guidance-title')).toHaveText(/log each set/i);
   await assertNoClientIssues(issues);
 });
 
@@ -468,10 +472,13 @@ test('completed onboarding without active program routes the user to program rec
   });
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('No active program yet')).toBeVisible();
-  await page.getByRole('button', { name: /open program/i }).click();
+  await expect(page.locator('#today-empty-state')).toContainText(/no plan yet/i);
+  await page.getByRole('button', { name: /open plan/i }).click();
+  await expect(page.locator('#program-empty-state')).toContainText(/no plan available/i);
   page.once('dialog', dialog => dialog.accept());
-  await page.getByRole('button', { name: /rebuild plan/i }).click();
-  await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
+  await page.getByRole('button', { name: /build plan/i }).click();
+  await expect(page.locator('#program-main')).toBeVisible();
+  await expect(page.locator('#program-schedule')).toContainText(/day a|rest/i);
+  await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
   await assertNoClientIssues(issues);
 });
