@@ -47,10 +47,14 @@ const appNav = document.getElementById('app-nav');
 const tabs = document.querySelectorAll('.tab-content');
 const navItems = document.querySelectorAll('.nav-item');
 const todayEmptyState = document.getElementById('today-empty-state');
+const todayGuidance = document.getElementById('today-guidance');
+const todayGuidanceTitle = document.getElementById('today-guidance-title');
+const todayGuidanceCopy = document.getElementById('today-guidance-copy');
 const programEmptyState = document.getElementById('program-empty-state');
 const programMain = document.getElementById('program-main');
 const programRegenerateButton = document.getElementById('program-regenerate-button');
 const historyEmpty = document.getElementById('history-empty');
+const historyNoteCard = document.getElementById('history-note-card');
 
 navItems.forEach(item => {
   item.addEventListener('click', () => {
@@ -133,6 +137,39 @@ function getTodayDateString() {
   return new Date().toISOString().split('T')[0];
 }
 
+function humanizeToken(value = '') {
+  return String(value)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, match => match.toUpperCase());
+}
+
+function formatWorkoutTypeLabel(type) {
+  if (!type) return '';
+  if (type === 'rest') return 'Rest day';
+  if (/^[A-Za-z]$/.test(type)) return `Day ${type.toUpperCase()}`;
+  return humanizeToken(type);
+}
+
+function formatPlanSlotLabel(type) {
+  if (!type || type === 'rest') return 'Rest';
+  if (/^[A-Za-z]$/.test(type)) return `Day ${type.toUpperCase()}`;
+  return humanizeToken(type);
+}
+
+function formatDateLabel(value) {
+  if (!value) return '';
+
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 function setTodayError(message = '') {
   document.getElementById('today-error').textContent = message;
 }
@@ -152,6 +189,15 @@ function setOnboardingSaveStatus(message, tone = 'neutral') {
 
 function setOnboardingSubmitError(message = '') {
   onboardingSubmitError.textContent = message;
+}
+
+function setTodayGuidance(title = '', copy = '') {
+  if (!todayGuidance || !todayGuidanceTitle || !todayGuidanceCopy) return;
+
+  const visible = Boolean(title || copy);
+  todayGuidance.classList.toggle('hidden', !visible);
+  todayGuidanceTitle.textContent = title;
+  todayGuidanceCopy.textContent = copy;
 }
 
 function getActiveTabId() {
@@ -301,14 +347,14 @@ function renderOnboardingReview(payload = buildOnboardingPayload()) {
   if (!onboardingReview) return;
 
   const sections = [
-    { title: 'Goals', values: formatOnboardingReviewValues('goals', payload.goals) },
-    { title: 'Experience', values: formatOnboardingReviewValues('experienceLevel', payload.experienceLevel) },
-    { title: 'Weekly rhythm', values: formatOnboardingReviewValues('trainingDaysPerWeek', String(payload.trainingDaysPerWeek)) },
-    { title: 'Session length', values: formatOnboardingReviewValues('sessionDurationMinutes', String(payload.sessionDurationMinutes)) },
+    { title: 'Goal', values: formatOnboardingReviewValues('goals', payload.goals) },
+    { title: 'Level', values: formatOnboardingReviewValues('experienceLevel', payload.experienceLevel) },
+    { title: 'Days', values: formatOnboardingReviewValues('trainingDaysPerWeek', String(payload.trainingDaysPerWeek)) },
+    { title: 'Length', values: formatOnboardingReviewValues('sessionDurationMinutes', String(payload.sessionDurationMinutes)) },
     { title: 'Equipment', values: formatOnboardingReviewValues('equipmentAccess', payload.equipmentAccess) },
-    { title: 'Focus areas', values: formatOnboardingReviewValues('focusAreas', payload.focusAreas) },
-    { title: 'Limitations', values: formatOnboardingReviewValues('limitations', payload.limitations) },
-    { title: 'Style preferences', values: formatOnboardingReviewValues('preferredStyles', payload.preferredStyles) },
+    { title: 'Focus', values: formatOnboardingReviewValues('focusAreas', payload.focusAreas) },
+    { title: 'Avoid', values: formatOnboardingReviewValues('limitations', payload.limitations) },
+    { title: 'Style', values: formatOnboardingReviewValues('preferredStyles', payload.preferredStyles) },
   ];
 
   onboardingReview.innerHTML = '';
@@ -344,11 +390,15 @@ function syncOnboardingStepUI() {
 
   if (onboardingNextButton) {
     onboardingNextButton.classList.toggle('hidden', onboardingCurrentStep === lastStep);
-    onboardingNextButton.textContent = onboardingCurrentStep === lastStep - 1 ? 'Review plan' : 'Continue';
+    onboardingNextButton.textContent = 'Continue';
   }
 
   if (onboardingCompleteButton) {
     onboardingCompleteButton.classList.toggle('hidden', onboardingCurrentStep !== lastStep);
+  }
+
+  if (onboardingReview) {
+    onboardingReview.classList.toggle('hidden', onboardingCurrentStep !== lastStep);
   }
 
   renderOnboardingReview();
@@ -397,29 +447,29 @@ function validateOnboardingPayload(payload) {
   const errors = {};
 
   if (payload.goals.length === 0) {
-    errors.goals = 'Choose at least one goal.';
+    errors.goals = 'Pick at least one goal.';
   }
   if (!payload.experienceLevel) {
-    errors.experienceLevel = 'Choose your current experience level.';
+    errors.experienceLevel = 'Choose your level.';
   }
   if (!payload.trainingDaysPerWeek || payload.trainingDaysPerWeek < 2 || payload.trainingDaysPerWeek > 5) {
-    errors.trainingDaysPerWeek = 'Pick a weekly training rhythm between 2 and 5 days.';
+    errors.trainingDaysPerWeek = 'Choose between 2 and 5 days.';
   }
   if (
     !payload.sessionDurationMinutes ||
     payload.sessionDurationMinutes < 20 ||
     payload.sessionDurationMinutes > 75
   ) {
-    errors.sessionDurationMinutes = 'Pick a session length between 20 and 75 minutes.';
+    errors.sessionDurationMinutes = 'Choose between 20 and 75 minutes.';
   }
   if (payload.equipmentAccess.length === 0) {
-    errors.equipmentAccess = 'Choose at least one equipment option.';
+    errors.equipmentAccess = 'Pick at least one equipment option.';
   }
   if (payload.focusAreas.length === 0) {
     errors.focusAreas = 'Pick at least one focus area.';
   }
   if (payload.preferredStyles.length === 0) {
-    errors.preferredStyles = 'Pick at least one style preference.';
+    errors.preferredStyles = 'Pick at least one style.';
   }
 
   return errors;
@@ -468,7 +518,7 @@ function hydrateOnboardingForm(onboarding) {
   onboardingCurrentStep = onboarding?.status === 'draft' ? resolveDraftOnboardingStep(data) : 0;
   syncOnboardingStepUI();
   setOnboardingSaveStatus(
-    onboarding?.status === 'draft' ? 'Draft restored. We save updates as you go.' : 'We save your setup as you go.',
+    onboarding?.status === 'draft' ? 'Draft restored.' : 'Progress saves automatically.',
     'neutral'
   );
 }
@@ -488,7 +538,7 @@ async function loadOnboardingState() {
       completedAt: null,
       answers: createDefaultOnboardingData(),
     });
-    setOnboardingSaveStatus('Could not load a saved draft. You can still continue.', 'error');
+    setOnboardingSaveStatus('Could not load saved progress.', 'error');
   }
 }
 
@@ -536,8 +586,8 @@ function renderTodayRecoveryState() {
 
   loader.classList.add('hidden');
   content.classList.remove('hidden');
-  document.getElementById('today-workout-name').textContent = 'Program needed';
-  document.getElementById('today-workout-type').textContent = 'Recovery';
+  document.getElementById('today-workout-name').textContent = 'No plan yet';
+  document.getElementById('today-workout-type').textContent = 'Build one to start';
   exercisesContainer.classList.add('hidden');
   restMessage.classList.add('hidden');
   lockedMessage.classList.add('hidden');
@@ -545,10 +595,11 @@ function renderTodayRecoveryState() {
   setTodayLockedMessage('');
   renderEmptyState(
     todayEmptyState,
-    'No active program yet',
-    'Your preferences are saved, but there is no active plan to train from right now. Open Program to rebuild one from your saved setup.',
-    { text: 'Open Program', type: 'open-tab', targetTab: 'program' }
+    'No plan yet',
+    'Build a plan first, then today’s workout will appear here.',
+    { text: 'Open Plan', type: 'open-tab', targetTab: 'program' }
   );
+  setTodayGuidance('', '');
 }
 
 function renderProgramRecoveryState() {
@@ -561,16 +612,16 @@ function renderProgramRecoveryState() {
   setProgramError('');
   renderEmptyState(
     programEmptyState,
-    'Program not available',
-    'We have your onboarding profile, but no active program is currently stored. Rebuild one from your saved preferences.',
-    { text: 'Rebuild plan', type: 'regenerate-program' }
+    'No plan available',
+    'Use your saved preferences to build a fresh plan.',
+    { text: 'Build plan', type: 'regenerate-program' }
   );
 }
 
 function renderHistoryRecoveryState() {
   document.getElementById('history-loader').classList.add('hidden');
   document.getElementById('history-data').classList.add('hidden');
-  historyEmpty.textContent = 'No active program yet. Open Program to rebuild your plan.';
+  historyEmpty.textContent = 'No plan yet. Build one first to start logging workouts.';
   historyEmpty.classList.remove('hidden');
   document.getElementById('history-error').textContent = '';
 }
@@ -610,7 +661,7 @@ async function saveTodayWorkout(triggerBtn, footerHint) {
   todaySaveInFlight = true;
 
   if (triggerBtn) triggerBtn.disabled = true;
-  if (footerHint) footerHint.textContent = 'Saving workout...';
+  if (footerHint) footerHint.textContent = 'Saving...';
 
   try {
     const existingLog = await getExistingLog(todayWorkoutDate);
@@ -639,11 +690,11 @@ async function saveTodayWorkout(triggerBtn, footerHint) {
       return;
     }
 
-    setTodayError('Save error: ' + error.message);
+    setTodayError('Could not save workout: ' + error.message);
   } finally {
     todaySaveInFlight = false;
     if (triggerBtn && triggerBtn.isConnected) triggerBtn.disabled = false;
-    if (footerHint && footerHint.isConnected) footerHint.textContent = '';
+    if (footerHint && footerHint.isConnected) footerHint.textContent = footerHint.dataset.defaultText || '';
   }
 }
 
@@ -656,6 +707,7 @@ async function loadToday() {
 
   setTodayError('');
   setTodayLockedMessage('');
+  setTodayGuidance('', '');
   clearTodayEmptyState();
   loader.classList.remove('hidden');
   content.classList.add('hidden');
@@ -679,18 +731,19 @@ async function loadToday() {
     todayWorkoutType = data.type === 'rest' ? null : data.type;
     todayWorkoutSaved = Boolean(existingLog);
 
-    document.getElementById('today-workout-name').textContent = data.name || 'Workout';
-    document.getElementById('today-workout-type').textContent = `Type: ${data.type}`;
+    document.getElementById('today-workout-name').textContent = data.name || 'Today’s workout';
+    document.getElementById('today-workout-type').textContent = formatWorkoutTypeLabel(data.type);
 
     exercisesContainer.classList.remove('hidden');
     exercisesContainer.innerHTML = '';
 
     if (todayWorkoutSaved) {
       exercisesContainer.classList.add('hidden');
+      setTodayGuidance('Workout already logged', 'Open History if you want to review the saved sets.');
       setTodayLockedMessage(
         data.date === getTodayDateString()
-          ? "Today's workout is already saved. Open History to review it."
-          : `Workout for ${data.date} is already saved.`
+          ? 'Today is already done.'
+          : `${formatDateLabel(data.date)} is already logged.`
       );
       lockedMessage.classList.remove('hidden');
       return;
@@ -698,18 +751,22 @@ async function loadToday() {
 
     if (data.type === 'rest') {
       exercisesContainer.classList.add('hidden');
+      setTodayGuidance('Recovery day', 'No logging needed today.');
       restMessage.classList.remove('hidden');
       return;
     }
 
     if (!data.exercises || data.exercises.length === 0) {
       exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
+      setTodayGuidance('Nothing to log', 'Today’s workout is empty.');
       return;
     }
 
+    setTodayGuidance('Log each set', 'Enter reps or seconds, then move to the next exercise.');
     activeExerciseIndex = 0;
 
     data.exercises.forEach((exercise, index) => {
+      const isLastExercise = index === data.exercises.length - 1;
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = exercise.id;
       card.dataset.index = String(index);
@@ -722,7 +779,7 @@ async function loadToday() {
 
       const progress = el('div', 'exercise-progress');
       progress.appendChild(el('span', 'exercise-progress-current', `${index + 1}/${data.exercises.length}`));
-      progress.appendChild(el('span', 'exercise-progress-label', 'Current exercise'));
+      progress.appendChild(el('span', 'exercise-progress-label', 'Exercise'));
       card.appendChild(progress);
 
       card.appendChild(el('div', 'card-title exercise-title', exercise.name || exercise.id));
@@ -733,7 +790,12 @@ async function loadToday() {
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
-      helper.textContent = '';
+      helper.textContent =
+        exercise.type === 'time'
+          ? 'Enter seconds for each set.'
+          : exercise.type === 'cycles'
+            ? 'Enter cycles for each set.'
+            : 'Enter reps for each set.';
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
@@ -743,12 +805,17 @@ async function loadToday() {
       card.appendChild(setsContainer);
 
       const footer = el('div', 'exercise-card-footer');
-      const footerHint = el('div', 'exercise-footer-hint', '');
-      const confirmBtn = el('button', 'exercise-complete-btn', '✓');
+      const footerHint = el(
+        'div',
+        'exercise-footer-hint',
+        isLastExercise ? 'Fill every set to save.' : 'Fill every set to continue.'
+      );
+      footerHint.dataset.defaultText = footerHint.textContent;
+      const confirmBtn = el('button', 'exercise-complete-btn', isLastExercise ? 'Save workout' : 'Next exercise');
       confirmBtn.type = 'button';
       confirmBtn.setAttribute(
         'aria-label',
-        index === data.exercises.length - 1 ? 'Confirm last exercise' : 'Confirm and open next exercise'
+        isLastExercise ? 'Save workout' : 'Open next exercise'
       );
       confirmBtn.addEventListener('click', async () => {
         await advanceExercise(card);
@@ -790,7 +857,7 @@ async function loadToday() {
       return;
     }
 
-    setTodayError('Error loading workout: ' + error.message);
+    setTodayError('Could not load today: ' + error.message);
   }
 }
 
@@ -801,7 +868,7 @@ function createSetRow(index, type) {
   const input = el('input', 'set-input');
   input.type = 'number';
   input.min = '0';
-  input.placeholder = type === 'time' ? 'Sec' : 'Reps';
+  input.placeholder = type === 'time' ? 'Sec' : type === 'cycles' ? 'Cycles' : 'Reps';
   row.appendChild(input);
 
   return row;
@@ -835,8 +902,17 @@ async function advanceExercise(card) {
   if (!card.classList.contains('active') || todaySaveInFlight) return;
 
   const inputs = Array.from(card.querySelectorAll('.set-input'));
+  const footerHint = card.querySelector('.exercise-footer-hint');
   const isComplete = inputs.every(input => input.value.trim() !== '');
   if (!isComplete) {
+    if (footerHint) {
+      footerHint.textContent = 'Enter every set first.';
+      window.setTimeout(() => {
+        if (footerHint.isConnected) {
+          footerHint.textContent = footerHint.dataset.defaultText || '';
+        }
+      }, 1400);
+    }
     card.classList.add('exercise-card-invalid');
     window.setTimeout(() => card.classList.remove('exercise-card-invalid'), 380);
     return;
@@ -854,7 +930,6 @@ async function advanceExercise(card) {
   card.classList.add('completed-pulse');
   window.setTimeout(() => card.classList.remove('completed-pulse'), 320);
   const confirmBtn = card.querySelector('.exercise-complete-btn');
-  const footerHint = card.querySelector('.exercise-footer-hint');
   await saveTodayWorkout(confirmBtn, footerHint);
 }
 
@@ -892,13 +967,14 @@ async function loadHistory(date) {
     loader.classList.add('hidden');
 
     if (!data || !data.workout_type) {
-      empty.textContent = 'No data for this day';
+      empty.textContent = 'No workout logged for this day.';
       empty.classList.remove('hidden');
       return;
     }
 
     content.classList.remove('hidden');
-    document.getElementById('history-workout-type').textContent = data.workout_type;
+    document.getElementById('history-workout-type').textContent =
+      `${formatWorkoutTypeLabel(data.workout_type)} · ${formatDateLabel(date)}`;
 
     const exercisesContainer = document.getElementById('history-exercises');
     exercisesContainer.innerHTML = '';
@@ -909,7 +985,7 @@ async function loadHistory(date) {
 
         const header = el('div', 'history-exercise-header');
         header.appendChild(el('div', 'history-exercise-index', `#${index + 1}`));
-        header.appendChild(el('div', 'card-title', exercise.id));
+        header.appendChild(el('div', 'card-title', humanizeToken(exercise.id)));
         card.appendChild(header);
 
         const chips = el('div', 'history-set-chips');
@@ -920,10 +996,11 @@ async function loadHistory(date) {
         exercisesContainer.appendChild(card);
       });
     } else {
-      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises</div>';
+      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises logged.</div>';
     }
 
-    document.getElementById('history-note').textContent = data.note || 'No notes added for this workout.';
+    historyNoteCard?.classList.toggle('hidden', !data.note);
+    document.getElementById('history-note').textContent = data.note || '';
   } catch (error) {
     loader.classList.add('hidden');
     if (error instanceof AuthRedirectError) return;
@@ -947,10 +1024,10 @@ async function loadHistory(date) {
     }
 
     if (error instanceof ApiError && error.status === 404) {
-      empty.textContent = 'No data for this day';
+      empty.textContent = 'No workout logged for this day.';
       empty.classList.remove('hidden');
     } else {
-      errorEl.textContent = 'Error loading history: ' + error.message;
+      errorEl.textContent = 'Could not load history: ' + error.message;
     }
   }
 }
@@ -981,10 +1058,10 @@ function formatProgramTarget(exercise, progressionState) {
 
 function formatProgramProgressionNote(progressionState) {
   if (!progressionState?.last_progression) {
-    return 'No progression changes yet';
+    return 'No recent changes';
   }
 
-  return `Last adjusted ${progressionState.last_progression}`;
+  return `Updated ${progressionState.last_progression}`;
 }
 
 async function loadProgram() {
@@ -1031,7 +1108,7 @@ async function loadProgram() {
       days.forEach(([key, label]) => {
         const row = el('div', 'program-schedule-row');
         row.appendChild(el('span', 'program-day', label));
-        row.appendChild(el('span', 'program-day-value', data.schedule[key] || 'Rest'));
+        row.appendChild(el('span', 'program-day-value', formatPlanSlotLabel(data.schedule[key] || 'rest')));
         scheduleContainer.appendChild(row);
       });
     }
@@ -1042,7 +1119,7 @@ async function loadProgram() {
 
         const header = el('div', 'program-workout-header');
         header.appendChild(el('div', 'card-title', workout.name || type));
-        header.appendChild(el('div', 'program-workout-type', type.toUpperCase()));
+        header.appendChild(el('div', 'program-workout-type', formatWorkoutTypeLabel(type)));
         card.appendChild(header);
 
         if (workout.exercises && workout.exercises.length > 0) {
@@ -1050,7 +1127,7 @@ async function loadProgram() {
           workout.exercises.forEach(exercise => {
             const row = el('div', 'program-exercise-row');
             const main = el('div', 'program-exercise-main');
-            main.appendChild(el('div', 'program-exercise-name', exercise.name || exercise.id));
+            main.appendChild(el('div', 'program-exercise-name', exercise.name || humanizeToken(exercise.id)));
 
             const exerciseProgression = progressionState[exercise.id] ?? null;
             main.appendChild(el('div', 'program-exercise-detail', formatProgramTarget(exercise, exerciseProgression)));
@@ -1063,7 +1140,7 @@ async function loadProgram() {
           });
           card.appendChild(list);
         } else {
-          card.appendChild(el('div', 'text-secondary', 'No exercises'));
+          card.appendChild(el('div', 'text-secondary', 'No exercises in this session.'));
         }
 
         workoutsContainer.appendChild(card);
@@ -1091,7 +1168,7 @@ async function loadProgram() {
       return;
     }
 
-    setProgramError('Error loading program: ' + error.message);
+    setProgramError('Could not load plan: ' + error.message);
   }
 }
 
@@ -1110,7 +1187,7 @@ function handleOnboardingChange() {
 function handleOnboardingNextStep() {
   const payload = buildOnboardingPayload();
   if (!isOnboardingStepValid(onboardingCurrentStep, payload)) {
-    setOnboardingSubmitError('Complete this step before moving on.');
+    setOnboardingSubmitError('Finish this step to continue.');
     return;
   }
 
@@ -1121,7 +1198,7 @@ function handleOnboardingNextStep() {
 function scheduleOnboardingDraftSave() {
   if (currentShellMode !== 'onboarding') return;
   window.clearTimeout(onboardingDraftTimer);
-  setOnboardingSaveStatus('Saving draft...', 'pending');
+  setOnboardingSaveStatus('Saving...', 'pending');
 
   onboardingDraftTimer = window.setTimeout(async () => {
     const payload = buildOnboardingPayload();
@@ -1143,10 +1220,10 @@ function scheduleOnboardingDraftSave() {
         answers: payload,
       };
       updateOnboardingBadge(appState.onboarding);
-      setOnboardingSaveStatus('Draft saved.', 'success');
+      setOnboardingSaveStatus('Saved.', 'success');
     } catch (error) {
       if (error instanceof AuthRedirectError) return;
-      setOnboardingSaveStatus('Could not save draft right now.', 'error');
+      setOnboardingSaveStatus('Could not save right now.', 'error');
     }
   }, 450);
 }
@@ -1166,14 +1243,14 @@ async function handleOnboardingSubmit(event) {
 
   renderOnboardingErrors(errors);
   if (Object.keys(errors).length > 0) {
-    setOnboardingSubmitError('Fill the highlighted fields before we generate your plan.');
+    setOnboardingSubmitError('Fill the highlighted fields before building your plan.');
     return;
   }
 
   onboardingSubmitting = true;
   onboardingCompleteButton.disabled = true;
   setOnboardingSubmitError('');
-  setOnboardingSaveStatus('Generating your plan...', 'pending');
+  setOnboardingSaveStatus('Building your plan...', 'pending');
 
   try {
     await api.completeOnboarding(payload);
@@ -1182,7 +1259,7 @@ async function handleOnboardingSubmit(event) {
   } catch (error) {
     if (error instanceof AuthRedirectError) return;
     setOnboardingSubmitError(error.message || 'Could not complete onboarding.');
-    setOnboardingSaveStatus('We could not generate the plan yet.', 'error');
+    setOnboardingSaveStatus('We could not build the plan yet.', 'error');
   } finally {
     onboardingSubmitting = false;
     onboardingCompleteButton.disabled = false;
@@ -1193,7 +1270,7 @@ async function handleRegenerateProgram(trigger) {
   if (!appState.me?.lifecycle?.onboarding_completed) return;
   if (trigger.disabled) return;
 
-  const confirmed = window.confirm('Replace your current plan with one rebuilt from your saved preferences?');
+  const confirmed = window.confirm('Build a new plan from your saved preferences?');
   if (!confirmed) return;
 
   trigger.disabled = true;
@@ -1215,7 +1292,7 @@ async function handleRegenerateProgram(trigger) {
       return;
     }
 
-    setProgramError('Could not regenerate program: ' + error.message);
+    setProgramError('Could not build a new plan: ' + error.message);
   } finally {
     trigger.disabled = false;
   }
