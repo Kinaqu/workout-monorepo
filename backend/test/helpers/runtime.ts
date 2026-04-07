@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
 
 const USER_TABLES = [
+  "program_runtime_state",
   "progression_events",
   "exercise_progression_state",
   "workout_session_sets",

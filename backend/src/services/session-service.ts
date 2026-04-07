@@ -2,6 +2,7 @@ import { ProgramTemplate } from "../domain/program";
 import { enrichSessionInput, parseLogText, sessionToLegacyLogResponse, SessionWriteInput, WorkoutSessionRecord } from "../domain/session";
 import { badRequest } from "../lib/app-error";
 import { isValidDate, todayDate } from "../lib/time";
+import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
 import { SessionRepository } from "../repositories/session-repository";
 import { UserLifecycleService } from "./user-lifecycle-service";
 
@@ -18,7 +19,8 @@ export class SessionAlreadyExistsError extends Error {
 export class SessionService {
   constructor(
     private readonly lifecycle: UserLifecycleService,
-    private readonly sessions: SessionRepository
+    private readonly sessions: SessionRepository,
+    private readonly runtime: ProgramRuntimeStateRepository
   ) {}
 
   async createFromJson(userId: string, username: string, payload: unknown, requestedDate?: string) {
@@ -125,7 +127,9 @@ export class SessionService {
       throw new SessionAlreadyExistsError(input.sessionDate, existing.id);
     }
 
-    return this.sessions.createSession(userId, program, enrichSessionInput(program, input));
+    const created = await this.sessions.createSession(userId, program, enrichSessionInput(program, input));
+    await this.runtime.markSessionLogged(userId, program.versionId, created.updatedAt);
+    return created;
   }
 }
 

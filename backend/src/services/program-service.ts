@@ -4,17 +4,20 @@ import { seedProgressionStates } from "../domain/progression";
 import { nowIso } from "../lib/time";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
+import { ProgressionService } from "./progression-service";
 import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class ProgramService {
   constructor(
     private readonly lifecycle: UserLifecycleService,
     private readonly programs: ProgramRepository,
-    private readonly progression: ProgressionRepository
+    private readonly progression: ProgressionRepository,
+    private readonly progressionService: ProgressionService
   ) {}
 
   async getCurrentProgram(userId: string, username: string) {
     const program = await this.lifecycle.requireActiveProgram(userId, username);
+    await this.progressionService.ensureFreshForProgram(userId, username, program.versionId);
     const states = await this.progression.getByProgram(userId, program.versionId);
 
     return {

@@ -129,12 +129,26 @@ describe("documented product flow", () => {
     expect(session.response.status).toBe(200);
     expect((session.body as { id: string }).id).toBe(firstLogBody.session.id);
 
+    const refreshedWorkout = await fetchJson(app.request.bind(app), `/workout/today?date=${monday}`, {
+      headers: headers(),
+    });
+    expect(refreshedWorkout.response.status).toBe(200);
+
+    const progressedProgram = await fetchJson(app.request.bind(app), "/program", { headers: headers() });
+    expect(progressedProgram.response.status).toBe(200);
+    const progressedBounds = (
+      progressedProgram.body as {
+        progressionState: Record<string, { min: number; max: number; sets: number }>;
+      }
+    ).progressionState[firstExercise.id];
+    expect(progressedBounds).toBeDefined();
+    expect(progressedBounds.sets).toBeGreaterThan(bounds.sets);
+
     const progression = await fetchJson(app.request.bind(app), "/progression/run", {
       method: "POST",
       headers: headers(),
     });
     expect(progression.response.status).toBe(200);
-    expect((progression.body as { result: { changed: unknown[] } }).result.changed.length).toBeGreaterThan(0);
 
     const regenerated = await fetchJson(app.request.bind(app), "/program/regenerate", {
       method: "POST",
