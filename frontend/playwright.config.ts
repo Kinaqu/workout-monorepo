@@ -12,6 +12,7 @@ export default defineConfig({
     : [['list']],
   use: {
     baseURL: process.env.BASE_URL || 'http://127.0.0.1:4173',
+    serviceWorkers: 'block',
     trace: 'on-first-retry',
   },
   webServer: isDeployedTarget

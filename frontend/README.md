@@ -36,6 +36,10 @@ The application allows users to view today's workout, log completed sets, inspec
 - **🔐 Authentication**
   - Clerk-powered sign-in and sign-up pages live at `/login` and `/register`.
   - The app uses the Clerk `__session` cookie as the primary auth source, with legacy local token fallback still supported in `api.js`.
+- **🧭 Onboarding**
+  - On app boot, the frontend checks `GET /me` before rendering the main workout tabs.
+  - Users with incomplete onboarding stay inside a lightweight in-app setup flow until the backend confirms completion.
+  - Draft answers are restored through `GET /onboarding` and saved progressively through `POST /onboarding`.
 - **🏋️ Workout Tracking**
   - View today's generated workout directly on the dashboard.
   - Log completed sets exercise-by-exercise from the main app flow.
@@ -74,7 +78,7 @@ The application allows users to view today's workout, log completed sets, inspec
 The frontend is a lightweight client application configured to interact with a serverless REST API and Clerk-hosted authentication.
 
 **Data Flow:**  
-`Frontend UI` ➔ `Clerk Session / API Client` ➔ `Cloudflare Worker API`
+`Frontend UI` ➔ `Clerk Session / API Client` ➔ `GET /me` gate ➔ `Onboarding or Main App` ➔ `Cloudflare Worker API`
 
 **The frontend currently includes:**
 - a vanilla JavaScript main app in `app.js`
@@ -162,6 +166,9 @@ The auth flow in this project currently works as follows:
 2. `register.jsx` renders Clerk `SignUp`.
 3. Missing `VITE_CLERK_PUBLISHABLE_KEY` shows a diagnostic notice on the auth pages.
 4. Unauthenticated users are redirected to `/login` from `app.js` unless a Clerk session or legacy token is available.
+5. Authenticated users hit `GET /me` on app load.
+6. If onboarding is incomplete, the app renders the onboarding form, restores any saved draft via `GET /onboarding`, and saves updates through `POST /onboarding`.
+7. Final onboarding submission calls `POST /onboarding/complete`, then the app reloads state and shows the generated program/workout flow.
 
 ### Local Backend Integration
 
@@ -212,10 +219,15 @@ The frontend application communicates with the Workout Manager backend through `
 
 | HTTP Method | Endpoint | Description |
 | :--- | :--- | :--- |
+| `GET` | `/me` | Load authenticated product state, onboarding status, and active-program availability |
+| `GET` | `/onboarding` | Restore saved onboarding draft and completion state |
+| `POST` | `/onboarding` | Save onboarding draft answers |
+| `POST` | `/onboarding/complete` | Complete onboarding and trigger backend-owned program generation |
 | `GET` | `/workout/today` | Fetch today's generated workout plan |
 | `POST` | `/log` | Save a completed workout session |
 | `GET` | `/log/{date}` | Retrieve workout history for a specific date |
 | `GET` | `/program` | Load the active training program |
+| `POST` | `/program/regenerate` | Regenerate the active program from stored onboarding/profile preferences |
 | `POST` | `/progression/run` | Trigger progression recalculation |
 
 ### Legacy Auth Endpoints

@@ -2,12 +2,14 @@ name: Frontend CI
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: frontend-${{ github.workflow }}-${{ github.ref }}
@@ -15,14 +17,25 @@ concurrency:
 
 jobs:
   frontend-check:
-    name: frontend-check
+    name: frontend-ci-job
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
+    env:
+      GH_TOKEN: ${{ github.token }}
+      STATUS_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Mark frontend-check pending
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=pending
+          -f context=frontend-check
+          -f description="Frontend checks are running"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -52,3 +65,30 @@ jobs:
           name: frontend-playwright-report
           path: frontend/playwright-report
           if-no-files-found: ignore
+
+      - name: Report frontend-check success
+        if: success()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=success
+          -f context=frontend-check
+          -f description="Frontend checks passed"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Report frontend-check failure
+        if: failure()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=failure
+          -f context=frontend-check
+          -f description="Frontend checks failed"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Report frontend-check cancellation
+        if: cancelled()
+        run: >
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${STATUS_SHA}"
+          -f state=error
+          -f context=frontend-check
+          -f description="Frontend checks were cancelled"
+          -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
