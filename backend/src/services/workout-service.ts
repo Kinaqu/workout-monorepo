@@ -12,7 +12,7 @@ export class WorkoutService {
 
   async getWorkoutForDate(userId: string, username: string, date: string) {
     const program = await this.lifecycle.requireActiveProgram(userId, username);
-    await this.progressionService.ensureFreshForProgram(userId, username, program.versionId);
+    await this.progressionService.ensureFreshForToday(userId, username, program.versionId);
     const states = await this.progression.getByProgram(userId, program.versionId);
     const plan = createWorkoutPlan(program, date, states);
 
