@@ -9,6 +9,18 @@ const urlsToCache = [
   '/icons/workout-logo.svg'
 ];
 
+function getNavigationCacheKey(url) {
+  if (url.pathname.startsWith('/login')) {
+    return '/login';
+  }
+
+  if (url.pathname.startsWith('/register')) {
+    return '/register';
+  }
+
+  return '/';
+}
+
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -50,7 +62,7 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(request).then(async cachedResponse => {
+    caches.match(request, { ignoreSearch: isNavigationRequest }).then(async cachedResponse => {
       if (cachedResponse) {
         return cachedResponse;
       }
@@ -65,7 +77,7 @@ self.addEventListener('fetch', event => {
       return networkResponse;
     }).catch(async () => {
       if (isNavigationRequest) {
-        const fallback = await caches.match('/');
+        const fallback = await caches.match(getNavigationCacheKey(url), { ignoreSearch: true });
         if (fallback) {
           return fallback;
         }

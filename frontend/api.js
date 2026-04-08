@@ -79,10 +79,6 @@ function isExpiredSession(response) {
   return response.status === 401;
 }
 
-function hasStoredSession() {
-  return hasClerkSession() || Boolean(getToken());
-}
-
 function redirectToLogin(message) {
   removeToken();
 
@@ -124,9 +120,7 @@ async function request(endpoint, options = {}) {
         }
       }
 
-      if (!hasStoredSession()) {
-        redirectToLogin(getErrorMessage(data, response.status));
-      }
+      redirectToLogin(getErrorMessage(data, response.status));
     }
 
     if (!response.ok) {
