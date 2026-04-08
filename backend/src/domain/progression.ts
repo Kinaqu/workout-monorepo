@@ -1,3 +1,4 @@
+import { addDays } from "../lib/time";
 import { ProgramTemplate, WorkoutExerciseTemplate } from "./program";
 
 export interface ExerciseProgressionState {
@@ -45,6 +46,7 @@ export interface ProgressionEvaluationInput {
     exercises: SessionPerformance[];
   }>;
   now: string;
+  lookbackDays?: number;
 }
 
 export interface ProgressionChange {
@@ -162,10 +164,29 @@ export function templateToWorkoutExerciseView(
 }
 
 export function evaluateProgression(input: ProgressionEvaluationInput): ProgressionEvaluationResult {
+  const lookbackDays = Math.max(1, input.lookbackDays ?? 7);
   const nextStates = new Map<string, ExerciseProgressionState>();
   const changed: ProgressionChange[] = [];
   const skipped: Array<{ id: string; reason: string }> = [];
   const events: ProgressionEventRecord[] = [];
+  const today = input.now.slice(0, 10);
+  const completedSessions = input.sessions.filter(session =>
+    isWorkoutSessionFullyCompleted(input.program, input.states, session)
+  );
+  const plannedWorkoutCount = countPlannedWorkoutDays(input.program, today, lookbackDays);
+  const requiredCompletedWorkouts = plannedWorkoutCount > 0 ? Math.ceil(plannedWorkoutCount * 0.5) : 0;
+
+  if (requiredCompletedWorkouts > 0 && completedSessions.length < requiredCompletedWorkouts) {
+    return {
+      changed: [],
+      skipped: listDistinctExercises(input.program).map(template => ({
+        id: template.exercise.key,
+        reason: `completed ${completedSessions.length}/${plannedWorkoutCount} planned workouts in last ${lookbackDays} days`,
+      })),
+      nextStates: Array.from(input.states.values()).map(state => ({ ...state, updatedAt: input.now })),
+      events: [],
+    };
+  }
 
   for (const template of listDistinctExercises(input.program)) {
     const current = input.states.get(template.exercise.key);
@@ -174,7 +195,7 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
       continue;
     }
 
-    const sessionResults = input.sessions
+    const sessionResults = completedSessions
       .map(session => session.exercises.find(exercise => matchesSessionPerformance(template, exercise)) ?? null)
       .filter((entry): entry is SessionPerformance => entry !== null && entry.sets.length > 0);
 
@@ -206,19 +227,21 @@ export function evaluateProgression(input: ProgressionEvaluationInput): Progress
     };
 
     let change: ProgressionChange | null = null;
-    if (aboveTarget >= 2) {
-      if (current.currentSets < template.maxSets) {
+    if (aboveTarget >= 1) {
+      const targetStep = resolveTargetStep(template);
+      const initialTargetCeiling = template.targetMax + targetStep;
+      if (current.currentTargetMax >= initialTargetCeiling && current.currentSets < template.maxSets) {
         nextState.currentSets += 1;
       } else {
-        nextState.currentTargetMin += template.exercise.progressionStep;
-        nextState.currentTargetMax += template.exercise.progressionStep;
+        nextState.currentTargetMin += targetStep;
+        nextState.currentTargetMax += targetStep;
       }
       nextState.lastProgressionAt = input.now.slice(0, 10);
       change = {
         id: template.exercise.key,
         name: template.exercise.name,
         direction: "up",
-        reason: `performed above target in ${aboveTarget} sessions`,
+        reason: `completed weekly workload gate and met target in ${aboveTarget} workouts`,
         before,
         after: {
           sets: nextState.currentSets,
@@ -302,4 +325,48 @@ function matchesSessionPerformance(template: WorkoutExerciseTemplate, performanc
   }
 
   return template.exercise.key === performance.exerciseKey;
+}
+
+function countPlannedWorkoutDays(program: ProgramTemplate, endDate: string, lookbackDays: number): number {
+  let count = 0;
+  const startDate = addDays(endDate, -(lookbackDays - 1));
+
+  for (let cursor = startDate; cursor <= endDate; cursor = addDays(cursor, 1)) {
+    if (program.schedule[getDayNameForPlan(cursor)]) {
+      count += 1;
+    }
+  }
+
+  return count;
+}
+
+function isWorkoutSessionFullyCompleted(
+  program: ProgramTemplate,
+  states: Map<string, ExerciseProgressionState>,
+  session: { sessionDate: string; exercises: SessionPerformance[] }
+): boolean {
+  const workoutKey = program.schedule[getDayNameForPlan(session.sessionDate)];
+  if (!workoutKey) {
+    return false;
+  }
+
+  const workout = program.workouts[workoutKey];
+  if (!workout || workout.exercises.length === 0) {
+    return false;
+  }
+
+  return workout.exercises.every(template => {
+    const performance =
+      session.exercises.find(exercise => matchesSessionPerformance(template, exercise)) ?? null;
+    const requiredSets = states.get(template.exercise.key)?.currentSets ?? 1;
+    return Boolean(performance && performance.sets.length >= requiredSets);
+  });
+}
+
+function resolveTargetStep(template: WorkoutExerciseTemplate): number {
+  if (template.exercise.type === "time") {
+    return Math.max(template.exercise.progressionStep, 10);
+  }
+
+  return Math.max(template.exercise.progressionStep, 2);
 }

@@ -56,3 +56,15 @@ export function daysAgo(days: number): string {
   value.setUTCDate(value.getUTCDate() - days);
   return value.toISOString().slice(0, 10);
 }
+
+export function addDays(date: string, days: number): string {
+  const value = new Date(`${date}T00:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+export function diffUtcDays(fromIso: string, toIso: string): number {
+  const from = new Date(fromIso).getTime();
+  const to = new Date(toIso).getTime();
+  return Math.floor((to - from) / 86_400_000);
+}
