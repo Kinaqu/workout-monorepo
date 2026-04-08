@@ -24,6 +24,14 @@ export class ProgressionService {
   }
 
   async ensureFreshForProgram(userId: string, username: string, programId: string, lookbackDays = 7) {
+    return this.ensureFreshByRuntime(userId, username, programId, lookbackDays);
+  }
+
+  async ensureFreshForToday(userId: string, username: string, programId: string, lookbackDays = 7) {
+    return this.ensureFreshByRuntime(userId, username, programId, lookbackDays);
+  }
+
+  private async ensureFreshByRuntime(userId: string, username: string, programId: string, lookbackDays = 7) {
     await this.lifecycle.ensureUserExists(userId, username);
 
     const runtime = await this.runtime.getByProgram(userId, programId);
