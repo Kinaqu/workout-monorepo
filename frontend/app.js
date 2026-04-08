@@ -767,6 +767,7 @@ async function loadToday() {
 
     data.exercises.forEach((exercise, index) => {
       const isLastExercise = index === data.exercises.length - 1;
+      const currentSets = exercise.sets || exercise.max_sets || 1;
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = exercise.id;
       card.dataset.index = String(index);
@@ -786,7 +787,7 @@ async function loadToday() {
 
       const chips = el('div', 'exercise-header-chips');
       if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
-      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${exercise.max_sets || 1} sets`));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${currentSets} sets`));
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
@@ -799,7 +800,7 @@ async function loadToday() {
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
-      for (let indexOfSet = 0; indexOfSet < (exercise.max_sets || 1); indexOfSet += 1) {
+      for (let indexOfSet = 0; indexOfSet < currentSets; indexOfSet += 1) {
         setsContainer.appendChild(createSetRow(indexOfSet + 1, exercise.type));
       }
       card.appendChild(setsContainer);
