@@ -156,6 +156,14 @@ function formatPlanSlotLabel(type) {
   return humanizeToken(type);
 }
 
+function formatSetCountLabel(count) {
+  return `${count} ${count === 1 ? 'set' : 'sets'}`;
+}
+
+function resolveTodayExerciseSets(exercise) {
+  return Number.isInteger(exercise?.sets) && exercise.sets > 0 ? exercise.sets : 1;
+}
+
 function formatDateLabel(value) {
   if (!value) return '';
 
@@ -767,7 +775,7 @@ async function loadToday() {
 
     data.exercises.forEach((exercise, index) => {
       const isLastExercise = index === data.exercises.length - 1;
-      const currentSets = exercise.sets || exercise.max_sets || 1;
+      const currentSets = resolveTodayExerciseSets(exercise);
       const card = el('section', `card exercise-card${index === 0 ? ' active' : ''}`);
       card.dataset.id = exercise.id;
       card.dataset.index = String(index);
@@ -787,16 +795,19 @@ async function loadToday() {
 
       const chips = el('div', 'exercise-header-chips');
       if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
-      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${currentSets} sets`));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${formatSetCountLabel(currentSets)} today`));
+      if (Number.isInteger(exercise.max_sets) && exercise.max_sets > currentSets) {
+        chips.appendChild(el('div', 'exercise-chip', `Plan max ${formatSetCountLabel(exercise.max_sets)}`));
+      }
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
       helper.textContent =
         exercise.type === 'time'
-          ? 'Enter seconds for each set.'
+          ? "Enter seconds for today's sets."
           : exercise.type === 'cycles'
-            ? 'Enter cycles for each set.'
-            : 'Enter reps for each set.';
+            ? "Enter cycles for today's sets."
+            : "Enter reps for today's sets.";
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');

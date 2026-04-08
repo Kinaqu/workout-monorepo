@@ -434,7 +434,8 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
   await expect(page.locator('#today-content')).toBeVisible();
   await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
   await expect(page.locator('#today-guidance-title')).toHaveText(/log each set/i);
-  await expect(page.locator('.exercise-chip-accent')).toHaveText('1 sets');
+  await expect(page.locator('.exercise-chip-accent')).toHaveText('1 set today');
+  await expect(page.locator('.exercise-header-chips')).toContainText('Plan max 3 sets');
   await expect(page.locator('.exercise-card .set-input')).toHaveCount(1);
   await assertNoClientIssues(issues);
 });
