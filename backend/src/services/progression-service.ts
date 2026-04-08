@@ -1,6 +1,6 @@
 import { evaluateProgression } from "../domain/progression";
 import { conflict } from "../lib/app-error";
-import { daysAgo, nowIso } from "../lib/time";
+import { daysAgo, diffUtcDays, nowIso } from "../lib/time";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
@@ -8,6 +8,8 @@ import { SessionRepository } from "../repositories/session-repository";
 import { UserLifecycleService } from "./user-lifecycle-service";
 
 export class ProgressionService {
+  private static readonly AUTO_REFRESH_TTL_DAYS = 7;
+
   constructor(
     private readonly lifecycle: UserLifecycleService,
     private readonly programs: ProgramRepository,
@@ -32,11 +34,12 @@ export class ProgressionService {
       return false;
     }
 
-    if (!runtime.lastSessionLoggedAt) {
-      return false;
-    }
-
-    if (runtime.lastProgressionRunAt && runtime.lastProgressionRunAt >= runtime.lastSessionLoggedAt) {
+    if (runtime.lastProgressionRunAt) {
+      const ageInDays = diffUtcDays(runtime.lastProgressionRunAt, nowIso());
+      if (ageInDays < ProgressionService.AUTO_REFRESH_TTL_DAYS) {
+        return false;
+      }
+    } else if (!runtime.lastSessionLoggedAt) {
       return false;
     }
 
@@ -59,6 +62,7 @@ export class ProgressionService {
       states,
       sessions: recentSessions,
       now: runAt,
+      lookbackDays,
     });
 
     await this.progression.replaceProgramStates(userId, activeProgram.versionId, result.nextStates);

@@ -161,6 +161,103 @@ describe("program generation and validation", () => {
 });
 
 describe("log parsing and progression", () => {
+  function buildWeeklyProgressionProgram() {
+    return {
+      versionId: "program_1",
+      key: "program",
+      name: "Program",
+      source: "generated",
+      createdAt: "2026-04-01T00:00:00.000Z",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+      schedule: {
+        monday: "A",
+        tuesday: null,
+        wednesday: "B",
+        thursday: null,
+        friday: "C",
+        saturday: null,
+        sunday: null,
+      },
+      workouts: {
+        A: {
+          id: "workout_a",
+          key: "A",
+          name: "Workout A",
+          sortOrder: 0,
+          exercises: [
+            {
+              id: "wex_a_1",
+              sortOrder: 0,
+              maxSets: 3,
+              targetMin: 8,
+              targetMax: 10,
+              exercise: {
+                id: "exercise_push_up",
+                catalogExerciseId: "catalog_push_up",
+                key: "push_up",
+                name: "Push Up",
+                type: "reps" as const,
+                progressionEnabled: true,
+                progressionStep: 1,
+                deloadStep: 1,
+              },
+            },
+          ],
+        },
+        B: {
+          id: "workout_b",
+          key: "B",
+          name: "Workout B",
+          sortOrder: 1,
+          exercises: [
+            {
+              id: "wex_b_1",
+              sortOrder: 0,
+              maxSets: 3,
+              targetMin: 8,
+              targetMax: 10,
+              exercise: {
+                id: "exercise_push_up_b",
+                catalogExerciseId: "catalog_push_up",
+                key: "push_up",
+                name: "Push Up",
+                type: "reps" as const,
+                progressionEnabled: true,
+                progressionStep: 1,
+                deloadStep: 1,
+              },
+            },
+          ],
+        },
+        C: {
+          id: "workout_c",
+          key: "C",
+          name: "Workout C",
+          sortOrder: 2,
+          exercises: [
+            {
+              id: "wex_c_1",
+              sortOrder: 0,
+              maxSets: 3,
+              targetMin: 8,
+              targetMax: 10,
+              exercise: {
+                id: "exercise_push_up_c",
+                catalogExerciseId: "catalog_push_up",
+                key: "push_up",
+                name: "Push Up",
+                type: "reps" as const,
+                progressionEnabled: true,
+                progressionStep: 1,
+                deloadStep: 1,
+              },
+            },
+          ],
+        },
+      },
+    };
+  }
+
   it("parses legacy text logs into exercises, notes, and unmatched lines", () => {
     const program = {
       versionId: "program_1",
@@ -213,80 +310,31 @@ describe("log parsing and progression", () => {
     expect(parsed.unmatched).toEqual(["Unknown 5"]);
   });
 
-  it("progresses when performance exceeds targets repeatedly", () => {
-    const generated = generateProgramFromProfile(normalizeOnboardingAnswers(ONBOARDING_ANSWERS), {
-      seedVersion: "seed-v1",
-      exercises: Array.from({ length: 6 }, (_, index) => ({
-        id: `catalog_${index}`,
-        exerciseKey: `exercise_${index}`,
-        name: `Exercise ${index}`,
-        type: "reps" as const,
-        category: "strength",
-        difficulty: "beginner" as const,
-        equipment: ["bodyweight"],
-        workoutTags: ["strength", "upper", "push", "core", "balanced", "recovery", "mobility"],
-        goalTags: ["strength"],
-        focusAreas: ["upper_body", "core"],
-        contraindicationTags: [],
-        experienceLevels: ["beginner", "intermediate", "advanced"],
-        maxSets: 2,
-        defaultTargetMin: 8,
-        defaultTargetMax: 10,
-        progressionEnabled: true,
-        progressionStep: 1,
-        deloadStep: 1,
-        seedVersion: "seed-v1",
-      })),
+  it("requires at least half of planned workouts to be completed before increasing load", () => {
+    const program = buildWeeklyProgressionProgram();
+    const states = seedProgressionStates(program, new Map(), "2026-04-01T00:00:00.000Z", null);
+    const targetExercise = states[0];
+    expect(targetExercise).toBeDefined();
+
+    const result = evaluateProgression({
+      program,
+      states: new Map(states.map(state => [state.exerciseKey, state])),
+      sessions: [
+        {
+          sessionDate: "2026-04-06",
+          exercises: [{ exerciseKey: "push_up", catalogExerciseId: "catalog_push_up", sets: [10] }],
+        },
+      ],
+      now: "2026-04-12T00:00:00.000Z",
+      lookbackDays: 7,
     });
 
-    const program = {
-      versionId: "program_1",
-      key: generated.definition.id,
-      name: generated.definition.name,
-      source: "generated",
-      createdAt: "2026-04-01T00:00:00.000Z",
-      updatedAt: "2026-04-01T00:00:00.000Z",
-      schedule: {
-        monday: "A",
-        tuesday: null,
-        wednesday: "B",
-        thursday: null,
-        friday: "C",
-        saturday: null,
-        sunday: null,
-      },
-      workouts: Object.fromEntries(
-        Object.entries(createProgramDraft(generated.definition).workouts).map(workout => {
-          const [key, value] = workout;
-          return [
-            key,
-            {
-              id: `workout_${key}`,
-              key,
-              name: value.name,
-              sortOrder: value.sortOrder,
-              exercises: value.exercises.map((exercise, index) => ({
-                id: `wex_${key}_${index}`,
-                sortOrder: index,
-                maxSets: exercise.maxSets,
-                targetMin: exercise.targetMin,
-                targetMax: exercise.targetMax,
-                exercise: {
-                  id: `exercise_${exercise.exerciseKey}`,
-                  catalogExerciseId: exercise.catalogExerciseId,
-                  key: exercise.exerciseKey,
-                  name: exercise.exerciseName,
-                  type: exercise.exerciseType,
-                  progressionEnabled: exercise.progressionEnabled,
-                  progressionStep: exercise.progressionStep,
-                  deloadStep: exercise.deloadStep,
-                },
-              })),
-            },
-          ];
-        })
-      ),
-    };
+    expect(result.changed).toHaveLength(0);
+    expect(result.skipped[0]?.reason).toContain("completed 1/3 planned workouts");
+  });
+
+  it("progresses weekly when at least half of planned workouts are fully completed", () => {
+    const program = buildWeeklyProgressionProgram();
 
     const states = seedProgressionStates(program, new Map(), "2026-04-01T00:00:00.000Z", null);
     const targetExercise = states[0];
@@ -297,18 +345,21 @@ describe("log parsing and progression", () => {
       states: new Map(states.map(state => [state.exerciseKey, state])),
       sessions: [
         {
-          sessionDate: "2026-04-01",
-          exercises: [{ exerciseKey: targetExercise.exerciseKey, catalogExerciseId: targetExercise.catalogExerciseId, sets: [10, 11] }],
+          sessionDate: "2026-04-06",
+          exercises: [{ exerciseKey: targetExercise.exerciseKey, catalogExerciseId: targetExercise.catalogExerciseId, sets: [10] }],
         },
         {
-          sessionDate: "2026-04-03",
-          exercises: [{ exerciseKey: targetExercise.exerciseKey, catalogExerciseId: targetExercise.catalogExerciseId, sets: [11, 12] }],
+          sessionDate: "2026-04-08",
+          exercises: [{ exerciseKey: targetExercise.exerciseKey, catalogExerciseId: targetExercise.catalogExerciseId, sets: [11] }],
         },
       ],
-      now: "2026-04-04T00:00:00.000Z",
+      now: "2026-04-12T00:00:00.000Z",
+      lookbackDays: 7,
     });
 
     expect(result.changed[0]?.id).toBe(targetExercise.exerciseKey);
-    expect(result.events).toHaveLength(1);
+    expect(result.changed[0]?.after.min).toBe(targetExercise.currentTargetMin + 2);
+    expect(result.changed[0]?.after.max).toBe(targetExercise.currentTargetMax + 2);
+    expect(result.events.length).toBeGreaterThan(0);
   });
 });
