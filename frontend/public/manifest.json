@@ -1,16 +1,16 @@
 {
   "id": "/",
-  "name": "Workout Tracker",
-  "short_name": "Workout",
-  "description": "Focused workout tracking with a clean mobile-first interface.",
+  "name": "Kinova",
+  "short_name": "Kinova",
+  "description": "Adaptive training workspace for Kinova plans, progress, and daily sessions.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#121212",
+  "background_color": "#05070b",
+  "theme_color": "#05070b",
   "icons": [
     {
-      "src": "/icons/workout-logo.svg",
+      "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

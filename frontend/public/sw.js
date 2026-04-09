@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workout-app-v4';
+const CACHE_NAME = 'kinova-app-v5';
 const urlsToCache = [
   '/',
   '/login',
@@ -6,7 +6,8 @@ const urlsToCache = [
   '/style.css',
   '/manifest.json',
   '/favicon.svg',
-  '/icons/workout-logo.svg'
+  '/logo.svg',
+  '/logo_without_bg.svg'
 ];
 
 function getNavigationCacheKey(url) {
@@ -54,7 +55,9 @@ self.addEventListener('fetch', event => {
     || url.pathname.startsWith('/icons/')
     || url.pathname === '/style.css'
     || url.pathname === '/manifest.json'
-    || url.pathname === '/favicon.svg';
+    || url.pathname === '/favicon.svg'
+    || url.pathname === '/logo.svg'
+    || url.pathname === '/logo_without_bg.svg';
   const isNavigationRequest = request.mode === 'navigate';
 
   if (!isSameOrigin || isApiRequest || (!isNavigationRequest && !isStaticAsset)) {
