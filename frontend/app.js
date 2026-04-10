@@ -771,11 +771,8 @@ async function loadToday() {
       card.dataset.id = exercise.id;
       card.dataset.index = String(index);
       card.dataset.total = String(data.exercises.length);
-
-      let targetText = '';
-      if (exercise.type === 'reps' && exercise.reps) targetText = `${exercise.reps.max} reps`;
-      else if (exercise.type === 'time' && exercise.duration) targetText = `${exercise.duration.max} sec`;
-      else if (exercise.type === 'cycles' && exercise.cycles) targetText = `${exercise.cycles.max} cycles`;
+      const currentSets = resolveTodayExerciseSets(exercise);
+      const targetText = formatTodayExerciseTarget(exercise);
 
       const progress = el('div', 'exercise-progress');
       progress.appendChild(el('span', 'exercise-progress-current', `${index + 1}/${data.exercises.length}`));
@@ -786,7 +783,7 @@ async function loadToday() {
 
       const chips = el('div', 'exercise-header-chips');
       if (targetText) chips.appendChild(el('div', 'exercise-chip', targetText));
-      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', `${exercise.max_sets || 1} sets`));
+      chips.appendChild(el('div', 'exercise-chip exercise-chip-accent', formatTodayExerciseSetsLabel(exercise, currentSets)));
       card.appendChild(chips);
 
       const helper = el('div', 'exercise-helper');
@@ -799,7 +796,7 @@ async function loadToday() {
       card.appendChild(helper);
 
       const setsContainer = el('div', 'sets-container');
-      for (let indexOfSet = 0; indexOfSet < (exercise.max_sets || 1); indexOfSet += 1) {
+      for (let indexOfSet = 0; indexOfSet < currentSets; indexOfSet += 1) {
         setsContainer.appendChild(createSetRow(indexOfSet + 1, exercise.type));
       }
       card.appendChild(setsContainer);
@@ -859,6 +856,50 @@ async function loadToday() {
 
     setTodayError('Could not load today: ' + error.message);
   }
+}
+
+function formatTodayExerciseTarget(exercise) {
+  if (exercise.type === 'reps') {
+    return formatTodayTargetRange(exercise.reps, 'reps');
+  }
+
+  if (exercise.type === 'time') {
+    return formatTodayTargetRange(exercise.duration, 'sec');
+  }
+
+  return formatTodayTargetRange(exercise.cycles, 'cycles');
+}
+
+function formatTodayTargetRange(range, unit) {
+  if (!range) {
+    return '';
+  }
+
+  const min = Number.isInteger(range.min) ? range.min : null;
+  const max = Number.isInteger(range.max) ? range.max : null;
+  if (min === null && max === null) {
+    return '';
+  }
+  if (min !== null && max !== null) {
+    return min === max ? `${max} ${unit}` : `${min}-${max} ${unit}`;
+  }
+
+  return `${min ?? max} ${unit}`;
+}
+
+function resolveTodayExerciseSets(exercise) {
+  const currentSets = Number.isInteger(exercise.sets) ? exercise.sets : null;
+  const maxSets = Number.isInteger(exercise.max_sets) ? exercise.max_sets : null;
+  return Math.max(1, currentSets ?? maxSets ?? 1);
+}
+
+function formatTodayExerciseSetsLabel(exercise, currentSets = resolveTodayExerciseSets(exercise)) {
+  const maxSets = Number.isInteger(exercise.max_sets) ? exercise.max_sets : null;
+  if (maxSets && maxSets > currentSets) {
+    return `${currentSets}/${maxSets} sets`;
+  }
+
+  return `${currentSets} sets`;
 }
 
 function createSetRow(index, type) {

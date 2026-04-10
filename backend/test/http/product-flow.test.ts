@@ -92,7 +92,15 @@ describe("documented product flow", () => {
       version_id: string;
       workouts: Record<
         string,
-        { exercises: Array<{ id: string; reps?: { min: number; max: number }; duration?: { min: number; max: number }; cycles?: { min: number; max: number } }> }
+        {
+          exercises: Array<{
+            id: string;
+            max_sets: number;
+            reps?: { min: number; max: number };
+            duration?: { min: number; max: number };
+            cycles?: { min: number; max: number };
+          }>;
+        }
       >;
       progressionState: Record<string, { min: number; max: number; sets: number }>;
     };
@@ -108,7 +116,20 @@ describe("documented product flow", () => {
     const monday = "2026-04-06";
     const workout = await fetchJson(app.request.bind(app), `/workout/today?date=${monday}`, { headers: headers() });
     expect(workout.response.status).toBe(200);
-    expect((workout.body as { type: string }).type).toBe("A");
+    const workoutBody = workout.body as {
+      type: string;
+      exercises: Array<{ id: string; sets: number; max_sets: number; reps?: { min: number; max: number } }>;
+    };
+    expect(workoutBody.type).toBe("A");
+    expect(workoutBody.exercises[0]).toMatchObject({
+      id: firstExercise.id,
+      sets: programBody.progressionState[firstExercise.id]?.sets ?? 1,
+      max_sets: firstExercise.max_sets,
+      reps: {
+        min: programBody.progressionState[firstExercise.id]?.min ?? firstExercise.reps?.min,
+        max: programBody.progressionState[firstExercise.id]?.max ?? firstExercise.reps?.max,
+      },
+    });
 
     const sessionDateOne = "2026-04-06";
     const sessionDateTwo = "2026-04-08";

@@ -231,6 +231,7 @@ function buildTodayWorkoutResponse() {
         id: 'pushups',
         name: 'Push-ups',
         type: 'reps',
+        sets: 2,
         max_sets: 3,
         reps: { min: 8, max: 12 },
       },
@@ -433,6 +434,8 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
   await expect(page.locator('#today-content')).toBeVisible();
   await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
   await expect(page.locator('#today-guidance-title')).toHaveText(/log each set/i);
+  await expect(page.locator('.exercise-chip')).toContainText(['8-12 reps', '2/3 sets']);
+  await expect(page.locator('.set-row')).toHaveCount(2);
   await assertNoClientIssues(issues);
 });
 
