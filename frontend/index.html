@@ -347,15 +347,32 @@
       </div>
     </section>
 
-    <div id="app-shell" class="hidden">
-      <div id="tab-today" class="tab-content active">
-        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></span><span>Today</span></h1>
+    <div id="app-shell" class="hidden app-shell">
+      <div id="tab-today" class="tab-content active app-view app-view-today">
+        <section class="card app-view-header today-header-card">
+          <div class="app-view-header-copy">
+            <div class="app-view-kicker">Adaptive session</div>
+            <h1 class="section-title app-view-title"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></span><span>Today</span></h1>
+            <p class="app-view-copy">Log the work you actually completed. Kinova uses this signal to steer the next useful session instead of resetting the route.</p>
+          </div>
+          <div class="app-view-header-meta">
+            <div class="app-view-pill">Minimal-gear ready</div>
+            <div class="app-view-pill app-view-pill-strong">Progressive signal tracking</div>
+          </div>
+        </section>
         <div id="today-loader" class="loader"></div>
         <div id="today-error" class="error-message"></div>
         <div id="today-content" class="hidden">
           <div class="card today-overview-card">
-            <div id="today-workout-name" class="card-title"></div>
-            <div id="today-workout-type" class="card-subtitle"></div>
+            <div class="today-overview-main">
+              <div class="today-overview-kicker">Current route</div>
+              <div id="today-workout-name" class="card-title"></div>
+              <p class="today-overview-copy">Built from your saved plan, current progression state, and what you logged most recently.</p>
+            </div>
+            <div class="today-overview-side">
+              <div id="today-workout-type" class="today-overview-badge"></div>
+              <div class="today-overview-note">Complete each set, then move on.</div>
+            </div>
           </div>
           <div id="today-guidance" class="card today-guidance-card hidden">
             <div id="today-guidance-title" class="card-title"></div>
@@ -363,23 +380,34 @@
           </div>
           <div id="today-empty-state" class="card empty-state-card hidden"></div>
           <div id="today-exercises"></div>
-          <div id="today-rest-message" class="hidden text-center mt-4">
+          <div id="today-rest-message" class="card today-status-card hidden text-center mt-4">
             <p>No workout today. Recover and come back tomorrow.</p>
           </div>
           <div id="today-locked-message" class="card today-status-card hidden"></div>
         </div>
       </div>
 
-      <div id="tab-history" class="tab-content">
-        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg></span><span>History</span></h1>
-        <input type="date" id="history-date">
+      <div id="tab-history" class="tab-content app-view app-view-history">
+        <section class="card app-view-header history-header-card">
+          <div class="app-view-header-copy">
+            <div class="app-view-kicker">Training log</div>
+            <h1 class="section-title app-view-title"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg></span><span>History</span></h1>
+            <p class="app-view-copy">Review the sessions you already logged and see what signal Kinova captured for that day.</p>
+          </div>
+          <label class="history-filter-card">
+            <span class="history-filter-label">Pick a day</span>
+            <input type="date" id="history-date">
+          </label>
+        </section>
         <div id="history-loader" class="loader hidden"></div>
         <div id="history-error" class="error-message"></div>
         <div id="history-content">
-          <div id="history-empty" class="text-center mt-4 hidden">No data for this day</div>
+          <div id="history-empty" class="card empty-state-card history-empty-card hidden">No data for this day</div>
           <div id="history-data" class="hidden">
             <div class="card history-summary-card">
+              <div class="history-summary-kicker">Saved session</div>
               <div id="history-workout-type" class="card-title"></div>
+              <p class="history-summary-copy">Every completed set you log becomes the signal for progression and recovery decisions.</p>
             </div>
             <div id="history-exercises"></div>
             <div id="history-note-card" class="card history-note-card">
@@ -390,22 +418,46 @@
         </div>
       </div>
 
-      <div id="tab-program" class="tab-content">
-        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Plan</span></h1>
-        <div class="program-toolbar">
-          <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
-        </div>
+      <div id="tab-program" class="tab-content app-view app-view-program">
+        <section class="card app-view-header program-header-card">
+          <div class="app-view-header-copy">
+            <div class="app-view-kicker">Current route</div>
+            <h1 class="section-title app-view-title"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Plan</span></h1>
+            <p class="app-view-copy">This is the current weekly route Kinova will use. Rebuild it only when your schedule, equipment, or constraints changed enough to justify a fresh baseline.</p>
+          </div>
+          <div class="program-toolbar">
+            <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
+          </div>
+        </section>
         <div id="program-loader" class="loader"></div>
         <div id="program-error" class="error-message"></div>
         <div id="program-content" class="hidden">
           <div id="program-empty-state" class="card empty-state-card hidden"></div>
           <div id="program-main" class="hidden">
-            <div class="card mb-4">
-              <div class="card-title">Week</div>
-              <div id="program-schedule"></div>
+            <div class="program-surface-grid">
+              <section class="card program-week-card">
+                <div class="program-section-kicker">Week layout</div>
+                <div class="card-title">Current split</div>
+                <p class="card-subtitle">Training and recovery days arranged in the order Kinova will use this week.</p>
+                <div id="program-schedule"></div>
+              </section>
+
+              <section class="card program-summary-card">
+                <div class="program-section-kicker">System note</div>
+                <div class="card-title">Plan stays aligned with your saved setup.</div>
+                <p class="card-subtitle">If your equipment, time budget, or focus changed enough to alter the route, rebuild the plan from the latest preferences.</p>
+              </section>
             </div>
-            <h2 class="mb-4">Sessions</h2>
-            <div id="program-workouts"></div>
+
+            <section class="program-workouts-shell">
+              <div class="program-workouts-head">
+                <div>
+                  <div class="program-section-kicker">Sessions</div>
+                  <h2 class="program-section-title">Current sessions</h2>
+                </div>
+              </div>
+              <div id="program-workouts"></div>
+            </section>
           </div>
         </div>
       </div>

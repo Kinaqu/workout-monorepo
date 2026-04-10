@@ -842,7 +842,7 @@ async function loadToday() {
     }
 
     if (!data.exercises || data.exercises.length === 0) {
-      exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
+      exercisesContainer.innerHTML = '<div class="card empty-state-card today-empty-card-inline">No exercises in this session.</div>';
       setTodayGuidance('Nothing to log', 'Today’s workout is empty.');
       return;
     }
@@ -1081,7 +1081,7 @@ async function loadHistory(date) {
         exercisesContainer.appendChild(card);
       });
     } else {
-      exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises logged.</div>';
+      exercisesContainer.innerHTML = '<div class="card empty-state-card history-empty-card">No exercises logged.</div>';
     }
 
     historyNoteCard?.classList.toggle('hidden', !data.note);
