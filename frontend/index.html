@@ -13,47 +13,101 @@
 </head>
 <body>
   <div class="container">
-    <section id="onboarding-shell" class="hidden" aria-labelledby="onboarding-title">
-      <div class="card onboarding-hero-card">
-        <div class="onboarding-kicker">3 quick steps</div>
-        <h1 id="onboarding-title" class="section-title mb-4">
-          <span class="section-title-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"></path>
-              <path d="M12 4h9"></path>
-              <path d="M4 9h16"></path>
-              <path d="M4 15h16"></path>
-              <path d="M8 4v16"></path>
-            </svg>
-          </span>
-          <span>Set up your plan</span>
-        </h1>
-        <p class="onboarding-copy">Pick your goal, routine, and training preferences.</p>
-        <div class="onboarding-meta-row">
-          <div class="onboarding-meta-pill">About 1 minute</div>
-          <div id="onboarding-status-badge" class="onboarding-meta-pill hidden"></div>
-        </div>
-      </div>
+    <section id="onboarding-shell" class="hidden onboarding-shell" aria-labelledby="onboarding-title">
+      <div class="onboarding-shell-grid">
+        <div class="card onboarding-hero-card">
+          <div class="onboarding-hero-sheen" aria-hidden="true"></div>
+          <a class="onboarding-brand-mark" href="/" aria-label="Kinova home">
+            <img src="/logo_without_bg.svg" alt="" class="onboarding-brand-logo">
+            <span class="onboarding-brand-copy">
+              <span class="onboarding-brand-name">Kinova</span>
+              <span class="onboarding-brand-subtitle">Adaptive Training</span>
+            </span>
+          </a>
 
-      <form id="onboarding-form" class="onboarding-form" novalidate>
-        <div id="onboarding-progress" class="card onboarding-progress-card" aria-label="Onboarding progress">
-          <div class="onboarding-progress-steps">
-            <div class="onboarding-progress-step active" data-onboarding-step-item="0">
-              <span class="onboarding-progress-index">1</span>
-              <span class="onboarding-progress-copy">Profile</span>
+          <div class="onboarding-kicker">Adaptive onboarding</div>
+          <h1 id="onboarding-title" class="onboarding-title">Set up your plan around the week you can actually train.</h1>
+          <p class="onboarding-copy">Pick your goal, schedule, and training preferences. Kinova uses this to build a route that stays useful when the week gets messy.</p>
+
+          <div class="onboarding-meta-row">
+            <div class="onboarding-meta-pill">About 1 minute</div>
+            <div id="onboarding-status-badge" class="onboarding-meta-pill hidden"></div>
+            <div id="onboarding-live-pill" class="onboarding-meta-pill onboarding-meta-pill-strong">Step 1 of 3</div>
+          </div>
+
+          <div class="onboarding-signal-card" aria-label="Onboarding setup summary">
+            <div class="onboarding-signal-head">
+              <div>
+                <p class="onboarding-signal-label">Current setup</p>
+                <p id="onboarding-step-summary-title" class="onboarding-signal-title">Start with your goal</p>
+              </div>
+              <span id="onboarding-step-count" class="onboarding-signal-badge">Step 1</span>
             </div>
-            <div class="onboarding-progress-step" data-onboarding-step-item="1">
-              <span class="onboarding-progress-index">2</span>
-              <span class="onboarding-progress-copy">Schedule</span>
+
+            <p id="onboarding-step-summary-copy" class="onboarding-signal-copy">Choose what matters most right now.</p>
+
+            <div class="onboarding-progress-meter">
+              <div class="onboarding-progress-meter-copy">
+                <span>Setup progress</span>
+                <span id="onboarding-progress-meter-label">33% complete</span>
+              </div>
+              <div class="onboarding-progress-meter-track">
+                <div id="onboarding-progress-meter-bar" class="onboarding-progress-meter-bar" style="width: 33%"></div>
+              </div>
             </div>
-            <div class="onboarding-progress-step" data-onboarding-step-item="2">
-              <span class="onboarding-progress-index">3</span>
-              <span class="onboarding-progress-copy">Preferences</span>
+
+            <div class="onboarding-signal-footer">
+              <div>
+                <span class="onboarding-signal-dot"></span>
+                <span id="onboarding-step-summary-meta">1 goal selected, beginner start</span>
+              </div>
+              <span>Draft-safe flow</span>
             </div>
+          </div>
+
+          <div class="onboarding-highlight-grid">
+            <article class="onboarding-highlight-card">
+              <div class="onboarding-highlight-kicker">Signal</div>
+              <p>Build from the level, gear, and routine you can realistically keep.</p>
+            </article>
+            <article class="onboarding-highlight-card">
+              <div class="onboarding-highlight-kicker">Route</div>
+              <p>Each answer narrows the first week toward something you can actually execute.</p>
+            </article>
+            <article class="onboarding-highlight-card">
+              <div class="onboarding-highlight-kicker">Protection</div>
+              <p>Saved drafts and adaptive updates prevent resets when life breaks the ideal schedule.</p>
+            </article>
           </div>
         </div>
 
-        <section class="card onboarding-card onboarding-step-panel" data-onboarding-step-panel="0">
+        <form id="onboarding-form" class="onboarding-form" novalidate>
+          <div id="onboarding-progress" class="card onboarding-progress-card" aria-label="Onboarding progress">
+            <div class="onboarding-progress-header">
+              <div>
+                <div class="onboarding-progress-kicker">Plan setup</div>
+                <p class="onboarding-progress-title">Three short decisions. One usable route.</p>
+              </div>
+              <div class="onboarding-progress-caption">Auto-save stays on while you edit</div>
+            </div>
+
+            <div class="onboarding-progress-steps">
+              <div class="onboarding-progress-step active" data-onboarding-step-item="0">
+                <span class="onboarding-progress-index">1</span>
+                <span class="onboarding-progress-copy">Profile</span>
+              </div>
+              <div class="onboarding-progress-step" data-onboarding-step-item="1">
+                <span class="onboarding-progress-index">2</span>
+                <span class="onboarding-progress-copy">Schedule</span>
+              </div>
+              <div class="onboarding-progress-step" data-onboarding-step-item="2">
+                <span class="onboarding-progress-index">3</span>
+                <span class="onboarding-progress-copy">Preferences</span>
+              </div>
+            </div>
+          </div>
+
+          <section class="card onboarding-card onboarding-step-panel" data-onboarding-step-panel="0">
           <div class="onboarding-step-header">
             <div class="onboarding-step-kicker">Step 1 of 3</div>
             <h2 class="card-title">Start with your goal</h2>
@@ -103,9 +157,9 @@
             </div>
             <p class="field-error" data-error-for="experienceLevel"></p>
           </div>
-        </section>
+          </section>
 
-        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="1">
+          <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="1">
           <div class="onboarding-step-header">
             <div class="onboarding-step-kicker">Step 2 of 3</div>
             <h2 class="card-title">Pick a routine</h2>
@@ -161,9 +215,9 @@
             </div>
             <p class="field-error" data-error-for="sessionDurationMinutes"></p>
           </div>
-        </section>
+          </section>
 
-        <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="2">
+          <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="2">
           <div class="onboarding-step-header">
             <div class="onboarding-step-kicker">Step 3 of 3</div>
             <h2 class="card-title">Fine-tune the plan</h2>
@@ -270,19 +324,27 @@
             </div>
             <p class="field-error" data-error-for="preferredStyles"></p>
           </div>
-        </section>
+          </section>
 
-        <section class="card onboarding-card onboarding-actions-card">
-          <div id="onboarding-review" class="onboarding-review onboarding-review-compact hidden"></div>
-          <p id="onboarding-save-status" class="onboarding-helper-text">Progress saves automatically.</p>
-          <div id="onboarding-submit-error" class="error-message onboarding-submit-error"></div>
-          <div class="onboarding-action-row">
-            <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
-            <button id="onboarding-next-button" type="button">Continue</button>
-            <button id="onboarding-complete-button" class="hidden" type="submit">Build plan</button>
-          </div>
-        </section>
-      </form>
+          <section class="card onboarding-card onboarding-actions-card">
+            <div class="onboarding-review-header">
+              <div>
+                <div class="onboarding-step-kicker">Review</div>
+                <h2 class="card-title">What Kinova will use</h2>
+              </div>
+              <p class="card-subtitle">These inputs seed the first week and become the baseline for future adjustments.</p>
+            </div>
+            <div id="onboarding-review" class="onboarding-review onboarding-review-compact hidden"></div>
+            <p id="onboarding-save-status" class="onboarding-helper-text">Progress saves automatically.</p>
+            <div id="onboarding-submit-error" class="error-message onboarding-submit-error"></div>
+            <div class="onboarding-action-row">
+              <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
+              <button id="onboarding-next-button" type="button">Continue</button>
+              <button id="onboarding-complete-button" class="hidden" type="submit">Build plan</button>
+            </div>
+          </section>
+        </form>
+      </div>
     </section>
 
     <div id="app-shell" class="hidden">
