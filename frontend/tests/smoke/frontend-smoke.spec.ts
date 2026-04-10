@@ -305,7 +305,7 @@ test('serves required public assets', async ({ request }) => {
     '/manifest.json',
     '/sw.js',
     '/favicon.svg',
-    '/icons/workout-logo.svg',
+    '/logo.svg',
   ];
 
   const protectedRequest = bypassHeaders

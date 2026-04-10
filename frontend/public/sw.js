@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workout-app-v4';
+const CACHE_NAME = 'kinova-app-v5';
 const urlsToCache = [
   '/',
   '/login',
@@ -6,7 +6,17 @@ const urlsToCache = [
   '/style.css',
   '/manifest.json',
   '/favicon.svg',
-  '/icons/workout-logo.svg'
+  '/logo.svg',
+  '/logo_without_bg.svg',
+  '/fonts/manrope-400.ttf',
+  '/fonts/manrope-500.ttf',
+  '/fonts/manrope-600.ttf',
+  '/fonts/manrope-700.ttf',
+  '/fonts/manrope-800.ttf',
+  '/fonts/sora-400.ttf',
+  '/fonts/sora-500.ttf',
+  '/fonts/sora-600.ttf',
+  '/fonts/sora-700.ttf'
 ];
 
 function getNavigationCacheKey(url) {
@@ -52,9 +62,12 @@ self.addEventListener('fetch', event => {
   const isApiRequest = url.href.includes('workout-api');
   const isStaticAsset = url.pathname.startsWith('/assets/')
     || url.pathname.startsWith('/icons/')
+    || url.pathname.startsWith('/fonts/')
     || url.pathname === '/style.css'
     || url.pathname === '/manifest.json'
-    || url.pathname === '/favicon.svg';
+    || url.pathname === '/favicon.svg'
+    || url.pathname === '/logo.svg'
+    || url.pathname === '/logo_without_bg.svg';
   const isNavigationRequest = request.mode === 'navigate';
 
   if (!isSameOrigin || isApiRequest || (!isNavigationRequest && !isStaticAsset)) {

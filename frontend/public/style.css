@@ -1,14 +1,107 @@
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/manrope-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/manrope-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/manrope-600.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/manrope-700.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/manrope-800.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/sora-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/sora-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/sora-600.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/sora-700.ttf") format("truetype");
+}
+
 :root {
-  --bg-color: #0f141a;
-  --surface-color: #18212b;
-  --primary-color: #6fb6ff;
-  --primary-variant: #245ea6;
-  --secondary-color: #5eead4;
-  --text-primary: #ffffff;
-  --text-secondary: #9caabd;
-  --error-color: #f07d8c;
-  --border-color: #2b3642;
+  --background: #05070b;
+  --foreground: #f8fbff;
+  --accent: #125bff;
+  --accent-strong: #2e72ff;
+  --accent-soft: #8ab4ff;
+  --surface-strong: #08111f;
+  --surface-elevated: #0b111a;
+  --surface-panel: rgba(255, 255, 255, 0.045);
+  --surface-panel-strong: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --copy-primary: rgba(248, 251, 255, 0.96);
+  --copy-secondary: rgba(248, 251, 255, 0.72);
+  --copy-muted: rgba(248, 251, 255, 0.52);
   --success-color: #4fd18f;
+  --error-color: #f07d8c;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-display: "Sora", "Segoe UI", sans-serif;
+  --shadow-md: 0 18px 50px rgba(5, 7, 11, 0.22);
+  --shadow-lg: 0 24px 70px rgba(5, 7, 11, 0.32);
+  --shadow-xl: 0 32px 120px rgba(5, 7, 11, 0.62);
+
+  /* Compatibility aliases for existing frontend styles. */
+  --bg-color: var(--background);
+  --surface-color: var(--surface-strong);
+  --primary-color: var(--accent);
+  --primary-variant: var(--accent-strong);
+  --secondary-color: var(--accent-soft);
+  --text-primary: var(--copy-primary);
+  --text-secondary: var(--copy-secondary);
+  --border-color: var(--border);
 }
 
 * {
@@ -18,31 +111,53 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at top left, rgba(18, 91, 255, 0.24), transparent 36%),
+    radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.08), transparent 22%),
+    linear-gradient(180deg, #05070b 0%, #08111f 55%, #05070b 100%);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--background);
+}
+
+::selection {
+  background: rgba(18, 91, 255, 0.28);
+  color: #ffffff;
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 a {
-  color: var(--primary-color);
+  color: var(--accent-soft);
   text-decoration: none;
 }
 
 button {
-  background-color: var(--primary-color);
-  color: #04111f;
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-variant) 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 14px;
+  border-radius: 999px;
   padding: 12px 16px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   min-height: 44px;
   width: 100%;
-  transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 12px 24px rgba(40, 95, 166, 0.22);
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+  box-shadow: var(--shadow-md);
 }
 
 button:active {
@@ -57,9 +172,9 @@ button:disabled {
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--primary-color);
-  border: 1px solid rgba(111, 182, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--copy-primary);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: none;
 }
 
@@ -69,11 +184,11 @@ button:disabled {
 
 input, textarea {
   width: 100%;
-  background-color: var(--surface-color);
+  background-color: var(--surface-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 12px 14px;
   font-size: 16px;
   min-height: 44px;
   margin-bottom: 16px;
@@ -85,8 +200,8 @@ input:focus, textarea:focus {
 }
 
 .container {
-  padding: 16px;
-  max-width: 600px;
+  padding: 20px;
+  max-width: 680px;
   margin: 0 auto;
   padding-bottom: 80px; /* Space for bottom nav */
 }
@@ -98,13 +213,14 @@ input:focus, textarea:focus {
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
-  max-width: 400px;
+  max-width: 460px;
   margin: 0 auto;
 }
 
 .auth-container h1 {
   margin-bottom: 24px;
   text-align: center;
+  font-family: var(--font-display);
 }
 
 .auth-links {
@@ -125,13 +241,13 @@ input:focus, textarea:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(16, 23, 31, 0.92);
+  background: rgba(8, 17, 31, 0.82);
   display: flex;
   justify-content: space-around;
   border-top: 1px solid var(--border-color);
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 100;
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(18px);
 }
 
 .nav-item {
@@ -176,7 +292,7 @@ input:focus, textarea:focus {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-panel-strong);
   color: var(--primary-color);
 }
 
@@ -196,16 +312,20 @@ input:focus, textarea:focus {
 
 /* Cards */
 .card {
-  background-color: var(--surface-color);
-  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(11, 17, 26, 0.96), rgba(8, 17, 31, 0.94));
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
   padding: 16px;
   margin-bottom: 16px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
 }
 
 .card-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
+  color: var(--copy-primary);
 }
 
 .card-subtitle {
@@ -1219,7 +1339,7 @@ body::-webkit-scrollbar-thumb:hover,
 .clerk-primary-button,
 .clerk-social-button {
   background: var(--primary-color);
-  color: #000;
+  color: var(--copy-primary);
   border: none;
 }
 
@@ -1244,15 +1364,18 @@ body::-webkit-scrollbar-thumb:hover,
 
 .clerk-card {
   width: 100%;
-  background: linear-gradient(180deg, #1f1f25 0%, #17171d 100%);
-  border: 1px solid #2e2e38;
-  border-radius: 18px;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(18, 91, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(11, 17, 26, 0.98) 0%, rgba(8, 17, 31, 0.96) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: var(--shadow-xl);
 }
 
 .clerk-title {
   font-size: 1.4rem;
   font-weight: 700;
+  font-family: var(--font-display);
 }
 
 .clerk-subtitle,
@@ -1260,18 +1383,18 @@ body::-webkit-scrollbar-thumb:hover,
 .clerk-text-secondary,
 .clerk-divider-text,
 .clerk-label {
-  color: #a8a8b8;
+  color: var(--copy-secondary);
 }
 
 .clerk-input {
-  border-radius: 12px;
-  border-color: #333341;
-  background: #111116;
+  border-radius: 16px;
+  border-color: var(--border-color);
+  background: var(--surface-elevated);
 }
 
 .clerk-input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(111, 182, 255, 0.22);
+  box-shadow: 0 0 0 2px rgba(18, 91, 255, 0.22);
 }
 
 .clerk-primary-button,
@@ -1284,10 +1407,10 @@ body::-webkit-scrollbar-thumb:hover,
 .clerk-alt-method-button,
 .cl-alternativeMethodsBlockButton {
   min-height: 46px;
-  border-radius: 12px;
-  border: 1px solid rgba(111, 182, 255, 0.28);
-  background: linear-gradient(180deg, rgba(111, 182, 255, 0.16) 0%, rgba(37, 94, 166, 0.28) 100%);
-  color: #eef7ff;
+  border-radius: 16px;
+  border: 1px solid rgba(18, 91, 255, 0.24);
+  background: linear-gradient(180deg, rgba(18, 91, 255, 0.14) 0%, rgba(46, 114, 255, 0.22) 100%);
+  color: var(--copy-primary);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -1297,19 +1420,19 @@ body::-webkit-scrollbar-thumb:hover,
 .cl-alternativeMethodsBlockButton:hover,
 .cl-alternativeMethodsBlockButton:focus-visible,
 .cl-alternativeMethodsBlockButton:active {
-  background: linear-gradient(180deg, rgba(111, 182, 255, 0.24) 0%, rgba(37, 94, 166, 0.38) 100%);
-  border-color: rgba(173, 219, 255, 0.46);
+  background: linear-gradient(180deg, rgba(18, 91, 255, 0.22) 0%, rgba(46, 114, 255, 0.3) 100%);
+  border-color: rgba(138, 180, 255, 0.4);
 }
 
 .clerk-alt-method-button-text,
 .clerk-alt-method-button-arrow,
 .cl-alternativeMethodsBlockButtonText,
 .cl-alternativeMethodsBlockButtonArrow {
-  color: #eef7ff;
+  color: var(--copy-primary);
 }
 
 .clerk-divider-line {
-  background: #31313a;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 
@@ -1321,13 +1444,13 @@ body::-webkit-scrollbar-thumb:hover,
 
 .clerk-input::placeholder,
 .cl-formFieldInput::placeholder {
-  color: #c5c5d3 !important;
+  color: var(--copy-muted) !important;
   opacity: 1;
 }
 
 .clerk-password-toggle,
 .cl-formFieldInputShowPasswordButton {
-  color: #f5f5ff !important;
+  color: var(--copy-primary) !important;
   right: 12px !important;
 }
 
@@ -1351,7 +1474,7 @@ body::-webkit-scrollbar-thumb:hover,
 [class*="cl-badge"]::before,
 [class*="clerk-badge"]::before {
   content: "Protected sign-in by Clerk";
-  color: #ddd6f3;
+  color: var(--accent-soft);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -1386,7 +1509,7 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .auth-loader-title {
-  color: #d3d3dd;
+  color: var(--copy-secondary);
   font-size: 14px;
   letter-spacing: 0.02em;
 }
@@ -1394,7 +1517,7 @@ body::-webkit-scrollbar-thumb:hover,
 .auth-loader-line,
 .auth-loader-button {
   border-radius: 10px;
-  background: linear-gradient(90deg, #23232d 0%, #30303d 40%, #23232d 80%);
+  background: linear-gradient(90deg, rgba(18, 91, 255, 0.08) 0%, rgba(138, 180, 255, 0.14) 40%, rgba(18, 91, 255, 0.08) 80%);
   background-size: 220% 100%;
   animation: authShimmer 1.2s linear infinite;
 }
@@ -1427,7 +1550,7 @@ body::-webkit-scrollbar-thumb:hover,
 
 .cl-formFieldHintText,
 .cl-formFieldWarningText {
-  color: #d0d0db !important;
+  color: var(--copy-secondary) !important;
 }
 
 .cl-formFieldSuccessText {
@@ -1437,9 +1560,9 @@ body::-webkit-scrollbar-thumb:hover,
 
 /* Verify email readability */
 .cl-otpCodeFieldInput {
-  background: #111116 !important;
-  border: 1px solid #4a4a5a !important;
-  color: #ffffff !important;
+  background: var(--surface-elevated) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--copy-primary) !important;
 }
 
 .cl-otpCodeFieldInput::placeholder {
