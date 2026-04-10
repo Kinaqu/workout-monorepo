@@ -13,6 +13,20 @@ const ONBOARDING_DEFAULTS = {
   limitations: [],
   preferredStyles: ['balanced'],
 };
+const ONBOARDING_STEP_CONTENT = [
+  {
+    title: 'Start with your goal',
+    copy: 'Choose what matters most right now.',
+  },
+  {
+    title: 'Pick a routine',
+    copy: 'Choose what you can realistically stick to.',
+  },
+  {
+    title: 'Fine-tune the plan',
+    copy: 'Add equipment, focus areas, and anything to avoid.',
+  },
+];
 
 let todayWorkoutType = null;
 let todayWorkoutDate = null;
@@ -40,6 +54,13 @@ const onboardingCompleteButton = document.getElementById('onboarding-complete-bu
 const onboardingBackButton = document.getElementById('onboarding-back-button');
 const onboardingNextButton = document.getElementById('onboarding-next-button');
 const onboardingReview = document.getElementById('onboarding-review');
+const onboardingLivePill = document.getElementById('onboarding-live-pill');
+const onboardingStepCount = document.getElementById('onboarding-step-count');
+const onboardingStepSummaryTitle = document.getElementById('onboarding-step-summary-title');
+const onboardingStepSummaryCopy = document.getElementById('onboarding-step-summary-copy');
+const onboardingStepSummaryMeta = document.getElementById('onboarding-step-summary-meta');
+const onboardingProgressMeterLabel = document.getElementById('onboarding-progress-meter-label');
+const onboardingProgressMeterBar = document.getElementById('onboarding-progress-meter-bar');
 const onboardingStepPanels = Array.from(document.querySelectorAll('[data-onboarding-step-panel]'));
 const onboardingStepItems = Array.from(document.querySelectorAll('[data-onboarding-step-item]'));
 const appShell = document.getElementById('app-shell');
@@ -113,6 +134,7 @@ function activateTab(tabId) {
 function setShellMode(mode) {
   currentShellMode = mode;
   const isOnboarding = mode === 'onboarding';
+  document.body.classList.toggle('onboarding-mode', isOnboarding);
   onboardingShell.classList.toggle('hidden', !isOnboarding);
   appShell.classList.toggle('hidden', isOnboarding);
   appNav.classList.toggle('hidden', isOnboarding);
@@ -343,7 +365,67 @@ function formatOnboardingReviewValues(name, values) {
   return [getChoiceLabel(name, String(values))];
 }
 
+function formatPluralLabel(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function buildOnboardingStepSummaryMeta(payload) {
+  switch (onboardingCurrentStep) {
+    case 0: {
+      const goalsCount = payload.goals.length;
+      const level = formatOnboardingReviewValues('experienceLevel', payload.experienceLevel)[0];
+      return `${formatPluralLabel(goalsCount, 'goal')} selected, ${level.toLowerCase()} start`;
+    }
+    case 1: {
+      const days = payload.trainingDaysPerWeek ? `${payload.trainingDaysPerWeek} day${payload.trainingDaysPerWeek === 1 ? '' : 's'}` : 'no days';
+      const duration = payload.sessionDurationMinutes ? `${payload.sessionDurationMinutes} min sessions` : 'duration not set';
+      return `${days} per week, ${duration}`;
+    }
+    case 2: {
+      return `${formatPluralLabel(payload.equipmentAccess.length, 'equipment option')}, ${formatPluralLabel(payload.focusAreas.length, 'focus area')}, ${formatPluralLabel(payload.limitations.length, 'limit', 'limits')} flagged`;
+    }
+    default:
+      return 'Adaptive setup in progress';
+  }
+}
+
+function syncOnboardingHero(payload = buildOnboardingPayload()) {
+  const totalSteps = getOnboardingLastStepIndex() + 1;
+  const currentStep = onboardingCurrentStep + 1;
+  const currentStepContent = ONBOARDING_STEP_CONTENT[onboardingCurrentStep] || ONBOARDING_STEP_CONTENT[0];
+  const completion = Math.round((currentStep / totalSteps) * 100);
+
+  if (onboardingLivePill) {
+    onboardingLivePill.textContent = `Step ${currentStep} of ${totalSteps}`;
+  }
+
+  if (onboardingStepCount) {
+    onboardingStepCount.textContent = `Step ${currentStep}`;
+  }
+
+  if (onboardingStepSummaryTitle) {
+    onboardingStepSummaryTitle.textContent = currentStepContent.title;
+  }
+
+  if (onboardingStepSummaryCopy) {
+    onboardingStepSummaryCopy.textContent = currentStepContent.copy;
+  }
+
+  if (onboardingStepSummaryMeta) {
+    onboardingStepSummaryMeta.textContent = buildOnboardingStepSummaryMeta(payload);
+  }
+
+  if (onboardingProgressMeterLabel) {
+    onboardingProgressMeterLabel.textContent = `${completion}% complete`;
+  }
+
+  if (onboardingProgressMeterBar) {
+    onboardingProgressMeterBar.style.width = `${completion}%`;
+  }
+}
+
 function renderOnboardingReview(payload = buildOnboardingPayload()) {
+  syncOnboardingHero(payload);
   if (!onboardingReview) return;
 
   const sections = [
@@ -480,16 +562,19 @@ function updateOnboardingBadge(onboarding) {
 
   if (status === 'draft') {
     onboardingStatusBadge.textContent = 'Draft saved';
+    onboardingStatusBadge.dataset.state = 'draft';
     onboardingStatusBadge.classList.remove('hidden');
     return;
   }
 
   if (status === 'completed') {
     onboardingStatusBadge.textContent = 'Completed';
+    onboardingStatusBadge.dataset.state = 'completed';
     onboardingStatusBadge.classList.remove('hidden');
     return;
   }
 
+  delete onboardingStatusBadge.dataset.state;
   onboardingStatusBadge.classList.add('hidden');
 }
 
