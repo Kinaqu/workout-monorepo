@@ -1,6 +1,7 @@
 import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClerkLoaded, ClerkProvider, Show } from '@clerk/react';
+import { AuthLinkRow, AuthMessageCard, AuthMetaList, AuthShell, AuthSkeleton } from './auth-shell.jsx';
 import { clerkAppearance } from './clerkAppearance.js';
 import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './clerk.jsx';
 
@@ -9,16 +10,29 @@ const LazySignUp = lazy(() => import('@clerk/react').then(module => ({ default: 
 function MissingKeyNotice() {
   return (
     <main className="auth-container">
-      <section className="card auth-card">
-        <h1 className="mb-4">Clerk key is missing</h1>
-        <p className="text-secondary">Set VITE_CLERK_PUBLISHABLE_KEY in Vercel Project Settings → Environment Variables and redeploy.</p>
-        <p className="text-secondary" style={{ marginTop: '8px', fontSize: '12px' }}>
-          env check — VITE: {String(envDiagnostics.hasViteKey)}, CLERK_: {String(envDiagnostics.hasClerkKeyAlias)}, NEXT_PUBLIC_: {String(envDiagnostics.hasNextPublicAlias)}
-        </p>
-        <p className="mt-4">
-          <a href="https://clerk.com/docs/react/getting-started/quickstart">Clerk React quickstart</a>
-        </p>
-      </section>
+      <AuthShell
+        eyebrow="Access configuration"
+        title="Kinova sign-up is blocked until the Clerk publishable key is available."
+        description="Once the key is present, new users can move from account creation into onboarding without leaving the product shell."
+        stageLabel="Configuration required"
+      >
+        <AuthMessageCard
+          title="Clerk key is missing"
+          copy="Set VITE_CLERK_PUBLISHABLE_KEY in Vercel Project Settings and redeploy this frontend."
+          tone="warning"
+        >
+          <AuthMetaList
+            items={[
+              { label: 'VITE', value: String(envDiagnostics.hasViteKey) },
+              { label: 'CLERK_', value: String(envDiagnostics.hasClerkKeyAlias) },
+              { label: 'NEXT_PUBLIC_', value: String(envDiagnostics.hasNextPublicAlias) },
+            ]}
+          />
+          <AuthLinkRow href="https://clerk.com/docs/react/getting-started/quickstart">
+            Open Clerk React quickstart
+          </AuthLinkRow>
+        </AuthMessageCard>
+      </AuthShell>
     </main>
   );
 }
@@ -32,30 +46,26 @@ function SignedInRedirect() {
   return null;
 }
 
-function AuthSkeleton({ label }) {
-  return (
-    <section className="card auth-loader-card" aria-live="polite" aria-busy="true">
-      <div className="auth-loader-title">Preparing {label}</div>
-      <div className="auth-loader-line" />
-      <div className="auth-loader-line auth-loader-line-short" />
-      <div className="auth-loader-button" />
-    </section>
-  );
-}
-
 function RegisterPage() {
   return (
     <main className="auth-container">
-      <ClerkLoaded>
-        <Show when="signed-out">
-          <Suspense fallback={<AuthSkeleton label="sign up" />}>
-            <LazySignUp routing="virtual" signInUrl="/login" appearance={clerkAppearance} />
-          </Suspense>
-        </Show>
-        <Show when="signed-in">
-          <SignedInRedirect />
-        </Show>
-      </ClerkLoaded>
+      <AuthShell
+        eyebrow="New member setup"
+        title="Create a Kinova account and move straight into the adaptive plan setup."
+        description="Account creation should feel like the first step of the product, not a detached third-party screen."
+        stageLabel="Sign up"
+      >
+        <ClerkLoaded>
+          <Show when="signed-out">
+            <Suspense fallback={<AuthSkeleton label="sign up" />}>
+              <LazySignUp routing="virtual" signInUrl="/login" appearance={clerkAppearance} />
+            </Suspense>
+          </Show>
+          <Show when="signed-in">
+            <SignedInRedirect />
+          </Show>
+        </ClerkLoaded>
+      </AuthShell>
     </main>
   );
 }
