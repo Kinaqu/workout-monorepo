@@ -7,7 +7,16 @@ const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
   '/logo.svg',
-  '/logo_without_bg.svg'
+  '/logo_without_bg.svg',
+  '/fonts/manrope-400.ttf',
+  '/fonts/manrope-500.ttf',
+  '/fonts/manrope-600.ttf',
+  '/fonts/manrope-700.ttf',
+  '/fonts/manrope-800.ttf',
+  '/fonts/sora-400.ttf',
+  '/fonts/sora-500.ttf',
+  '/fonts/sora-600.ttf',
+  '/fonts/sora-700.ttf'
 ];
 
 function getNavigationCacheKey(url) {
@@ -53,6 +62,7 @@ self.addEventListener('fetch', event => {
   const isApiRequest = url.href.includes('workout-api');
   const isStaticAsset = url.pathname.startsWith('/assets/')
     || url.pathname.startsWith('/icons/')
+    || url.pathname.startsWith('/fonts/')
     || url.pathname === '/style.css'
     || url.pathname === '/manifest.json'
     || url.pathname === '/favicon.svg'
