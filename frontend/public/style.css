@@ -217,6 +217,7 @@ input:focus, textarea:focus {
   margin: 0 auto;
   padding: 32px 24px;
   isolation: isolate;
+  overflow: hidden;
 }
 
 .auth-container::before,
