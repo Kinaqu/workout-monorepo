@@ -1,5 +1,7 @@
 import type { RuntimeAppConfig } from './types.ts';
 
+const HOSTED_DEFAULT_API_BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+
 function normalizeBaseUrl(value: string | undefined | null): string {
   return typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
 }
@@ -18,7 +20,16 @@ export function resolveApiBaseUrl(): string {
     return runtimeBaseUrl;
   }
 
-  return normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL ?? import.meta.env.NEXT_PUBLIC_API_BASE_URL);
+  const configuredBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL ?? import.meta.env.NEXT_PUBLIC_API_BASE_URL);
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  if (import.meta.env.DEV) {
+    return '';
+  }
+
+  return HOSTED_DEFAULT_API_BASE_URL;
 }
 
 export function buildApiUrl(endpoint: string): string {

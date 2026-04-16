@@ -15,6 +15,8 @@ import type {
   OnboardingCompleteResponse,
   OnboardingDraftSaveResponse,
   OnboardingStateResponse,
+  ProgramDefinition,
+  ProgramMutationResponse,
   ProgramResponse,
   ProgressionRunResponse,
   SessionsListResponse,
@@ -142,6 +144,17 @@ async function request<TResponse>(endpoint: string, options: RequestOptions = {}
 
   try {
     const response = await fetch(buildApiUrl(endpoint), config);
+    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+    if (!contentType.includes('application/json')) {
+      const message = contentType.includes('text/html')
+        ? 'Expected JSON API response but received HTML. Check frontend API base URL configuration.'
+        : `Expected JSON API response but received ${contentType || 'an unknown content type'}.`;
+
+      throw new ApiError(message, response.status, {
+        error: message,
+      });
+    }
+
     const data = (await response.json().catch(() => ({}))) as ApiErrorPayload;
 
     if (isExpiredSession(response) && !options.noAuth) {
@@ -200,7 +213,8 @@ export const api: ApiClient = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  getTodayWorkout: () => request<WorkoutTodayResponse>('/workout/today'),
+  getTodayWorkout: (date?: string) =>
+    request<WorkoutTodayResponse>(`/workout/today${buildQueryString({ date })}`),
   logWorkout: (payload: JsonLogRequest, date?: string) => {
     const headers = new Headers();
     if (date) {
@@ -223,6 +237,20 @@ export const api: ApiClient = {
   getSession: (id: string) => request<WorkoutSessionRecord>(`/sessions/${id}`),
   getLog: (date: string) => request<LegacyLogByDateResponse>(`/log/${date}`),
   getProgram: () => request<ProgramResponse>('/program'),
+  saveProgram: (payload: ProgramDefinition) =>
+    request<ProgramMutationResponse>('/program', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  resetProgram: (resetToken: string) => {
+    const headers = new Headers();
+    headers.set('X-Reset-Token', resetToken);
+
+    return request<ProgramMutationResponse>('/program/reset', {
+      method: 'POST',
+      headers,
+    });
+  },
   regenerateProgram: () => request<GeneratedProgramResponse>('/program/regenerate', { method: 'POST' }),
   runProgression: () => request<ProgressionRunResponse>('/progression/run', { method: 'POST' }),
 };

@@ -11,14 +11,37 @@ import {
 } from '/lib/api/index.js';
 import { hasActiveProgram } from '/store/app-store.js';
 import { el, renderEmptyState } from '/shared/ui/dom.js';
-import { getTodayDateString } from '/shared/utils/date.js';
-import { formatDateLabel, formatWorkoutTypeLabel } from '/shared/utils/format.js';
+import { getTodayDateString, shiftDateString } from '/shared/utils/date.js';
+import { formatDateLabel, formatLongDateLabel, formatWorkoutTypeLabel } from '/shared/utils/format.js';
 import { ensureApiObject } from '/shared/utils/guards.js';
 
 const todayEmptyState = document.getElementById('today-empty-state');
 const todayGuidance = document.getElementById('today-guidance');
 const todayGuidanceTitle = document.getElementById('today-guidance-title');
 const todayGuidanceCopy = document.getElementById('today-guidance-copy');
+const todayDateInput = document.getElementById('today-date');
+const todayDateLabel = document.getElementById('today-selected-date-label');
+const todayDatePrevButton = document.getElementById('today-date-prev-button');
+const todayDateNextButton = document.getElementById('today-date-next-button');
+const todayDateResetButton = document.getElementById('today-date-reset-button');
+const todayWorkoutDateLabel = document.getElementById('today-workout-date');
+const todayRunProgressionButton = document.getElementById('today-run-progression-button');
+const todayProgressionLastRun = document.getElementById('today-progression-last-run');
+const todayProgressionFeedback = document.getElementById('today-progression-feedback');
+
+function getLatestProgressionDate(progressionState = {}) {
+  return Object.values(progressionState).reduce((latest, state) => {
+    if (!state?.last_progression) {
+      return latest;
+    }
+
+    if (!latest || state.last_progression > latest) {
+      return state.last_progression;
+    }
+
+    return latest;
+  }, '');
+}
 
 export function createTodayWorkoutFeature({
   getHistorySelectedDate,
@@ -27,10 +50,62 @@ export function createTodayWorkoutFeature({
   onMissingProgram,
 }) {
   let todayWorkoutType = null;
-  let todayWorkoutDate = null;
+  let todayWorkoutDate = getTodayDateString();
   let todayWorkoutSaved = false;
   let todaySaveInFlight = false;
+  let todayLoadInFlight = false;
+  let progressionRunInFlight = false;
   let activeExerciseIndex = 0;
+  let lastProgressionDate = '';
+  let lastProgressionRun = null;
+
+  function init() {
+    setSelectedDate(getTodayDateString());
+
+    todayDateInput?.addEventListener('change', event => {
+      void handleSelectedDate(event.target.value);
+    });
+
+    todayDatePrevButton?.addEventListener('click', () => {
+      void handleSelectedDate(shiftDateString(getSelectedDate(), -1));
+    });
+
+    todayDateNextButton?.addEventListener('click', () => {
+      void handleSelectedDate(shiftDateString(getSelectedDate(), 1));
+    });
+
+    todayDateResetButton?.addEventListener('click', () => {
+      void handleSelectedDate(getTodayDateString());
+    });
+
+    todayRunProgressionButton?.addEventListener('click', () => {
+      void handleRunProgression();
+    });
+  }
+
+  function getSelectedDate() {
+    return todayDateInput?.value || todayWorkoutDate || getTodayDateString();
+  }
+
+  function setSelectedDate(value) {
+    const safeDate = value || getTodayDateString();
+    todayWorkoutDate = safeDate;
+    if (todayDateInput) {
+      todayDateInput.value = safeDate;
+    }
+
+    if (todayDateLabel) {
+      todayDateLabel.textContent =
+        safeDate === getTodayDateString()
+          ? `Today · ${formatLongDateLabel(safeDate)}`
+          : `Planned for · ${formatLongDateLabel(safeDate)}`;
+    }
+  }
+
+  async function handleSelectedDate(value) {
+    setSelectedDate(value);
+    await load();
+  }
 
   function setTodayError(message = '') {
     document.getElementById('today-error').textContent = message;
@@ -54,6 +129,94 @@ export function createTodayWorkoutFeature({
     todayEmptyState.classList.add('hidden');
   }
 
+  function setDateControlsDisabled(disabled) {
+    if (todayDateInput) todayDateInput.disabled = disabled;
+    if (todayDatePrevButton) todayDatePrevButton.disabled = disabled;
+    if (todayDateNextButton) todayDateNextButton.disabled = disabled;
+    if (todayDateResetButton) todayDateResetButton.disabled = disabled;
+  }
+
+  function renderProgressionFeedback() {
+    if (!todayRunProgressionButton) return;
+
+    todayRunProgressionButton.disabled = !hasActiveProgram() || progressionRunInFlight || todayLoadInFlight;
+
+    if (!todayProgressionLastRun) return;
+
+    if (lastProgressionDate) {
+      todayProgressionLastRun.textContent = `Last run: ${formatLongDateLabel(lastProgressionDate)}`;
+      todayProgressionLastRun.classList.remove('hidden');
+    } else {
+      todayProgressionLastRun.classList.add('hidden');
+      todayProgressionLastRun.textContent = '';
+    }
+
+    if (!todayProgressionFeedback) return;
+
+    todayProgressionFeedback.innerHTML = '';
+
+    if (progressionRunInFlight) {
+      todayProgressionFeedback.classList.remove('hidden');
+      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Refreshing progression…'));
+      todayProgressionFeedback.appendChild(
+        el('p', 'card-subtitle', 'Evaluating recent sessions and reseeding the next targets.')
+      );
+      return;
+    }
+
+    if (!lastProgressionRun) {
+      if (lastProgressionDate) {
+        todayProgressionFeedback.classList.remove('hidden');
+        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Progression is up to date'));
+        todayProgressionFeedback.appendChild(
+          el('p', 'card-subtitle', `The backend last changed progression on ${formatLongDateLabel(lastProgressionDate)}.`)
+        );
+      } else {
+        todayProgressionFeedback.classList.add('hidden');
+      }
+      return;
+    }
+
+    const changed = Array.isArray(lastProgressionRun.result?.changed) ? lastProgressionRun.result.changed : [];
+    const skipped = Array.isArray(lastProgressionRun.result?.skipped) ? lastProgressionRun.result.skipped : [];
+
+    todayProgressionFeedback.classList.remove('hidden');
+    todayProgressionFeedback.appendChild(
+      el('div', 'card-title', `Progression refreshed for ${formatLongDateLabel(lastProgressionRun.progression_date)}`)
+    );
+
+    const summary = el('div', 'today-progression-summary');
+    summary.appendChild(
+      el('div', 'today-progression-pill', `${changed.length} ${changed.length === 1 ? 'change' : 'changes'}`)
+    );
+    summary.appendChild(
+      el('div', 'today-progression-pill is-muted', `${skipped.length} ${skipped.length === 1 ? 'skip' : 'skips'}`)
+    );
+    todayProgressionFeedback.appendChild(summary);
+
+    if (changed.length > 0) {
+      const list = el('div', 'today-progression-list');
+      changed.slice(0, 4).forEach(change => {
+        const item = el('div', 'today-progression-item');
+        item.appendChild(el('strong', '', change.name || change.id));
+        item.appendChild(
+          el(
+            'div',
+            'text-secondary',
+            `${change.before.min}-${change.before.max} -> ${change.after.min}-${change.after.max}, ${change.before.sets} -> ${change.after.sets} sets`
+          )
+        );
+        item.appendChild(el('div', 'text-secondary', change.reason));
+        list.appendChild(item);
+      });
+      todayProgressionFeedback.appendChild(list);
+    } else {
+      todayProgressionFeedback.appendChild(
+        el('p', 'card-subtitle', 'No targets changed this run. Recent sessions did not trigger an update.')
+      );
+    }
+  }
+
   function renderRecoveryState() {
     const loader = document.getElementById('today-loader');
     const content = document.getElementById('today-content');
@@ -65,6 +228,9 @@ export function createTodayWorkoutFeature({
     content.classList.remove('hidden');
     document.getElementById('today-workout-name').textContent = 'No plan yet';
     document.getElementById('today-workout-type').textContent = 'Build one to start';
+    if (todayWorkoutDateLabel) {
+      todayWorkoutDateLabel.textContent = formatLongDateLabel(getSelectedDate());
+    }
     exercisesContainer.classList.add('hidden');
     restMessage.classList.add('hidden');
     lockedMessage.classList.add('hidden');
@@ -73,10 +239,11 @@ export function createTodayWorkoutFeature({
     renderEmptyState(
       todayEmptyState,
       'No plan yet',
-      'Build a plan first, then today’s workout will appear here.',
+      'Build a plan first, then the generated workout will appear here for any date you inspect.',
       { text: 'Open Plan', type: 'open-tab', targetTab: 'program' }
     );
     setTodayGuidanceContent('', '');
+    renderProgressionFeedback();
   }
 
   async function getExistingSession(date) {
@@ -295,6 +462,42 @@ export function createTodayWorkoutFeature({
     await saveTodayWorkout(confirmBtn, footerHint);
   }
 
+  async function handleRunProgression() {
+    if (progressionRunInFlight || !hasActiveProgram()) {
+      return;
+    }
+
+    progressionRunInFlight = true;
+    setTodayError('');
+    renderProgressionFeedback();
+
+    try {
+      const result = ensureApiObject(await api.runProgression(), 'progression run');
+      lastProgressionRun = result;
+      lastProgressionDate = result.progression_date || lastProgressionDate;
+      renderProgressionFeedback();
+      await load();
+    } catch (error) {
+      if (error instanceof AuthRedirectError) return;
+
+      if (isOnboardingIncompleteError(error)) {
+        await onEnterOnboarding();
+        return;
+      }
+
+      if (isMissingProgramError(error)) {
+        onMissingProgram();
+        renderRecoveryState();
+        return;
+      }
+
+      setTodayError('Could not refresh progression: ' + error.message);
+    } finally {
+      progressionRunInFlight = false;
+      renderProgressionFeedback();
+    }
+  }
+
   async function load() {
     const loader = document.getElementById('today-loader');
     const content = document.getElementById('today-content');
@@ -306,6 +509,11 @@ export function createTodayWorkoutFeature({
     setTodayLockedMessage('');
     setTodayGuidanceContent('', '');
     clearTodayEmptyState();
+    setSelectedDate(getSelectedDate());
+    setDateControlsDisabled(true);
+    todayLoadInFlight = true;
+    renderProgressionFeedback();
+
     loader.classList.remove('hidden');
     content.classList.add('hidden');
     exercisesContainer.classList.remove('hidden');
@@ -313,13 +521,24 @@ export function createTodayWorkoutFeature({
     lockedMessage.classList.add('hidden');
 
     if (!hasActiveProgram()) {
+      todayLoadInFlight = false;
+      setDateControlsDisabled(false);
       renderRecoveryState();
       return;
     }
 
     try {
-      const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
+      const selectedDate = getSelectedDate();
+      const [workoutResponse, programResponse] = await Promise.all([
+        api.getTodayWorkout(selectedDate),
+        api.getProgram(),
+      ]);
+
+      const data = ensureApiObject(workoutResponse, 'workout');
+      const program = ensureApiObject(programResponse, 'program');
       const existingSession = await getExistingSession(data.date);
+
+      lastProgressionDate = getLatestProgressionDate(program.progressionState ?? {}) || lastProgressionDate;
 
       loader.classList.add('hidden');
       content.classList.remove('hidden');
@@ -328,8 +547,12 @@ export function createTodayWorkoutFeature({
       todayWorkoutType = data.type === 'rest' ? null : data.type;
       todayWorkoutSaved = Boolean(existingSession);
 
-      document.getElementById('today-workout-name').textContent = data.name || 'Today’s workout';
+      document.getElementById('today-workout-name').textContent =
+        data.type === 'rest' ? 'Rest day' : data.name || 'Today’s workout';
       document.getElementById('today-workout-type').textContent = formatWorkoutTypeLabel(data.type);
+      if (todayWorkoutDateLabel) {
+        todayWorkoutDateLabel.textContent = formatLongDateLabel(data.date);
+      }
 
       exercisesContainer.classList.remove('hidden');
       exercisesContainer.innerHTML = '';
@@ -343,19 +566,22 @@ export function createTodayWorkoutFeature({
             : `${formatDateLabel(data.date)} is already logged.`
         );
         lockedMessage.classList.remove('hidden');
+        renderProgressionFeedback();
         return;
       }
 
       if (data.type === 'rest') {
         exercisesContainer.classList.add('hidden');
-        setTodayGuidanceContent('Recovery day', 'No logging needed today.');
+        setTodayGuidanceContent('Recovery day', 'No logging needed for this date.');
         restMessage.classList.remove('hidden');
+        renderProgressionFeedback();
         return;
       }
 
       if (!data.exercises || data.exercises.length === 0) {
         exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
-        setTodayGuidanceContent('Nothing to log', 'Today’s workout is empty.');
+        setTodayGuidanceContent('Nothing to log', 'This generated workout is currently empty.');
+        renderProgressionFeedback();
         return;
       }
 
@@ -419,6 +645,7 @@ export function createTodayWorkoutFeature({
       });
 
       syncExerciseStack();
+      renderProgressionFeedback();
     } catch (error) {
       loader.classList.add('hidden');
       if (error instanceof AuthRedirectError) return;
@@ -434,11 +661,16 @@ export function createTodayWorkoutFeature({
         return;
       }
 
-      setTodayError('Could not load today: ' + error.message);
+      setTodayError('Could not load workout: ' + error.message);
+    } finally {
+      todayLoadInFlight = false;
+      setDateControlsDisabled(false);
+      renderProgressionFeedback();
     }
   }
 
   return {
+    init,
     load,
     renderRecoveryState,
   };

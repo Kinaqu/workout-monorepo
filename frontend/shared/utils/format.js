@@ -1,6 +1,7 @@
-import { formatDateLabel } from '/shared/utils/date.js';
+import { formatDateLabel, formatLongDateLabel } from '/shared/utils/date.js';
 
 export { formatDateLabel };
+export { formatLongDateLabel };
 
 export function humanizeToken(value = '') {
   return String(value)

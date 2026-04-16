@@ -112,6 +112,8 @@ onboardingFeature = createOnboardingFeature({
 });
 
 historyFeature.init();
+todayWorkoutFeature.init();
+programFeature.init();
 
 navItems.forEach(item => {
   item.addEventListener('click', () => {
