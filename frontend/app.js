@@ -1,4 +1,4 @@
-import { api, getToken, AuthRedirectError, ApiError } from '/api.js';
+import { api, getToken, startAuthSessionFlow, AuthRedirectError, ApiError } from '/api.js';
 import { ensureClerkReady } from '/clerk-bootstrap.js';
 
 const ONBOARDING_QUESTIONNAIRE_VERSION = 'onboarding-v1';
@@ -215,6 +215,18 @@ function isOnboardingIncompleteError(error) {
 
 function isMissingProgramError(error) {
   return error instanceof ApiError && error.status === 409 && error.message.includes('Active program not found');
+}
+
+function isWorkoutAlreadyLoggedError(error) {
+  return error instanceof ApiError && error.status === 409 && /already (logged|saved|exists)/i.test(error.message);
+}
+
+function isWorkoutLogValidationError(error) {
+  return error instanceof ApiError && (error.status === 400 || error.status === 422);
+}
+
+function isWorkoutLogServerError(error) {
+  return error instanceof ApiError && error.status >= 500;
 }
 
 function createDefaultOnboardingData() {
@@ -684,9 +696,29 @@ async function saveTodayWorkout(triggerBtn, footerHint) {
   } catch (error) {
     if (error instanceof AuthRedirectError) return;
 
-    if (error instanceof ApiError && error.status === 409) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      try {
+        startAuthSessionFlow(error.message);
+      } catch (redirectError) {
+        if (redirectError instanceof AuthRedirectError) return;
+        throw redirectError;
+      }
+    }
+
+    if (isWorkoutAlreadyLoggedError(error)) {
       todayWorkoutSaved = true;
       await loadToday();
+      setTodayLockedMessage('This workout has already been saved for that date.');
+      return;
+    }
+
+    if (isWorkoutLogValidationError(error)) {
+      setTodayError(error.message);
+      return;
+    }
+
+    if (isWorkoutLogServerError(error)) {
+      setTodayError('Could not save workout right now. Please try again in a moment.');
       return;
     }
 

@@ -117,7 +117,7 @@ const createLogRoute = createRoute({
       },
     },
     409: {
-      description: "Onboarding not completed or no active program exists.",
+      description: "Onboarding not completed, no active program exists, or a log already exists for the date.",
       content: {
         "application/json": {
           schema: ErrorResponseSchema,
