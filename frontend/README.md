@@ -186,19 +186,20 @@ The auth flow in this project currently works as follows:
 
 ### Local Backend Integration
 
-The frontend currently uses a hardcoded API base URL in `lib/api/client.js`:
+The frontend API layer now resolves its base URL in this order:
 
-```js
-export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+1. `window.__APP_CONFIG__.apiBaseUrl` runtime override
+2. `VITE_API_BASE_URL`
+3. `NEXT_PUBLIC_API_BASE_URL`
+4. Relative requests against the current origin
+
+For local end-to-end development, create a frontend env file from `.env.example` and point it at the local Worker:
+
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8787
 ```
 
-For local end-to-end development, switch it to your local Worker:
-
-```js
-export const BASE_URL = 'http://127.0.0.1:8787';
-```
-
-The project does not currently use a dedicated frontend env variable for the API base URL.
+This keeps the client free of hardcoded deployment URLs while still allowing runtime overrides when needed.
 
 ### Build & Deployment
 
@@ -227,7 +228,7 @@ npm run lint
 
 ## 🔌 API Endpoints
 
-The frontend application communicates with the Workout Manager backend through `lib/api/client.js`.
+The frontend application communicates with the Workout Manager backend through a typed API layer in `lib/api/client.ts`, with DTOs defined in `lib/api/types.ts`.
 
 > **Note:** All protected endpoints require `Authorization: Bearer <token>`. In the current app flow, that token usually comes from the Clerk session cookie.
 
@@ -244,23 +245,13 @@ The frontend application communicates with the Workout Manager backend through `
 | `POST` | `/program/regenerate` | Regenerate the active program from stored onboarding/profile preferences |
 | `POST` | `/progression/run` | Trigger progression recalculation |
 
-### Legacy Auth Endpoints
-
-`lib/api/client.js` still contains compatibility helpers for:
-
-| HTTP Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/auth/register` | Legacy helper, backend currently returns `410` |
-| `POST` | `/auth/login` | Legacy helper, backend currently returns `410` |
-
-These are no longer the primary frontend authentication path because the application now relies on Clerk.
+The frontend client intentionally does not expose `/auth/login` or `/auth/register`. Authentication is Clerk-first, and any remaining legacy local-token support is limited to compatibility fallback during session resolution.
 
 ---
 
 ## 🔮 Future Improvements
 
-- [ ] Move the API base URL to a dedicated frontend environment variable.
-- [ ] Reduce legacy auth compatibility code once Clerk-only auth is fully enforced.
+- [ ] Remove the remaining local-token fallback once Clerk-only auth is fully enforced end-to-end.
 - [ ] Expand offline support beyond static asset caching.
 - [ ] Migrate more of the main application UI from vanilla JavaScript to a consistent component model.
 
