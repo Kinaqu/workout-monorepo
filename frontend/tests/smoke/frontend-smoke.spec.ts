@@ -89,6 +89,15 @@ async function installLegacySession(page: Page) {
   });
 }
 
+async function installApiRuntimeConfig(page: Page) {
+  await page.addInitScript(origin => {
+    window.__APP_CONFIG__ = {
+      ...(window.__APP_CONFIG__ || {}),
+      apiBaseUrl: origin,
+    };
+  }, apiOrigin);
+}
+
 function buildMeResponse({
   onboardingCompleted,
   hasActiveProgram,
@@ -376,6 +385,7 @@ test('register page renders cleanly', async ({ page }) => {
 test('authenticated user with incomplete onboarding sees onboarding UI', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installLegacySession(page);
+  await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
 
   await mockApi(page, ({ url, method }) => {
@@ -401,6 +411,7 @@ test('authenticated user with incomplete onboarding sees onboarding UI', async (
 test('completing onboarding transitions to the main app', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installLegacySession(page);
+  await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let completed = false;
 
@@ -464,6 +475,7 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
 test('completed onboarding without active program routes the user to program recovery', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installLegacySession(page);
+  await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let regenerated = false;
 
