@@ -79,12 +79,12 @@ export function createTodayWorkoutFeature({
     setTodayGuidanceContent('', '');
   }
 
-  async function getExistingLog(date) {
+  async function getExistingSession(date) {
     try {
-      return await api.getLog(date);
+      const response = await api.listSessions({ date, limit: 1 });
+      return response.sessions[0] ?? null;
     } catch (error) {
       if (error instanceof AuthRedirectError) throw error;
-      if (error instanceof ApiError && error.status === 404) return null;
       throw error;
     }
   }
@@ -117,8 +117,8 @@ export function createTodayWorkoutFeature({
     if (footerHint) footerHint.textContent = 'Saving...';
 
     try {
-      const existingLog = await getExistingLog(todayWorkoutDate);
-      if (existingLog) {
+      const existingSession = await getExistingSession(todayWorkoutDate);
+      if (existingSession) {
         todayWorkoutSaved = true;
         await load();
         return;
@@ -319,14 +319,14 @@ export function createTodayWorkoutFeature({
 
     try {
       const data = ensureApiObject(await api.getTodayWorkout(), 'workout');
-      const existingLog = await getExistingLog(data.date);
+      const existingSession = await getExistingSession(data.date);
 
       loader.classList.add('hidden');
       content.classList.remove('hidden');
 
       todayWorkoutDate = data.date;
       todayWorkoutType = data.type === 'rest' ? null : data.type;
-      todayWorkoutSaved = Boolean(existingLog);
+      todayWorkoutSaved = Boolean(existingSession);
 
       document.getElementById('today-workout-name').textContent = data.name || 'Today’s workout';
       document.getElementById('today-workout-type').textContent = formatWorkoutTypeLabel(data.type);

@@ -310,6 +310,11 @@ export interface WorkoutSessionRecord {
   exercises: WorkoutSessionExercise[];
 }
 
+export interface SessionsListResponse {
+  sessions: WorkoutSessionRecord[];
+  count: number;
+}
+
 export interface LegacyLogEntry {
   date: string;
   workout_type: string | null;
@@ -340,6 +345,8 @@ export interface ApiClient {
   completeOnboarding(payload: OnboardingAnswers): Promise<OnboardingCompleteResponse>;
   getTodayWorkout(): Promise<WorkoutTodayResponse>;
   logWorkout(payload: JsonLogRequest, date?: string): Promise<LogCreateResponse>;
+  listSessions(options?: { date?: string; limit?: number }): Promise<SessionsListResponse>;
+  getSession(id: string): Promise<WorkoutSessionRecord>;
   getLog(date: string): Promise<LegacyLogByDateResponse>;
   getProgram(): Promise<ProgramResponse>;
   regenerateProgram(): Promise<GeneratedProgramResponse>;

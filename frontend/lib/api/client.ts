@@ -17,6 +17,8 @@ import type {
   OnboardingStateResponse,
   ProgramResponse,
   ProgressionRunResponse,
+  SessionsListResponse,
+  WorkoutSessionRecord,
   WorkoutTodayResponse,
 } from './types.ts';
 
@@ -173,6 +175,18 @@ async function request<TResponse>(endpoint: string, options: RequestOptions = {}
 
 export { API_BASE_URL };
 
+function buildQueryString(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    search.set(key, String(value));
+  });
+
+  const query = search.toString();
+  return query ? `?${query}` : '';
+}
+
 export const api: ApiClient = {
   getMe: () => request<MeResponse>('/me'),
   getOnboarding: () => request<OnboardingStateResponse>('/onboarding'),
@@ -199,6 +213,14 @@ export const api: ApiClient = {
       headers,
     });
   },
+  listSessions: (options = {}) =>
+    request<SessionsListResponse>(
+      `/sessions${buildQueryString({
+        date: options.date,
+        limit: options.limit,
+      })}`
+    ),
+  getSession: (id: string) => request<WorkoutSessionRecord>(`/sessions/${id}`),
   getLog: (date: string) => request<LegacyLogByDateResponse>(`/log/${date}`),
   getProgram: () => request<ProgramResponse>('/program'),
   regenerateProgram: () => request<GeneratedProgramResponse>('/program/regenerate', { method: 'POST' }),
