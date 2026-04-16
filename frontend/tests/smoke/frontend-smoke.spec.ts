@@ -2,7 +2,10 @@ import { expect, request as playwrightRequest, test, type Page } from '@playwrig
 
 const expectClerkKey = process.env.EXPECT_CLERK_PUBLISHABLE_KEY === 'true';
 const configuredBaseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173';
-const apiOrigin = 'https://workout-api.dimer133745.workers.dev';
+const apiOrigin =
+  process.env.VITE_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  new URL(configuredBaseUrl).origin;
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const isDeploymentSmoke = Boolean(process.env.BASE_URL);
 const bypassHeaders = bypassSecret
@@ -243,9 +246,28 @@ async function mockApi(
   page: Page,
   handler: (request: { url: URL; method: string; body: unknown }) => Promise<{ status?: number; body?: unknown } | null> | { status?: number; body?: unknown } | null,
 ) {
-  await page.route(`${apiOrigin}/**`, async route => {
+  await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
+    const isApiRequest =
+      url.origin === apiOrigin &&
+      (
+        url.pathname === '/me' ||
+        url.pathname === '/onboarding' ||
+        url.pathname === '/onboarding/complete' ||
+        url.pathname === '/workout/today' ||
+        url.pathname === '/log' ||
+        url.pathname.startsWith('/log/') ||
+        url.pathname === '/program' ||
+        url.pathname === '/program/regenerate' ||
+        url.pathname === '/progression/run'
+      );
+
+    if (!isApiRequest) {
+      await route.continue();
+      return;
+    }
+
     if (request.method() === 'OPTIONS') {
       await route.fulfill({
         status: 204,

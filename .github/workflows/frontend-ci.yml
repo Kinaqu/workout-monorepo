@@ -44,6 +44,7 @@ jobs:
       - name: Run local smoke tests
         env:
           EXPECT_CLERK_PUBLISHABLE_KEY: "false"
+          VITE_API_BASE_URL: "https://workout-api.dimer133745.workers.dev"
         run: npm run test:smoke:local
 
       - name: Upload Playwright report
