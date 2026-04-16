@@ -233,9 +233,9 @@ function buildProgramResponse() {
   };
 }
 
-function buildTodayWorkoutResponse() {
+function buildTodayWorkoutResponse(date = '2026-04-06') {
   return {
-    date: '2026-04-06',
+    date,
     name: 'Workout A',
     type: 'A',
     exercises: [
@@ -310,6 +310,7 @@ async function mockApi(
         url.pathname === '/sessions' ||
         url.pathname.startsWith('/sessions/') ||
         url.pathname === '/program' ||
+        url.pathname === '/program/reset' ||
         url.pathname === '/program/regenerate' ||
         url.pathname === '/progression/run'
       );
@@ -489,6 +490,12 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
         : { status: 409, body: { error: 'Onboarding not completed' } };
     }
 
+    if (method === 'GET' && url.pathname === '/program') {
+      return completed
+        ? { body: buildProgramResponse() }
+        : { status: 409, body: { error: 'Onboarding not completed' } };
+    }
+
     if (method === 'GET' && url.pathname === '/sessions') {
       return { body: { sessions: [], count: 0 } };
     }
@@ -554,8 +561,9 @@ test('completed onboarding without active program routes the user to program rec
   await expect(page.locator('#today-empty-state')).toContainText(/no plan yet/i);
   await page.getByRole('button', { name: /open plan/i }).click();
   await expect(page.locator('#program-empty-state')).toContainText(/no plan available/i);
-  page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: /build plan/i }).click();
+  await expect(page.locator('#confirm-dialog')).toBeVisible();
+  await page.locator('#confirm-dialog').getByRole('button', { name: /build new plan/i }).click();
   await expect(page.locator('#program-main')).toBeVisible();
   await expect(page.locator('#program-schedule')).toContainText(/day a|rest/i);
   await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
@@ -601,6 +609,10 @@ test('history screen renders sessions list and detail diagnostics from /sessions
       return { body: buildTodayWorkoutResponse() };
     }
 
+    if (method === 'GET' && url.pathname === '/program') {
+      return { body: buildProgramResponse() };
+    }
+
     if (method === 'GET' && url.pathname === '/sessions') {
       return { body: { sessions: [sessionTwo, sessionOne], count: 2 } };
     }
@@ -629,5 +641,118 @@ test('history screen renders sessions list and detail diagnostics from /sessions
   await expect(page.locator('#history-detail')).toContainText(/source: text import/i);
   await expect(page.locator('#history-detail')).toContainText(/unmatched import lines/i);
   await expect(page.locator('#history-detail')).toContainText(/burpees 8 8/i);
+  await assertNoClientIssues(issues);
+});
+
+test('today date picker, progression refresh, and manual program controls work together', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installLegacySession(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let savedProgramBody: Record<string, unknown> | null = null;
+  let resetCalled = false;
+  let progressionRuns = 0;
+
+  await mockApi(page, ({ url, method, body }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: true }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return { body: buildTodayWorkoutResponse(url.searchParams.get('date') || '2026-04-06') };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      const response = buildProgramResponse();
+      if (progressionRuns > 0) {
+        response.progressionState.pushups.last_progression = '2026-04-16';
+      }
+      return { body: response };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    if (method === 'POST' && url.pathname === '/progression/run') {
+      progressionRuns += 1;
+      return {
+        body: {
+          ok: true,
+          progression_date: '2026-04-16',
+          result: {
+            changed: [
+              {
+                id: 'pushups',
+                name: 'Push-ups',
+                direction: 'up',
+                reason: 'Exceeded the top rep target',
+                before: { sets: 1, min: 8, max: 12 },
+                after: { sets: 2, min: 10, max: 14 },
+              },
+            ],
+            skipped: [],
+          },
+        },
+      };
+    }
+
+    if (method === 'POST' && url.pathname === '/program') {
+      savedProgramBody = body as Record<string, unknown>;
+      return {
+        body: {
+          ok: true,
+          message: 'Program saved',
+          program: {
+            ...(body as Record<string, unknown>),
+            version_id: 'program_saved_smoke',
+          },
+        },
+      };
+    }
+
+    if (method === 'POST' && url.pathname === '/program/reset') {
+      resetCalled = true;
+      return {
+        body: {
+          ok: true,
+          message: 'Program reset to default',
+          program: {
+            ...buildProgramResponse(),
+            version_id: 'program_reset_smoke',
+          },
+        },
+      };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#today-date')).toHaveValue(/\d{4}-\d{2}-\d{2}/);
+
+  await page.locator('#today-date').fill('2026-04-19');
+  await page.locator('#today-date').dispatchEvent('change');
+  await expect(page.locator('#today-workout-date')).toContainText(/apr 19/i);
+
+  await page.getByRole('button', { name: /refresh progression/i }).click();
+  await expect(page.locator('#today-progression-feedback')).toContainText(/progression refreshed/i);
+  await expect(page.locator('#today-progression-feedback')).toContainText(/push-ups/i);
+  await expect(page.locator('#today-progression-last-run')).toContainText(/apr 16/i);
+
+  await page.locator('.nav-item[data-tab="program"]').click();
+  await expect(page.locator('#program-summary-copy')).toContainText(/general fitness plan/i);
+
+  await page.getByRole('button', { name: /edit plan/i }).click();
+  await expect(page.locator('#program-editor')).toBeVisible();
+  await page.locator('#program-editor-name').fill('Custom strength block');
+  await page.locator('#program-save-button').click();
+  await expect.poll(() => savedProgramBody?.name).toBe('Custom strength block');
+
+  await page.getByRole('button', { name: /reset to default/i }).click();
+  await expect(page.locator('#confirm-dialog')).toBeVisible();
+  await page.locator('#confirm-dialog-input').fill('test-reset-token');
+  await page.locator('#confirm-dialog').getByRole('button', { name: /reset program/i }).click();
+  await expect.poll(() => resetCalled).toBeTruthy();
   await assertNoClientIssues(issues);
 });

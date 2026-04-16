@@ -15,6 +15,8 @@ import type {
   OnboardingCompleteResponse,
   OnboardingDraftSaveResponse,
   OnboardingStateResponse,
+  ProgramDefinition,
+  ProgramMutationResponse,
   ProgramResponse,
   ProgressionRunResponse,
   SessionsListResponse,
@@ -200,7 +202,8 @@ export const api: ApiClient = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  getTodayWorkout: () => request<WorkoutTodayResponse>('/workout/today'),
+  getTodayWorkout: (date?: string) =>
+    request<WorkoutTodayResponse>(`/workout/today${buildQueryString({ date })}`),
   logWorkout: (payload: JsonLogRequest, date?: string) => {
     const headers = new Headers();
     if (date) {
@@ -223,6 +226,20 @@ export const api: ApiClient = {
   getSession: (id: string) => request<WorkoutSessionRecord>(`/sessions/${id}`),
   getLog: (date: string) => request<LegacyLogByDateResponse>(`/log/${date}`),
   getProgram: () => request<ProgramResponse>('/program'),
+  saveProgram: (payload: ProgramDefinition) =>
+    request<ProgramMutationResponse>('/program', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  resetProgram: (resetToken: string) => {
+    const headers = new Headers();
+    headers.set('X-Reset-Token', resetToken);
+
+    return request<ProgramMutationResponse>('/program/reset', {
+      method: 'POST',
+      headers,
+    });
+  },
   regenerateProgram: () => request<GeneratedProgramResponse>('/program/regenerate', { method: 'POST' }),
   runProgression: () => request<ProgressionRunResponse>('/progression/run', { method: 'POST' }),
 };

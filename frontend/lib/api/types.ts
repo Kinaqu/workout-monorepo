@@ -195,6 +195,14 @@ export interface ProgramResponse extends ProgramDefinition {
   progressionState: Record<string, ProgressionStateValue>;
 }
 
+export interface ProgramMutationResponse {
+  ok: true;
+  message: string;
+  program: ProgramDefinition & {
+    version_id: string;
+  };
+}
+
 export interface WorkoutExerciseBase {
   id: string;
   name: string;
@@ -343,12 +351,14 @@ export interface ApiClient {
   getOnboarding(): Promise<OnboardingStateResponse>;
   saveOnboardingDraft(payload: OnboardingDraft): Promise<OnboardingDraftSaveResponse>;
   completeOnboarding(payload: OnboardingAnswers): Promise<OnboardingCompleteResponse>;
-  getTodayWorkout(): Promise<WorkoutTodayResponse>;
+  getTodayWorkout(date?: string): Promise<WorkoutTodayResponse>;
   logWorkout(payload: JsonLogRequest, date?: string): Promise<LogCreateResponse>;
   listSessions(options?: { date?: string; limit?: number }): Promise<SessionsListResponse>;
   getSession(id: string): Promise<WorkoutSessionRecord>;
   getLog(date: string): Promise<LegacyLogByDateResponse>;
   getProgram(): Promise<ProgramResponse>;
+  saveProgram(payload: ProgramDefinition): Promise<ProgramMutationResponse>;
+  resetProgram(resetToken: string): Promise<ProgramMutationResponse>;
   regenerateProgram(): Promise<GeneratedProgramResponse>;
   runProgression(): Promise<ProgressionRunResponse>;
 }
