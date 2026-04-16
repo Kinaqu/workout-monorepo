@@ -316,11 +316,19 @@
         <div id="history-content">
           <div id="history-empty" class="text-center mt-4 hidden">No data for this day</div>
           <div id="history-data" class="hidden">
-            <div class="card history-summary-card">
-              <div id="history-workout-type" class="card-title"></div>
+            <div class="history-layout">
+              <aside class="history-sidebar">
+                <div class="card history-summary-card">
+                  <div class="history-panel-header">
+                    <div class="card-title">Sessions</div>
+                    <div id="history-session-summary" class="card-subtitle"></div>
+                  </div>
+                  <div id="history-session-list" class="history-session-list"></div>
+                </div>
+              </aside>
+              <section id="history-detail" class="history-detail hidden"></section>
             </div>
-            <div id="history-exercises"></div>
-            <div id="history-note-card" class="card history-note-card">
+            <div id="history-note-card" class="card history-note-card hidden">
               <div class="card-title">Note</div>
               <div id="history-note"></div>
             </div>

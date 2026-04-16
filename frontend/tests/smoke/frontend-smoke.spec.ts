@@ -251,6 +251,46 @@ function buildTodayWorkoutResponse() {
   };
 }
 
+function buildSessionRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'session_smoke_1',
+    sessionDate: '2026-04-06',
+    workoutType: 'A',
+    workoutName: 'Workout A',
+    note: 'Felt solid and controlled.',
+    source: 'text',
+    rawText: 'Push-ups 12 11',
+    unmatched: ['Burpees 8 8'],
+    createdAt: '2026-04-06T07:30:00.000Z',
+    updatedAt: '2026-04-06T07:35:00.000Z',
+    exercises: [
+      {
+        id: 'se_smoke_1',
+        programExerciseId: 'exercise_pushups',
+        catalogExerciseId: 'catalog_pushups',
+        exerciseKey: 'pushups',
+        exerciseName: 'Push-ups',
+        exerciseType: 'reps',
+        matched: true,
+        sortOrder: 0,
+        sets: [12, 11],
+      },
+      {
+        id: 'se_smoke_2',
+        programExerciseId: null,
+        catalogExerciseId: null,
+        exerciseKey: null,
+        exerciseName: 'Burpees',
+        exerciseType: 'reps',
+        matched: false,
+        sortOrder: 1,
+        sets: [8, 8],
+      },
+    ],
+    ...overrides,
+  };
+}
+
 async function mockApi(
   page: Page,
   handler: (request: { url: URL; method: string; body: unknown }) => Promise<{ status?: number; body?: unknown } | null> | { status?: number; body?: unknown } | null,
@@ -267,6 +307,8 @@ async function mockApi(
         url.pathname === '/workout/today' ||
         url.pathname === '/log' ||
         url.pathname.startsWith('/log/') ||
+        url.pathname === '/sessions' ||
+        url.pathname.startsWith('/sessions/') ||
         url.pathname === '/program' ||
         url.pathname === '/program/regenerate' ||
         url.pathname === '/progression/run'
@@ -447,8 +489,8 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
         : { status: 409, body: { error: 'Onboarding not completed' } };
     }
 
-    if (method === 'GET' && url.pathname.startsWith('/log/')) {
-      return { body: null };
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
     }
 
     return { status: 404, body: { error: 'Not found' } };
@@ -501,8 +543,8 @@ test('completed onboarding without active program routes the user to program rec
         : { status: 409, body: { error: 'Active program not found' } };
     }
 
-    if (method === 'GET' && url.pathname.startsWith('/log/')) {
-      return { body: null };
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
     }
 
     return { status: 404, body: { error: 'Not found' } };
@@ -517,5 +559,75 @@ test('completed onboarding without active program routes the user to program rec
   await expect(page.locator('#program-main')).toBeVisible();
   await expect(page.locator('#program-schedule')).toContainText(/day a|rest/i);
   await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
+  await assertNoClientIssues(issues);
+});
+
+test('history screen renders sessions list and detail diagnostics from /sessions', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installLegacySession(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  const sessionOne = buildSessionRecord();
+  const sessionTwo = buildSessionRecord({
+    id: 'session_smoke_2',
+    workoutType: 'B',
+    workoutName: 'Workout B',
+    source: 'json',
+    rawText: null,
+    unmatched: [],
+    createdAt: '2026-04-06T11:10:00.000Z',
+    updatedAt: '2026-04-06T11:10:00.000Z',
+    exercises: [
+      {
+        id: 'se_smoke_3',
+        programExerciseId: 'exercise_squats',
+        catalogExerciseId: 'catalog_squats',
+        exerciseKey: 'squats',
+        exerciseName: 'Bodyweight Squats',
+        exerciseType: 'reps',
+        matched: true,
+        sortOrder: 0,
+        sets: [15, 15, 14],
+      },
+    ],
+  });
+
+  await mockApi(page, ({ url, method }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: true }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return { body: buildTodayWorkoutResponse() };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [sessionTwo, sessionOne], count: 2 } };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions/session_smoke_2') {
+      return { body: sessionTwo };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions/session_smoke_1') {
+      return { body: sessionOne };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.locator('.nav-item[data-tab="history"]').click();
+
+  await expect(page.locator('#history-session-list .history-session-item')).toHaveCount(2);
+  await expect(page.locator('#history-session-summary')).toContainText(/2 sessions/i);
+  await expect(page.locator('#history-detail')).toContainText(/source: structured/i);
+  await expect(page.locator('#history-detail')).toContainText(/matched exercises/i);
+  await expect(page.locator('#history-detail')).toContainText(/raw import/i);
+
+  await page.locator('#history-session-list .history-session-item').nth(1).click();
+  await expect(page.locator('#history-detail')).toContainText(/source: text import/i);
+  await expect(page.locator('#history-detail')).toContainText(/unmatched import lines/i);
+  await expect(page.locator('#history-detail')).toContainText(/burpees 8 8/i);
   await assertNoClientIssues(issues);
 });

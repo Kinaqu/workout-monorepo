@@ -1,6 +1,5 @@
 import {
   api,
-  ApiError,
   AuthRedirectError,
   isMissingProgramError,
   isOnboardingIncompleteError,
@@ -12,17 +11,25 @@ import { formatDateLabel, formatWorkoutTypeLabel, humanizeToken } from '/shared/
 const historyEmpty = document.getElementById('history-empty');
 const historyNoteCard = document.getElementById('history-note-card');
 const historyDateInput = document.getElementById('history-date');
+const historySessionSummary = document.getElementById('history-session-summary');
+const historySessionList = document.getElementById('history-session-list');
+const historyDetail = document.getElementById('history-detail');
 
 export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
+  let loadedSessions = [];
+  let selectedSessionId = null;
+  let detailRequestToken = 0;
+
   function init() {
     historyDateInput?.addEventListener('change', event => {
-      load(event.target.value);
+      void load(event.target.value);
     });
   }
 
   function renderRecoveryState() {
     document.getElementById('history-loader').classList.add('hidden');
     document.getElementById('history-data').classList.add('hidden');
+    resetHistoryState();
     historyEmpty.textContent = 'No plan yet. Build one first to start logging workouts.';
     historyEmpty.classList.remove('hidden');
     document.getElementById('history-error').textContent = '';
@@ -61,44 +68,30 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     }
 
     try {
-      const data = await api.getLog(date);
+      const data = await api.listSessions({ date, limit: 50 });
       loader.classList.add('hidden');
+      loadedSessions = Array.isArray(data?.sessions) ? data.sessions : [];
 
-      if (!data || !data.workout_type) {
-        empty.textContent = 'No workout logged for this day.';
+      if (loadedSessions.length === 0) {
+        resetHistoryState();
+        empty.textContent = 'No sessions stored for this day.';
         empty.classList.remove('hidden');
         return;
       }
 
       content.classList.remove('hidden');
-      document.getElementById('history-workout-type').textContent =
-        `${formatWorkoutTypeLabel(data.workout_type)} · ${formatDateLabel(date)}`;
+      renderSessionSummary(date, loadedSessions);
+      renderSessionListItems();
 
-      const exercisesContainer = document.getElementById('history-exercises');
-      exercisesContainer.innerHTML = '';
+      const nextSessionId = loadedSessions.some(session => session.id === selectedSessionId)
+        ? selectedSessionId
+        : loadedSessions[0]?.id ?? null;
 
-      if (data.exercises && data.exercises.length > 0) {
-        data.exercises.forEach((exercise, index) => {
-          const card = el('article', 'card history-exercise-card');
-
-          const header = el('div', 'history-exercise-header');
-          header.appendChild(el('div', 'history-exercise-index', `#${index + 1}`));
-          header.appendChild(el('div', 'card-title', humanizeToken(exercise.id)));
-          card.appendChild(header);
-
-          const chips = el('div', 'history-set-chips');
-          exercise.sets.forEach((setValue, setIndex) => {
-            chips.appendChild(el('div', 'history-set-chip', `Set ${setIndex + 1}: ${setValue}`));
-          });
-          card.appendChild(chips);
-          exercisesContainer.appendChild(card);
-        });
+      if (nextSessionId) {
+        await loadSessionDetail(nextSessionId);
       } else {
-        exercisesContainer.innerHTML = '<div class="card history-empty-card">No exercises logged.</div>';
+        renderEmptyDetail();
       }
-
-      historyNoteCard?.classList.toggle('hidden', !data.note);
-      document.getElementById('history-note').textContent = data.note || '';
     } catch (error) {
       loader.classList.add('hidden');
       if (error instanceof AuthRedirectError) return;
@@ -114,13 +107,362 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
         return;
       }
 
-      if (error instanceof ApiError && error.status === 404) {
-        empty.textContent = 'No workout logged for this day.';
-        empty.classList.remove('hidden');
-      } else {
-        errorEl.textContent = 'Could not load history: ' + error.message;
-      }
+      errorEl.textContent = 'Could not load history: ' + error.message;
     }
+  }
+
+  function resetHistoryState() {
+    loadedSessions = [];
+    selectedSessionId = null;
+    detailRequestToken += 1;
+
+    if (historySessionSummary) {
+      historySessionSummary.textContent = '';
+    }
+
+    if (historySessionList) {
+      historySessionList.innerHTML = '';
+    }
+
+    if (historyDetail) {
+      historyDetail.innerHTML = '';
+      historyDetail.classList.add('hidden');
+    }
+
+    historyNoteCard?.classList.add('hidden');
+    const historyNote = document.getElementById('history-note');
+    if (historyNote) {
+      historyNote.textContent = '';
+    }
+  }
+
+  function renderSessionSummary(date, sessions) {
+    if (!historySessionSummary) return;
+
+    const countLabel = sessions.length === 1 ? '1 session' : `${sessions.length} sessions`;
+    historySessionSummary.textContent = `${formatDateLabel(date)} · ${countLabel}`;
+  }
+
+  function renderSessionListItems() {
+    if (!historySessionList) return;
+
+    historySessionList.innerHTML = '';
+
+    loadedSessions.forEach((session, index) => {
+      const button = el('button', 'history-session-item');
+      button.type = 'button';
+      button.dataset.sessionId = session.id;
+      button.classList.toggle('active', session.id === selectedSessionId);
+      button.addEventListener('click', () => {
+        void loadSessionDetail(session.id);
+      });
+
+      const header = el('div', 'history-session-item-header');
+      header.appendChild(el('div', 'history-session-item-index', `#${index + 1}`));
+      header.appendChild(el('div', 'history-session-item-title', getSessionTitle(session)));
+      button.appendChild(header);
+
+      button.appendChild(el('div', 'history-session-item-meta', getSessionMeta(session)));
+      button.appendChild(
+        el(
+          'div',
+          'history-session-item-stats',
+          `${countMatchedExercises(session)} matched · ${countUnmatchedExercises(session)} unmatched`
+        )
+      );
+
+      historySessionList.appendChild(button);
+    });
+  }
+
+  async function loadSessionDetail(sessionId) {
+    if (!sessionId) return;
+
+    selectedSessionId = sessionId;
+    renderSessionListItems();
+    renderDetailLoading();
+
+    const requestToken = ++detailRequestToken;
+
+    try {
+      const session = await api.getSession(sessionId);
+      if (requestToken !== detailRequestToken) return;
+      renderSessionDetail(session);
+    } catch (error) {
+      if (requestToken !== detailRequestToken) return;
+      if (error instanceof AuthRedirectError) return;
+
+      if (!historyDetail) return;
+
+      historyDetail.classList.remove('hidden');
+      historyDetail.innerHTML = '';
+      historyDetail.appendChild(
+        createEmptyCard(
+          'Could not load this session right now.',
+          error instanceof Error ? error.message : 'Unknown error'
+        )
+      );
+    }
+  }
+
+  function renderDetailLoading() {
+    if (!historyDetail) return;
+
+    historyDetail.classList.remove('hidden');
+    historyDetail.innerHTML = '';
+    historyDetail.appendChild(
+      createEmptyCard('Loading session details…', 'Fetching the full record from /sessions/{id}.')
+    );
+  }
+
+  function renderEmptyDetail() {
+    if (!historyDetail) return;
+
+    historyDetail.classList.remove('hidden');
+    historyDetail.innerHTML = '';
+    historyDetail.appendChild(
+      createEmptyCard('No session selected.', 'Choose a session from the list to inspect the saved payload.')
+    );
+  }
+
+  function renderSessionDetail(session) {
+    if (!historyDetail) return;
+
+    const matchedExercises = session.exercises.filter(exercise => exercise.matched);
+    const unmatchedExercises = session.exercises.filter(exercise => !exercise.matched);
+
+    historyDetail.innerHTML = '';
+    historyDetail.classList.remove('hidden');
+    historyDetail.appendChild(createOverviewCard(session, matchedExercises, unmatchedExercises));
+    historyDetail.appendChild(createParsedResultCard(session, matchedExercises, unmatchedExercises));
+    historyDetail.appendChild(
+      createExerciseSection('Matched exercises', matchedExercises, 'Exercises linked to the current program surface.')
+    );
+    historyDetail.appendChild(
+      createExerciseSection(
+        'Unmatched exercises',
+        unmatchedExercises,
+        'Saved import entries that could not be linked to a known exercise.'
+      )
+    );
+    historyDetail.appendChild(createRawImportCard(session));
+
+    historyNoteCard?.classList.toggle('hidden', !session.note);
+    const historyNote = document.getElementById('history-note');
+    if (historyNote) {
+      historyNote.textContent = session.note || '';
+    }
+  }
+
+  function createOverviewCard(session, matchedExercises, unmatchedExercises) {
+    const card = el('article', 'card history-detail-card history-detail-overview-card');
+    const header = el('div', 'history-detail-header');
+    const titleWrap = el('div', 'history-detail-title-wrap');
+
+    titleWrap.appendChild(el('div', 'history-detail-kicker', formatDateLabel(session.sessionDate)));
+    titleWrap.appendChild(el('div', 'card-title', getSessionTitle(session)));
+    titleWrap.appendChild(el('div', 'card-subtitle', `Session ${session.id}`));
+    header.appendChild(titleWrap);
+    header.appendChild(createPill(`Source: ${formatSourceLabel(session.source)}`, 'history-meta-pill'));
+    card.appendChild(header);
+
+    const meta = el('div', 'history-meta-grid');
+    meta.appendChild(createMetaStat('Workout slot', session.workoutType ? formatWorkoutTypeLabel(session.workoutType) : 'Unassigned'));
+    meta.appendChild(createMetaStat('Created', formatDateTime(session.createdAt)));
+    meta.appendChild(createMetaStat('Updated', formatDateTime(session.updatedAt)));
+    meta.appendChild(createMetaStat('Import issues', session.unmatched.length ? `${session.unmatched.length} lines` : 'None'));
+    card.appendChild(meta);
+
+    const stats = el('div', 'history-pill-row');
+    stats.appendChild(createPill(`${matchedExercises.length} matched`, 'history-stat-pill'));
+    stats.appendChild(createPill(`${unmatchedExercises.length} unmatched`, 'history-stat-pill history-stat-pill-warning'));
+    stats.appendChild(createPill(`${session.exercises.length} saved`, 'history-stat-pill history-stat-pill-neutral'));
+    card.appendChild(stats);
+
+    return card;
+  }
+
+  function createParsedResultCard(session, matchedExercises, unmatchedExercises) {
+    const card = el('article', 'card history-detail-card');
+    card.appendChild(el('div', 'card-title', 'Parsed result'));
+    card.appendChild(
+      el(
+        'p',
+        'history-detail-copy',
+        'Normalized payload persisted by the backend after structured logging or parser import.'
+      )
+    );
+
+    const summary = el('div', 'history-parsed-grid');
+    summary.appendChild(createMetaStat('Matched exercises', String(matchedExercises.length)));
+    summary.appendChild(createMetaStat('Unmatched exercises', String(unmatchedExercises.length)));
+    summary.appendChild(createMetaStat('Parser leftovers', String(session.unmatched.length)));
+    summary.appendChild(createMetaStat('Logged note', session.note ? 'Present' : 'Empty'));
+    card.appendChild(summary);
+
+    if (session.unmatched.length > 0) {
+      const issueBlock = el('div', 'history-block');
+      issueBlock.appendChild(el('div', 'history-block-title', 'Unmatched import lines'));
+      const list = el('div', 'history-text-list');
+      session.unmatched.forEach(line => {
+        list.appendChild(el('div', 'history-text-chip', line));
+      });
+      issueBlock.appendChild(list);
+      card.appendChild(issueBlock);
+    }
+
+    return card;
+  }
+
+  function createExerciseSection(title, exercises, description) {
+    const section = el('section', 'history-detail-section');
+    section.appendChild(el('div', 'history-section-title', title));
+    section.appendChild(el('p', 'history-detail-copy', description));
+
+    if (!exercises.length) {
+      section.appendChild(createEmptyCard('Nothing to show.', 'No exercises were saved in this category for the selected session.'));
+      return section;
+    }
+
+    const list = el('div', 'history-exercise-list');
+    exercises.forEach((exercise, index) => {
+      list.appendChild(createExerciseCard(exercise, index));
+    });
+    section.appendChild(list);
+
+    return section;
+  }
+
+  function createExerciseCard(exercise, index) {
+    const card = el('article', 'card history-exercise-card');
+    const header = el('div', 'history-exercise-header');
+    header.appendChild(el('div', 'history-exercise-index', `#${index + 1}`));
+
+    const titleWrap = el('div', 'history-exercise-title-wrap');
+    titleWrap.appendChild(el('div', 'card-title', exercise.exerciseName || humanizeToken(exercise.exerciseKey || 'exercise')));
+    titleWrap.appendChild(
+      el(
+        'div',
+        'card-subtitle',
+        exercise.exerciseKey ? `Key: ${exercise.exerciseKey}` : 'No program exercise key saved'
+      )
+    );
+    header.appendChild(titleWrap);
+
+    const badges = el('div', 'history-pill-row');
+    badges.appendChild(
+      createPill(
+        exercise.matched ? 'Matched' : 'Unmatched',
+        exercise.matched ? 'history-status-pill' : 'history-status-pill history-status-pill-warning'
+      )
+    );
+    badges.appendChild(
+      createPill(
+        exercise.exerciseType ? humanizeToken(exercise.exerciseType) : 'Unknown type',
+        'history-status-pill history-status-pill-neutral'
+      )
+    );
+    header.appendChild(badges);
+    card.appendChild(header);
+
+    const meta = el('div', 'history-meta-grid');
+    meta.appendChild(createMetaStat('Program exercise', exercise.programExerciseId || 'None'));
+    meta.appendChild(createMetaStat('Catalog exercise', exercise.catalogExerciseId || 'None'));
+    meta.appendChild(createMetaStat('Sort order', String(exercise.sortOrder)));
+    meta.appendChild(createMetaStat('Set count', String(exercise.sets.length)));
+    card.appendChild(meta);
+
+    if (exercise.sets.length > 0) {
+      const setList = el('div', 'history-set-list');
+      exercise.sets.forEach((setValue, setIndex) => {
+        const row = el('div', 'history-set-row');
+        row.appendChild(el('div', 'history-set-label', `Set ${setIndex + 1}`));
+        row.appendChild(el('div', 'history-set-value', String(setValue)));
+        setList.appendChild(row);
+      });
+      card.appendChild(setList);
+    } else {
+      card.appendChild(el('div', 'history-detail-copy', 'No set values were saved for this exercise.'));
+    }
+
+    return card;
+  }
+
+  function createRawImportCard(session) {
+    const card = el('article', 'card history-detail-card');
+    card.appendChild(el('div', 'card-title', 'Raw import'));
+    card.appendChild(
+      el(
+        'p',
+        'history-detail-copy',
+        session.rawText
+          ? 'Original import payload preserved by the backend.'
+          : 'No raw import payload is stored for this session. It was likely created through structured JSON logging.'
+      )
+    );
+
+    const pre = el('pre', 'history-raw-import');
+    pre.textContent = session.rawText || 'No raw text available.';
+    card.appendChild(pre);
+
+    return card;
+  }
+
+  function createMetaStat(label, value) {
+    const wrapper = el('div', 'history-meta-stat');
+    wrapper.appendChild(el('div', 'history-meta-label', label));
+    wrapper.appendChild(el('div', 'history-meta-value', value));
+    return wrapper;
+  }
+
+  function createPill(text, className) {
+    return el('div', className, text);
+  }
+
+  function createEmptyCard(title, message) {
+    const card = el('article', 'card history-empty-card');
+    card.appendChild(el('div', 'card-title', title));
+    card.appendChild(el('p', 'history-detail-copy', message));
+    return card;
+  }
+
+  function getSessionTitle(session) {
+    return session.workoutName || formatWorkoutTypeLabel(session.workoutType) || 'Logged session';
+  }
+
+  function getSessionMeta(session) {
+    return `${formatSourceLabel(session.source)} · ${formatTime(session.createdAt)}`;
+  }
+
+  function countMatchedExercises(session) {
+    return session.exercises.filter(exercise => exercise.matched).length;
+  }
+
+  function countUnmatchedExercises(session) {
+    return session.exercises.filter(exercise => !exercise.matched).length;
+  }
+
+  function formatSourceLabel(source) {
+    if (source === 'json') return 'Structured';
+    if (source === 'text') return 'Text import';
+    if (source === 'legacy-kv') return 'Legacy import';
+    return humanizeToken(source || 'unknown');
+  }
+
+  function formatTime(value) {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(value));
+  }
+
+  function formatDateTime(value) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(value));
   }
 
   return {
