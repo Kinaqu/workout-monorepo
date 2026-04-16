@@ -1,17 +1,17 @@
 import { ProgramTemplate } from "../domain/program";
 import { enrichSessionInput, parseLogText, sessionToLegacyLogResponse, SessionWriteInput, WorkoutSessionRecord } from "../domain/session";
-import { badRequest } from "../lib/app-error";
+import { AppError, badRequest } from "../lib/app-error";
 import { isValidDate, todayDate } from "../lib/time";
 import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
 import { SessionRepository } from "../repositories/session-repository";
 import { UserLifecycleService } from "./user-lifecycle-service";
 
-export class SessionAlreadyExistsError extends Error {
+export class SessionAlreadyExistsError extends AppError {
   constructor(
     public readonly sessionDate: string,
     public readonly sessionId: string
   ) {
-    super(`Workout log for ${sessionDate} already exists`);
+    super("Workout already logged for this date", 409);
     this.name = "SessionAlreadyExistsError";
   }
 }

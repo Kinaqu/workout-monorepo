@@ -79,7 +79,7 @@ function isExpiredSession(response) {
   return response.status === 401;
 }
 
-function redirectToLogin(message) {
+export function startAuthSessionFlow(message = 'Session expired. Please sign in again.') {
   removeToken();
 
   if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
@@ -87,6 +87,10 @@ function redirectToLogin(message) {
   }
 
   throw new AuthRedirectError(message);
+}
+
+function redirectToLogin(message) {
+  startAuthSessionFlow(message);
 }
 
 async function request(endpoint, options = {}) {

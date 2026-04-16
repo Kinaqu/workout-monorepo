@@ -145,6 +145,19 @@ describe("documented product flow", () => {
     });
     expect(firstLog.response.status).toBe(200);
 
+    const duplicateLog = await fetchJson(app.request.bind(app), "/log", {
+      method: "POST",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        session_date: sessionDateOne,
+        workout_type: "A",
+        note: "duplicate session",
+        exercises: buildWorkoutLogExercises(programBody.workouts.A.exercises, programBody.progressionState),
+      }),
+    });
+    expect(duplicateLog.response.status).toBe(409);
+    expect(duplicateLog.body).toEqual({ error: "Workout already logged for this date" });
+
     const secondLog = await fetchJson(app.request.bind(app), "/log", {
       method: "POST",
       headers: headers({ "Content-Type": "application/json" }),
