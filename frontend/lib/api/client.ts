@@ -144,6 +144,17 @@ async function request<TResponse>(endpoint: string, options: RequestOptions = {}
 
   try {
     const response = await fetch(buildApiUrl(endpoint), config);
+    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+    if (!contentType.includes('application/json')) {
+      const message = contentType.includes('text/html')
+        ? 'Expected JSON API response but received HTML. Check frontend API base URL configuration.'
+        : `Expected JSON API response but received ${contentType || 'an unknown content type'}.`;
+
+      throw new ApiError(message, response.status, {
+        error: message,
+      });
+    }
+
     const data = (await response.json().catch(() => ({}))) as ApiErrorPayload;
 
     if (isExpiredSession(response) && !options.noAuth) {
