@@ -81,9 +81,11 @@ The frontend is a lightweight client application configured to interact with a s
 `Frontend UI` ➔ `Clerk Session / API Client` ➔ `GET /me` gate ➔ `Onboarding or Main App` ➔ `Cloudflare Worker API`
 
 **The frontend currently includes:**
-- a vanilla JavaScript main app in `app.js`
+- a small vanilla JavaScript composition entrypoint in `app.js`
+- feature modules under `features/*` for onboarding, today, history, program, and profile state
+- shared infrastructure in `lib/api/*`, `store/*`, and `shared/*`
 - React-based auth entrypoints in `login.jsx` and `register.jsx`
-- a shared API client in `api.js`
+- a shared API client in `lib/api/client.js`
 - Vite multi-page builds for the main app and auth pages
 
 > **Security Note:** The primary auth flow is Clerk-first. The frontend sends the Clerk session token as a Bearer token when available. A legacy `localStorage` token path still exists for compatibility, but it is no longer the main authentication model.
@@ -101,8 +103,20 @@ The frontend is a lightweight client application configured to interact with a s
 
 ```text
 frontend/
-├── api.js                # API client for backend communication
-├── app.js                # Main application logic and UI rendering
+├── api.js                # Compatibility re-export for the shared API client
+├── app.js                # Composition entrypoint for the product app
+├── features/
+│   ├── history/
+│   ├── onboarding/
+│   ├── program/
+│   ├── settings-or-profile/
+│   └── today-workout/
+├── lib/
+│   └── api/              # Shared API client, auth helpers, and API errors
+├── shared/
+│   ├── ui/               # DOM-oriented shared UI helpers
+│   └── utils/            # Shared formatting, guards, and onboarding utils
+├── store/                # Small app-level state/selectors
 ├── clerkAppearance.js    # Shared Clerk UI appearance config
 ├── index.html            # Main application entry page
 ├── login.html            # Sign-in page shell
@@ -172,7 +186,7 @@ The auth flow in this project currently works as follows:
 
 ### Local Backend Integration
 
-The frontend currently uses a hardcoded API base URL in `api.js`:
+The frontend currently uses a hardcoded API base URL in `lib/api/client.js`:
 
 ```js
 export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
@@ -213,7 +227,7 @@ npm run lint
 
 ## 🔌 API Endpoints
 
-The frontend application communicates with the Workout Manager backend through `api.js`.
+The frontend application communicates with the Workout Manager backend through `lib/api/client.js`.
 
 > **Note:** All protected endpoints require `Authorization: Bearer <token>`. In the current app flow, that token usually comes from the Clerk session cookie.
 
@@ -232,7 +246,7 @@ The frontend application communicates with the Workout Manager backend through `
 
 ### Legacy Auth Endpoints
 
-`api.js` still contains compatibility helpers for:
+`lib/api/client.js` still contains compatibility helpers for:
 
 | HTTP Method | Endpoint | Description |
 | :--- | :--- | :--- |
