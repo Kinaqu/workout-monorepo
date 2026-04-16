@@ -1,0 +1,161 @@
+import { getToken as getClerkToken } from '@clerk/shared/getToken';
+
+import { ApiError, AuthRedirectError } from '/lib/api/errors.js';
+
+export const BASE_URL = 'https://workout-api.dimer133745.workers.dev';
+
+const LOGIN_PATH = '/login?reauth=1';
+
+function getClerkInstance() {
+  if (typeof window === 'undefined' || !('Clerk' in window)) {
+    return null;
+  }
+
+  return window.Clerk ?? null;
+}
+
+export function getToken() {
+  return localStorage.getItem('token');
+}
+
+export function setToken(token) {
+  localStorage.setItem('token', token);
+}
+
+export function removeToken() {
+  localStorage.removeItem('token');
+}
+
+export function hasClerkSession() {
+  const clerk = getClerkInstance();
+  return Boolean(clerk?.session || clerk?.isSignedIn);
+}
+
+async function resolveAuthToken(options) {
+  const clerk = getClerkInstance();
+  if (!clerk) {
+    return getToken();
+  }
+
+  try {
+    const clerkToken = await getClerkToken(options);
+    if (clerkToken) return clerkToken;
+  } catch (error) {
+    console.warn('Unable to resolve Clerk token, falling back to legacy token storage.', error);
+  }
+
+  return getToken();
+}
+
+function getErrorMessage(data, fallbackStatus) {
+  const message = typeof data?.message === 'string' && data.message.trim()
+    ? data.message.trim()
+    : typeof data?.error === 'string' && data.error.trim()
+      ? data.error.trim()
+      : '';
+
+  const detail = typeof data?.detail === 'string' && data.detail.trim() ? data.detail.trim() : '';
+  if (message && detail && detail !== message) return `${message}: ${detail}`;
+  if (message) return message;
+  if (detail) return detail;
+
+  return `API Error: ${fallbackStatus}`;
+}
+
+function isExpiredSession(response) {
+  return response.status === 401;
+}
+
+export function startAuthSessionFlow(message = 'Session expired. Please sign in again.') {
+  removeToken();
+
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.replace(LOGIN_PATH);
+  }
+
+  throw new AuthRedirectError(message);
+}
+
+async function request(endpoint, options = {}) {
+  const url = `${BASE_URL}${endpoint}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const token = options.authToken ?? await resolveAuthToken(options.authTokenOptions);
+  if (token && !options.noAuth) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const config = { ...options, headers };
+
+  try {
+    const response = await fetch(url, config);
+    const data = await response.json().catch(() => ({}));
+
+    if (isExpiredSession(response) && !options.noAuth) {
+      if (!options.__retriedWithFreshToken) {
+        const freshToken = await resolveAuthToken({ skipCache: true });
+        if (freshToken) {
+          return request(endpoint, {
+            ...options,
+            __retriedWithFreshToken: true,
+            authToken: freshToken,
+            authTokenOptions: { skipCache: true },
+          });
+        }
+      }
+
+      startAuthSessionFlow(getErrorMessage(data, response.status));
+    }
+
+    if (!response.ok) {
+      throw new ApiError(getErrorMessage(data, response.status), response.status, data);
+    }
+
+    return data;
+  } catch (error) {
+    if (!(error instanceof AuthRedirectError) && !(error instanceof ApiError)) {
+      console.error('API Request failed:', error);
+    }
+    throw error;
+  }
+}
+
+export const api = {
+  login: (username, password) => request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+    noAuth: true,
+  }),
+  register: (username, password) => request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+    noAuth: true,
+  }),
+  getMe: () => request('/me'),
+  getOnboarding: () => request('/onboarding'),
+  saveOnboardingDraft: (payload) => request('/onboarding', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  completeOnboarding: (payload) => request('/onboarding/complete', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  getTodayWorkout: () => request('/workout/today'),
+  logWorkout: (data, date) => {
+    const headers = {};
+    if (date) headers['X-Workout-Date'] = date;
+    return request('/log', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers,
+    });
+  },
+  getLog: (date) => request(`/log/${date}`),
+  getProgram: () => request('/program'),
+  regenerateProgram: () => request('/program/regenerate', { method: 'POST' }),
+  runProgression: () => request('/progression/run', { method: 'POST' }),
+};
