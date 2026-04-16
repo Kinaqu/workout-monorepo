@@ -28,6 +28,20 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
   let onboardingSubmitting = false;
   let onboardingCurrentStep = 0;
 
+  function isCompletedOnboardingState(onboarding = selectOnboarding()) {
+    return Boolean(
+      onboarding?.completed ||
+      onboarding?.status === 'completed' ||
+      selectMe()?.lifecycle?.onboarding_completed ||
+      selectMe()?.onboarding?.completed
+    );
+  }
+
+  function cancelOnboardingDraftSave() {
+    window.clearTimeout(onboardingDraftTimer);
+    onboardingDraftTimer = null;
+  }
+
   if (onboardingForm) {
     onboardingForm.addEventListener('change', handleOnboardingChange);
     onboardingForm.addEventListener('submit', handleOnboardingSubmit);
@@ -297,9 +311,22 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
   async function loadOnboardingState() {
     try {
       const onboarding = ensureApiObject(await api.getOnboarding(), 'onboarding');
+      if (isCompletedOnboardingState(onboarding)) {
+        setOnboarding(onboarding);
+        updateOnboardingBadge(onboarding);
+        cancelOnboardingDraftSave();
+        return { completed: true };
+      }
+
       hydrateOnboardingForm(onboarding);
+      return { completed: false };
     } catch (error) {
       if (error instanceof AuthRedirectError) throw error;
+
+      if (isCompletedOnboardingState()) {
+        cancelOnboardingDraftSave();
+        return { completed: true };
+      }
 
       hydrateOnboardingForm({
         status: 'not_started',
@@ -310,6 +337,7 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
         answers: createDefaultOnboardingData(),
       });
       setOnboardingSaveStatus('Could not load saved progress.', 'error');
+      return { completed: false };
     }
   }
 
@@ -337,11 +365,16 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
   }
 
   function scheduleOnboardingDraftSave() {
-    if (selectShellMode() !== 'onboarding') return;
-    window.clearTimeout(onboardingDraftTimer);
+    if (selectShellMode() !== 'onboarding' || isCompletedOnboardingState()) return;
+    cancelOnboardingDraftSave();
     setOnboardingSaveStatus('Saving...', 'pending');
 
     onboardingDraftTimer = window.setTimeout(async () => {
+      if (isCompletedOnboardingState()) {
+        setOnboardingSaveStatus('Onboarding is already complete.', 'neutral');
+        return;
+      }
+
       const payload = buildOnboardingPayload();
       const signature = JSON.stringify(payload);
 
@@ -373,12 +406,18 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
     event.preventDefault();
     if (onboardingSubmitting) return;
 
+    if (isCompletedOnboardingState()) {
+      cancelOnboardingDraftSave();
+      await onCompleted();
+      return;
+    }
+
     if (onboardingCurrentStep < getOnboardingLastStepIndex()) {
       handleOnboardingNextStep();
       return;
     }
 
-    window.clearTimeout(onboardingDraftTimer);
+    cancelOnboardingDraftSave();
     const payload = buildOnboardingPayload();
     const errors = validateOnboardingPayload(payload);
 
@@ -408,8 +447,18 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
   }
 
   async function enter() {
+    const shouldProbeCompletedState = isCompletedOnboardingState();
+    if (!shouldProbeCompletedState) {
+      showShellMode('onboarding');
+    }
+
+    const onboardingState = await loadOnboardingState();
+    if (onboardingState?.completed) {
+      await onCompleted();
+      return;
+    }
+
     showShellMode('onboarding');
-    await loadOnboardingState();
   }
 
   return {

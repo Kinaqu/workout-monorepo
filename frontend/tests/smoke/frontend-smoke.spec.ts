@@ -171,6 +171,34 @@ function buildOnboardingResponse() {
   };
 }
 
+function buildCompletedOnboardingResponse() {
+  return {
+    status: 'completed',
+    completed: true,
+    questionnaireVersion: 'onboarding-v1',
+    answersUpdatedAt: '2026-04-01T00:00:00.000Z',
+    completedAt: '2026-04-01T00:00:00.000Z',
+    answers: {
+      questionnaireVersion: 'onboarding-v1',
+      goals: ['general_fitness'],
+      experienceLevel: 'beginner',
+      trainingDaysPerWeek: 3,
+      sessionDurationMinutes: 30,
+      equipmentAccess: ['bodyweight'],
+      focusAreas: ['upper_body', 'lower_body', 'core'],
+      limitations: [],
+      preferredStyles: ['balanced'],
+    },
+    profile: {
+      version: 'profile-v1',
+      primary_goal: 'general_fitness',
+      training_days_per_week: 3,
+      session_duration_minutes: 30,
+      updated_at: '2026-04-01T00:00:00.000Z',
+    },
+  };
+}
+
 function buildGeneratedProgramResponse() {
   return {
     ok: true,
@@ -629,6 +657,68 @@ test('completed onboarding without active program routes the user to program rec
   await expect(page.locator('#program-schedule')).toContainText(/day a|rest/i);
   await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
   await assertNoClientIssues(issues);
+});
+
+test('completed users do not autosave onboarding drafts when a stale flow tries to re-enter onboarding', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installLegacySession(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let onboardingDraftPosts = 0;
+  let recovered = false;
+
+  await mockApi(page, ({ url, method }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: true }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return recovered
+        ? { body: buildTodayWorkoutResponse() }
+        : { status: 409, body: { error: 'Onboarding not completed' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/onboarding') {
+      recovered = true;
+      return { body: buildCompletedOnboardingResponse() };
+    }
+
+    if (method === 'POST' && url.pathname === '/onboarding') {
+      onboardingDraftPosts += 1;
+      return {
+        body: {
+          ok: true,
+          message: 'Onboarding draft saved',
+          questionnaire_version: 'onboarding-v1',
+          updated_at: '2026-04-06T00:00:00.000Z',
+          completed_at: null,
+        },
+      };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      return { body: buildProgramResponse() };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('#onboarding-shell')).toBeHidden();
+  await expect(page.locator('#today-content')).toBeVisible();
+  await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
+  expect(onboardingDraftPosts).toBe(0);
+  expect.soft(issues.pageErrors, 'page errors').toEqual([]);
+  expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
+  expect.soft(
+    issues.consoleErrors.filter(message => !message.includes('status of 409 (Conflict)')),
+    'unexpected console errors'
+  ).toEqual([]);
 });
 
 test('history screen renders sessions list and detail diagnostics from /sessions', async ({ page }) => {
