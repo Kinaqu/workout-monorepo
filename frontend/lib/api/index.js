@@ -1,4 +1,4 @@
-export { api, BASE_URL, getToken, hasClerkSession, removeToken, setToken, startAuthSessionFlow } from '/lib/api/client.js';
+export { API_BASE_URL, api, hasStoredLegacyToken, startAuthSessionFlow } from '/lib/api/client.ts';
 export {
   ApiError,
   AuthRedirectError,
@@ -7,4 +7,4 @@ export {
   isWorkoutAlreadyLoggedError,
   isWorkoutLogServerError,
   isWorkoutLogValidationError,
-} from '/lib/api/errors.js';
+} from '/lib/api/errors.ts';
