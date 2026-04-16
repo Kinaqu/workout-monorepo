@@ -179,6 +179,90 @@ const GeneratedProgramMetadataSchema = z
   })
   .openapi("GeneratedProgramMetadata");
 
+const GeneratedProgramInputSummarySchema = z
+  .object({
+    primaryGoal: z.string().nullable().optional().openapi({ example: "strength" }),
+    trainingDaysPerWeek: z.number().int().nullable().optional().openapi({ example: 3 }),
+    sessionDurationMinutes: z.number().int().nullable().optional().openapi({ example: 45 }),
+  })
+  .catchall(z.unknown())
+  .openapi("GeneratedProgramInputSummary");
+
+const StoredGeneratedProgramMetadataSchema = z
+  .object({
+    generation_reason: z.string().openapi({ example: "regenerate" }),
+    profile_version: z.string().nullable().openapi({ example: "profile-v1" }),
+    created_at: IsoDateTimeSchema,
+    input_summary: GeneratedProgramInputSummarySchema,
+  })
+  .openapi("StoredGeneratedProgramMetadata");
+
+const ProgramRuntimeStateSchema = z
+  .object({
+    last_session_logged_at: z.string().nullable().openapi({ example: "2026-04-12T12:00:00.000Z" }),
+    last_progression_run_at: z.string().nullable().openapi({ example: "2026-04-16T12:00:00.000Z" }),
+    created_at: IsoDateTimeSchema,
+    updated_at: IsoDateTimeSchema,
+  })
+  .openapi("ProgramRuntimeState");
+
+const ProgressionEventStateSchema = z
+  .object({
+    sets: z.number().int().openapi({ example: 2 }),
+    min: z.number().int().openapi({ example: 8 }),
+    max: z.number().int().openapi({ example: 12 }),
+  })
+  .openapi("ProgressionEventState");
+
+const ProgramProgressionEventSchema = z
+  .object({
+    id: z.string().openapi({ example: "pe_123" }),
+    exercise_id: z.string().openapi({ example: "exercise_pushups" }),
+    catalog_exercise_id: z.string().nullable().openapi({ example: "catalog_pushups" }),
+    exercise_key: z.string().openapi({ example: "pushups" }),
+    exercise_name: z.string().openapi({ example: "Push-ups" }),
+    direction: z.enum(["up", "down"]),
+    reason: z.string().openapi({ example: "performed above target in 2 sessions" }),
+    before: ProgressionEventStateSchema,
+    after: ProgressionEventStateSchema,
+    created_at: IsoDateTimeSchema,
+  })
+  .openapi("ProgramProgressionEvent");
+
+const ActiveProgramVersionSchema = z
+  .object({
+    status: z.literal("active"),
+    program_family_id: z.string().openapi({ example: "program_family_123" }),
+    version_number: z.number().int().openapi({ example: 3 }),
+    previous_version_id: z.string().nullable().openapi({ example: "program_122" }),
+    created_at: IsoDateTimeSchema,
+    updated_at: IsoDateTimeSchema,
+    source: z.string().openapi({ example: "generated" }),
+  })
+  .openapi("ActiveProgramVersion");
+
+const CurrentVersionChangesSchema = z
+  .object({
+    summary: z.string().openapi({ example: "2 schedule days were remapped (Monday, Thursday)." }),
+    highlights: z.array(z.string()).openapi({
+      example: [
+        "2 schedule days were remapped (Monday, Thursday).",
+        "1 session was added (Mobility Reset).",
+      ],
+    }),
+    stats: z.object({
+      schedule_changes: z.number().int().openapi({ example: 2 }),
+      workouts_added: z.number().int().openapi({ example: 1 }),
+      workouts_removed: z.number().int().openapi({ example: 0 }),
+      exercises_added: z.number().int().openapi({ example: 2 }),
+      exercises_removed: z.number().int().openapi({ example: 1 }),
+      target_changes: z.number().int().openapi({ example: 3 }),
+      set_cap_changes: z.number().int().openapi({ example: 1 }),
+      renamed: z.boolean().openapi({ example: false }),
+    }),
+  })
+  .openapi("CurrentVersionChanges");
+
 export const GeneratedProgramResponseSchema = z
   .object({
     ok: z.literal(true),
@@ -264,6 +348,12 @@ export const ProgramResponseSchema = ProgramDefinitionSchema.extend({
     },
   }),
   progressionState: z.record(z.string(), ProgressionStateValueSchema),
+  generator_metadata: GeneratedProgramMetadataSchema.nullable(),
+  generated_program_metadata: StoredGeneratedProgramMetadataSchema.nullable(),
+  progression_events: z.array(ProgramProgressionEventSchema),
+  program_runtime_state: ProgramRuntimeStateSchema.nullable(),
+  active_version: ActiveProgramVersionSchema,
+  current_version_changes: CurrentVersionChangesSchema,
 }).openapi("ProgramResponse");
 
 export const ProgramMutationResponseSchema = z

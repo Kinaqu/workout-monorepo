@@ -6,7 +6,7 @@ import {
 } from '/lib/api/index.js';
 import { hasActiveProgram, hasCompletedOnboarding } from '/store/app-store.js';
 import { el, renderEmptyState } from '/shared/ui/dom.js';
-import { formatLongDateLabel } from '/shared/utils/date.js';
+import { formatDateTimeLabel, formatLongDateLabel } from '/shared/utils/date.js';
 import { formatPlanSlotLabel, formatWorkoutTypeLabel, humanizeToken } from '/shared/utils/format.js';
 import { ensureApiObject } from '/shared/utils/guards.js';
 
@@ -34,6 +34,15 @@ const programResetButton = document.getElementById('program-reset-button');
 const programSummaryCopy = document.getElementById('program-summary-copy');
 const programSummaryBadge = document.getElementById('program-summary-badge');
 const programSummaryMeta = document.getElementById('program-summary-meta');
+const programGenerationSummary = document.getElementById('program-generation-summary');
+const programGenerationMeta = document.getElementById('program-generation-meta');
+const programRuntimeSummary = document.getElementById('program-runtime-summary');
+const programRuntimeMeta = document.getElementById('program-runtime-meta');
+const programVersionMeta = document.getElementById('program-version-meta');
+const programChangesSummary = document.getElementById('program-changes-summary');
+const programChangesStats = document.getElementById('program-changes-stats');
+const programChangesList = document.getElementById('program-changes-list');
+const programTimelineList = document.getElementById('program-timeline-list');
 const programEditor = document.getElementById('program-editor');
 const programEditorStatus = document.getElementById('program-editor-status');
 const programEditorIdInput = document.getElementById('program-editor-id');
@@ -57,6 +66,85 @@ function createStat(label, value) {
   item.appendChild(el('div', 'program-summary-label', label));
   item.appendChild(el('div', 'program-summary-value', value));
   return item;
+}
+
+function createDetailStat(label, value) {
+  const item = el('div', 'program-detail-stat');
+  item.appendChild(el('div', 'program-detail-label', label));
+  item.appendChild(el('div', 'program-detail-value', value));
+  return item;
+}
+
+function createPill(label, className = '') {
+  return el('div', ['program-meta-pill', className].filter(Boolean).join(' '), label);
+}
+
+function countProgramExercises(program) {
+  return Object.values(program.workouts ?? {}).reduce(
+    (count, workout) => count + (Array.isArray(workout.exercises) ? workout.exercises.length : 0),
+    0
+  );
+}
+
+function formatDateOrFallback(value, fallback = 'Not yet') {
+  return value ? formatDateTimeLabel(value) : fallback;
+}
+
+function formatDirectionLabel(direction) {
+  return direction === 'down' ? 'Reduced' : 'Increased';
+}
+
+function formatGenerationReason(reason, source) {
+  if (reason === 'onboarding-complete') {
+    return 'Generated when onboarding was completed';
+  }
+
+  if (reason === 'regenerate') {
+    return 'Regenerated from the saved onboarding profile';
+  }
+
+  if (source === 'api') {
+    return 'Created from manual edits in the plan editor';
+  }
+
+  if (source === 'reset') {
+    return 'Reset back to the built-in default template';
+  }
+
+  if (source === 'legacy-kv' || source === 'legacy-default') {
+    return 'Imported from a legacy snapshot';
+  }
+
+  if (source === 'generated') {
+    return 'Generated from the saved onboarding profile';
+  }
+
+  return `Created from ${humanizeToken(source || 'unknown')}`;
+}
+
+function buildGenerationSummary(program) {
+  const metadata = program.generated_program_metadata;
+  const input = metadata?.input_summary ?? {};
+  const primaryGoal = typeof input.primaryGoal === 'string' ? humanizeToken(input.primaryGoal) : '';
+  const trainingDays =
+    typeof input.trainingDaysPerWeek === 'number' ? `${input.trainingDaysPerWeek} training days/week` : '';
+  const sessionDuration =
+    typeof input.sessionDurationMinutes === 'number' ? `${input.sessionDurationMinutes} min sessions` : '';
+  const details = [primaryGoal, trainingDays, sessionDuration].filter(Boolean);
+
+  const lead = formatGenerationReason(metadata?.generation_reason, program.source);
+  return details.length > 0 ? `${lead}. Built around ${details.join(' · ')}.` : `${lead}.`;
+}
+
+function formatVersionStatus(program) {
+  const versionNumber = program.active_version?.version_number;
+  return Number.isInteger(versionNumber) ? `Active · v${versionNumber}` : 'Active';
+}
+
+function formatTimelineDelta(event) {
+  const before = `${event.before.sets} sets · ${event.before.min}-${event.before.max}`;
+  const after = `${event.after.sets} sets · ${event.after.min}-${event.after.max}`;
+  return `${before} → ${after}`;
 }
 
 function getLatestProgressionDate(progressionState = {}) {
@@ -366,6 +454,18 @@ export function createProgramFeature({
     programEmptyState.classList.add('hidden');
   }
 
+  function clearMetadataPanels() {
+    if (programGenerationSummary) programGenerationSummary.textContent = '';
+    if (programGenerationMeta) programGenerationMeta.innerHTML = '';
+    if (programRuntimeSummary) programRuntimeSummary.textContent = '';
+    if (programRuntimeMeta) programRuntimeMeta.innerHTML = '';
+    if (programVersionMeta) programVersionMeta.innerHTML = '';
+    if (programChangesSummary) programChangesSummary.textContent = '';
+    if (programChangesStats) programChangesStats.innerHTML = '';
+    if (programChangesList) programChangesList.innerHTML = '';
+    if (programTimelineList) programTimelineList.innerHTML = '';
+  }
+
   function setActionsVisible(visible) {
     programRegenerateButton.classList.toggle('hidden', !visible);
     programEditButton.classList.toggle('hidden', !visible);
@@ -395,6 +495,7 @@ export function createProgramFeature({
     content.classList.remove('hidden');
     programMain.classList.add('hidden');
     setProgramError('');
+    clearMetadataPanels();
     stopEditing({ keepStatus: false, keepProgram: false });
     renderEmptyState(
       programEmptyState,
@@ -439,27 +540,154 @@ export function createProgramFeature({
   function renderSummary(program) {
     const latestProgressionDate = getLatestProgressionDate(program.progressionState ?? {});
     const workoutCount = Object.keys(program.workouts ?? {}).length;
-    const exerciseCount = Object.values(program.workouts ?? {}).reduce(
-      (count, workout) => count + (Array.isArray(workout.exercises) ? workout.exercises.length : 0),
-      0
-    );
+    const exerciseCount = countProgramExercises(program);
+    const versionLabel = Number.isInteger(program.active_version?.version_number)
+      ? `v${program.active_version.version_number}`
+      : program.version_id || 'Current';
 
     if (programSummaryCopy) {
       programSummaryCopy.textContent = `${program.name} · ${program.id}`;
     }
 
     if (programSummaryBadge) {
-      programSummaryBadge.textContent = program.source || 'manual';
+      programSummaryBadge.textContent = formatVersionStatus(program);
     }
 
     if (programSummaryMeta) {
       programSummaryMeta.innerHTML = '';
-      programSummaryMeta.appendChild(createStat('Version', program.version_id || 'Current'));
+      programSummaryMeta.appendChild(createStat('Version', versionLabel));
       programSummaryMeta.appendChild(createStat('Sessions', `${workoutCount}`));
       programSummaryMeta.appendChild(createStat('Exercises', `${exerciseCount}`));
       programSummaryMeta.appendChild(
         createStat('Last progression', latestProgressionDate ? formatLongDateLabel(latestProgressionDate) : 'Not yet')
       );
+    }
+  }
+
+  function renderMetadataPanels(program) {
+    const metadata = program.generated_program_metadata;
+    const runtime = program.program_runtime_state;
+    const version = program.active_version;
+    const changes = program.current_version_changes;
+    const progressionEvents = Array.isArray(program.progression_events) ? program.progression_events : [];
+
+    if (programGenerationSummary) {
+      programGenerationSummary.textContent = buildGenerationSummary(program);
+    }
+
+    if (programGenerationMeta) {
+      programGenerationMeta.innerHTML = '';
+      programGenerationMeta.appendChild(createPill(`Source: ${humanizeToken(program.source || 'unknown')}`));
+      if (metadata?.generation_reason) {
+        programGenerationMeta.appendChild(
+          createPill(`Reason: ${humanizeToken(metadata.generation_reason)}`, 'is-highlight')
+        );
+      }
+      if (program.generator_metadata?.version) {
+        programGenerationMeta.appendChild(createPill(`Generator: ${program.generator_metadata.version}`));
+      }
+      if (program.generator_metadata?.catalog_seed_version) {
+        programGenerationMeta.appendChild(
+          createPill(`Catalog: ${program.generator_metadata.catalog_seed_version}`)
+        );
+      }
+    }
+
+    if (programRuntimeSummary) {
+      programRuntimeSummary.textContent = runtime?.last_progression_run_at
+        ? `Last refresh ran on ${formatDateTimeLabel(runtime.last_progression_run_at)}.`
+        : 'Progression refresh has not run yet for this version.';
+    }
+
+    if (programRuntimeMeta) {
+      programRuntimeMeta.innerHTML = '';
+      programRuntimeMeta.appendChild(
+        createPill(`Last progression: ${formatDateOrFallback(runtime?.last_progression_run_at)}`, 'is-positive')
+      );
+      programRuntimeMeta.appendChild(
+        createPill(`Last session: ${formatDateOrFallback(runtime?.last_session_logged_at)}`)
+      );
+    }
+
+    if (programVersionMeta) {
+      programVersionMeta.innerHTML = '';
+      programVersionMeta.appendChild(createDetailStat('Status', formatVersionStatus(program)));
+      programVersionMeta.appendChild(
+        createDetailStat(
+          'Source',
+          version?.source ? humanizeToken(version.source) : humanizeToken(program.source || 'unknown')
+        )
+      );
+      programVersionMeta.appendChild(
+        createDetailStat(
+          'Version ID',
+          version?.version_number ? `v${version.version_number} · ${program.version_id}` : program.version_id
+        )
+      );
+      programVersionMeta.appendChild(
+        createDetailStat('Created', formatDateOrFallback(version?.created_at || metadata?.created_at, 'Unknown'))
+      );
+      programVersionMeta.appendChild(
+        createDetailStat('Updated', formatDateOrFallback(version?.updated_at, 'Unknown'))
+      );
+      programVersionMeta.appendChild(
+        createDetailStat('Previous version', version?.previous_version_id || 'None')
+      );
+    }
+
+    if (programChangesSummary) {
+      programChangesSummary.textContent =
+        changes?.summary || 'No structural changes were detected in this version.';
+    }
+
+    if (programChangesStats) {
+      programChangesStats.innerHTML = '';
+      if (changes?.stats) {
+        programChangesStats.appendChild(
+          createPill(`${changes.stats.schedule_changes} schedule updates`, 'is-highlight')
+        );
+        programChangesStats.appendChild(createPill(`${changes.stats.workouts_added} sessions added`));
+        programChangesStats.appendChild(createPill(`${changes.stats.workouts_removed} sessions removed`));
+        programChangesStats.appendChild(createPill(`${changes.stats.target_changes} target changes`));
+        programChangesStats.appendChild(createPill(`${changes.stats.set_cap_changes} set cap changes`));
+      }
+    }
+
+    if (programChangesList) {
+      programChangesList.innerHTML = '';
+      const highlights = Array.isArray(changes?.highlights) ? changes.highlights : [];
+      highlights.forEach(item => {
+        programChangesList.appendChild(el('div', 'program-change-item', item));
+      });
+    }
+
+    if (programTimelineList) {
+      programTimelineList.innerHTML = '';
+
+      if (progressionEvents.length === 0) {
+        programTimelineList.appendChild(
+          el('div', 'program-timeline-empty', 'No progression changes have been recorded for this version yet.')
+        );
+      } else {
+        progressionEvents.forEach(event => {
+          const item = el('article', 'program-timeline-item');
+          const header = el('div', 'program-timeline-header');
+          const copy = document.createElement('div');
+          copy.appendChild(
+            el(
+              'div',
+              'program-timeline-title',
+              `${formatDirectionLabel(event.direction)} ${event.exercise_name || humanizeToken(event.exercise_key)}`
+            )
+          );
+          copy.appendChild(el('div', 'program-timeline-diff', formatTimelineDelta(event)));
+          header.appendChild(copy);
+          header.appendChild(el('div', 'program-timeline-time', formatDateOrFallback(event.created_at, 'Unknown')));
+          item.appendChild(header);
+          item.appendChild(el('div', 'program-info-copy', event.reason));
+          programTimelineList.appendChild(item);
+        });
+      }
     }
   }
 
@@ -470,6 +698,7 @@ export function createProgramFeature({
     const progressionState = program.progressionState ?? {};
 
     renderSummary(program);
+    renderMetadataPanels(program);
 
     scheduleContainer.innerHTML = '';
     workoutsContainer.innerHTML = '';

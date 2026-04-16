@@ -90,6 +90,32 @@ describe("documented product flow", () => {
 
     const programBody = program.body as {
       version_id: string;
+      generator_metadata: { version: string; catalog_seed_version: string } | null;
+      generated_program_metadata: {
+        generation_reason: string;
+        profile_version: string | null;
+        created_at: string;
+        input_summary: {
+          primaryGoal?: string;
+          trainingDaysPerWeek?: number;
+          sessionDurationMinutes?: number;
+        };
+      } | null;
+      program_runtime_state: {
+        last_progression_run_at: string | null;
+        created_at: string;
+        updated_at: string;
+      } | null;
+      active_version: {
+        status: "active";
+        version_number: number;
+        previous_version_id: string | null;
+      };
+      current_version_changes: {
+        summary: string;
+        highlights: string[];
+      };
+      progression_events: Array<{ exercise_key: string; direction: "up" | "down" }>;
       workouts: Record<
         string,
         {
@@ -106,6 +132,21 @@ describe("documented product flow", () => {
     };
 
     expect(programBody.version_id).toBe(completedBody.program.version_id);
+    expect(programBody.generator_metadata).toEqual({
+      version: "generator-v1",
+      catalog_seed_version: "catalog-v1",
+    });
+    expect(programBody.generated_program_metadata?.generation_reason).toBe("onboarding-complete");
+    expect(programBody.generated_program_metadata?.input_summary.trainingDaysPerWeek).toBe(
+      ONBOARDING_ANSWERS.trainingDaysPerWeek
+    );
+    expect(programBody.program_runtime_state?.last_progression_run_at).toBeTruthy();
+    expect(programBody.active_version.status).toBe("active");
+    expect(programBody.active_version.version_number).toBe(1);
+    expect(programBody.current_version_changes.summary).toMatch(/initial version created/i);
+    expect(programBody.current_version_changes.highlights).toContain(
+      "This is the first version in the current plan family."
+    );
     const firstExercise = programBody.workouts.A.exercises[0];
     const secondWeekExercise = programBody.workouts.B.exercises[0];
     expect(firstExercise).toBeDefined();
@@ -206,11 +247,17 @@ describe("documented product flow", () => {
     const progressedState = (
       progressedProgram.body as {
         progressionState: Record<string, { min: number; max: number; sets: number }>;
+        progression_events: Array<{ exercise_key: string; direction: "up" | "down" }>;
+        program_runtime_state: { last_progression_run_at: string | null } | null;
       }
-    ).progressionState;
-    const progressedBounds = progressedState[firstExercise.id];
+    );
+    const progressedStateMap = progressedState.progressionState;
+    const progressedBounds = progressedStateMap[firstExercise.id];
     expect(progressedBounds).toBeDefined();
     expect(progressedBounds.max).toBeGreaterThan(bounds.max);
+    expect(progressedState.progression_events.length).toBeGreaterThan(0);
+    expect(progressedState.progression_events[0]?.exercise_key).toBe(firstExercise.id);
+    expect(progressedState.program_runtime_state?.last_progression_run_at).toBeTruthy();
 
     const weeklySessionOne = "2026-04-15";
     const weeklySessionTwo = "2026-04-17";
@@ -222,7 +269,7 @@ describe("documented product flow", () => {
         session_date: weeklySessionOne,
         workout_type: "B",
         note: "third session",
-        exercises: buildWorkoutLogExercises(programBody.workouts.B.exercises, progressedState),
+        exercises: buildWorkoutLogExercises(programBody.workouts.B.exercises, progressedStateMap),
       }),
     });
     expect(thirdLog.response.status).toBe(200);
@@ -234,7 +281,7 @@ describe("documented product flow", () => {
         session_date: weeklySessionTwo,
         workout_type: "C",
         note: "fourth session",
-        exercises: buildWorkoutLogExercises(programBody.workouts.C.exercises, progressedState),
+        exercises: buildWorkoutLogExercises(programBody.workouts.C.exercises, progressedStateMap),
       }),
     });
     expect(fourthLog.response.status).toBe(200);
@@ -250,17 +297,22 @@ describe("documented product flow", () => {
 
     const autoRefreshedProgram = await fetchJson(app.request.bind(app), "/program", { headers: refreshedHeaders() });
     expect(autoRefreshedProgram.response.status).toBe(200);
-    const autoRefreshedBounds = (
+    const autoRefreshedProgramBody = (
       autoRefreshedProgram.body as {
         progressionState: Record<string, { min: number; max: number; sets: number }>;
+        active_version: { version_number: number };
+        current_version_changes: { highlights: string[]; summary: string };
       }
-    ).progressionState[secondWeekExercise.id];
+    );
+    const autoRefreshedBounds = autoRefreshedProgramBody.progressionState[secondWeekExercise.id];
     expect(autoRefreshedBounds).toBeDefined();
-    const previousSecondWeekBounds = progressedState[secondWeekExercise.id];
+    const previousSecondWeekBounds = progressedStateMap[secondWeekExercise.id];
     expect(
       autoRefreshedBounds.max > (previousSecondWeekBounds?.max ?? 0) ||
         autoRefreshedBounds.sets > (previousSecondWeekBounds?.sets ?? 0)
     ).toBe(true);
+    expect(autoRefreshedProgramBody.active_version.version_number).toBe(1);
+    expect(autoRefreshedProgramBody.current_version_changes.summary).toMatch(/initial version created/i);
 
     const regenerated = await fetchJson(app.request.bind(app), "/program/regenerate", {
       method: "POST",

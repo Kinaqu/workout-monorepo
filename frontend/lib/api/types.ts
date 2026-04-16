@@ -130,6 +130,18 @@ export interface GeneratedProgramMetadata {
   catalog_seed_version: string;
 }
 
+export interface StoredGeneratedProgramMetadata {
+  generation_reason: string;
+  profile_version: string | null;
+  created_at: string;
+  input_summary: {
+    primaryGoal?: string | null;
+    trainingDaysPerWeek?: number | null;
+    sessionDurationMinutes?: number | null;
+    [key: string]: unknown;
+  };
+}
+
 export interface GeneratedProgram extends ProgramDefinition {
   version_id: string;
   source: string;
@@ -193,6 +205,49 @@ export interface ProgramResponse extends ProgramDefinition {
   source: string;
   userSets: Record<string, number>;
   progressionState: Record<string, ProgressionStateValue>;
+  generator_metadata: GeneratedProgramMetadata | null;
+  generated_program_metadata: StoredGeneratedProgramMetadata | null;
+  progression_events: Array<{
+    id: string;
+    exercise_id: string;
+    catalog_exercise_id: string | null;
+    exercise_key: string;
+    exercise_name: string;
+    direction: 'up' | 'down';
+    reason: string;
+    before: { sets: number; min: number; max: number };
+    after: { sets: number; min: number; max: number };
+    created_at: string;
+  }>;
+  program_runtime_state: {
+    last_session_logged_at: string | null;
+    last_progression_run_at: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  active_version: {
+    status: 'active';
+    program_family_id: string;
+    version_number: number;
+    previous_version_id: string | null;
+    created_at: string;
+    updated_at: string;
+    source: string;
+  };
+  current_version_changes: {
+    summary: string;
+    highlights: string[];
+    stats: {
+      schedule_changes: number;
+      workouts_added: number;
+      workouts_removed: number;
+      exercises_added: number;
+      exercises_removed: number;
+      target_changes: number;
+      set_cap_changes: number;
+      renamed: boolean;
+    };
+  };
 }
 
 export interface ProgramMutationResponse {

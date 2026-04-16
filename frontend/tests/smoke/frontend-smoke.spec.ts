@@ -230,6 +230,67 @@ function buildProgramResponse() {
       squats: { sets: 1, min: 10, max: 14, last_progression: null },
       bird_dog: { sets: 1, min: 10, max: 12, last_progression: null },
     },
+    generator_metadata: {
+      version: 'generator-v1',
+      catalog_seed_version: 'catalog-v1',
+    },
+    generated_program_metadata: {
+      generation_reason: 'regenerate',
+      profile_version: 'profile-v1',
+      created_at: '2026-04-10T09:00:00.000Z',
+      input_summary: {
+        primaryGoal: 'general_fitness',
+        trainingDaysPerWeek: 3,
+        sessionDurationMinutes: 45,
+      },
+    },
+    progression_events: [
+      {
+        id: 'pe_smoke_1',
+        exercise_id: 'exercise_pushups',
+        catalog_exercise_id: 'catalog_pushups',
+        exercise_key: 'pushups',
+        exercise_name: 'Push-ups',
+        direction: 'up',
+        reason: 'Exceeded the top rep target',
+        before: { sets: 1, min: 8, max: 12 },
+        after: { sets: 2, min: 10, max: 14 },
+        created_at: '2026-04-16T12:00:00.000Z',
+      },
+    ],
+    program_runtime_state: {
+      last_session_logged_at: '2026-04-15T08:30:00.000Z',
+      last_progression_run_at: '2026-04-16T12:00:00.000Z',
+      created_at: '2026-04-10T09:00:00.000Z',
+      updated_at: '2026-04-16T12:00:00.000Z',
+    },
+    active_version: {
+      status: 'active',
+      program_family_id: 'program_family_smoke',
+      version_number: 3,
+      previous_version_id: 'program_smoke_prev',
+      created_at: '2026-04-10T09:00:00.000Z',
+      updated_at: '2026-04-16T12:00:00.000Z',
+      source: 'generated',
+    },
+    current_version_changes: {
+      summary: '2 schedule days were remapped (Monday, Thursday).',
+      highlights: [
+        '2 schedule days were remapped (Monday, Thursday).',
+        '1 session was added (Workout C).',
+        '2 exercise targets were adjusted.',
+      ],
+      stats: {
+        schedule_changes: 2,
+        workouts_added: 1,
+        workouts_removed: 0,
+        exercises_added: 1,
+        exercises_removed: 0,
+        target_changes: 2,
+        set_cap_changes: 1,
+        renamed: false,
+      },
+    },
   };
 }
 
@@ -742,6 +803,11 @@ test('today date picker, progression refresh, and manual program controls work t
 
   await page.locator('.nav-item[data-tab="program"]').click();
   await expect(page.locator('#program-summary-copy')).toContainText(/general fitness plan/i);
+  await expect(page.locator('#program-generation-summary')).toContainText(/generated from the saved onboarding profile/i);
+  await expect(page.locator('#program-runtime-summary')).toContainText(/last refresh ran on/i);
+  await expect(page.locator('#program-version-meta')).toContainText(/active/i);
+  await expect(page.locator('#program-changes-list')).toContainText(/schedule days were remapped/i);
+  await expect(page.locator('#program-timeline-list')).toContainText(/push-ups/i);
 
   await page.getByRole('button', { name: /edit plan/i }).click();
   await expect(page.locator('#program-editor')).toBeVisible();
