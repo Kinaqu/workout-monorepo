@@ -7,6 +7,7 @@ import { ProfileRepository } from "../repositories/profile-repository";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
 import { ProgressionRepository } from "../repositories/progression-repository";
+import { RecommendationDraftRepository } from "../repositories/recommendation-draft-repository";
 import { SessionRepository } from "../repositories/session-repository";
 import { UserRepository } from "../repositories/user-repository";
 import { MeService } from "./me-service";
@@ -29,6 +30,7 @@ export function createAppContext(env: Env) {
   const profiles = new ProfileRepository(env);
   const catalog = new CatalogRepository(env);
   const metadata = new GeneratedProgramMetadataRepository(env);
+  const recommendationDrafts = new RecommendationDraftRepository(env);
   const lifecycle = new UserLifecycleService(users, programs, progression, sessions, legacy);
   const progressionService = new ProgressionService(lifecycle, programs, runtime, progression, sessions);
   const programGeneratorService = new ProgramGeneratorService(
@@ -48,6 +50,7 @@ export function createAppContext(env: Env) {
     workoutService: new WorkoutService(lifecycle, progression, progressionService),
     sessionService: new SessionService(lifecycle, sessions, runtime),
     progressionService,
+    recommendationDrafts,
     onboardingService: new OnboardingService(lifecycle, onboarding, profiles, programGeneratorService),
     meService: new MeService(lifecycle, onboarding, profiles, programs),
   };

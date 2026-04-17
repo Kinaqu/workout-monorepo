@@ -9,6 +9,7 @@ const USER_TABLES = [
   "workout_session_exercises",
   "workout_session_imports",
   "workout_sessions",
+  "recommendation_drafts",
   "generated_program_metadata",
   "program_schedule",
   "workout_exercises",
