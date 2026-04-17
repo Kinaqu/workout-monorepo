@@ -1,19 +1,59 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test';
 
+const HOSTED_DEFAULT_API_BASE_URL = 'https://workout-api.dimer133745.workers.dev';
 const expectClerkKey = process.env.EXPECT_CLERK_PUBLISHABLE_KEY === 'true';
 const configuredBaseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173';
-const apiOrigin =
-  process.env.VITE_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  new URL(configuredBaseUrl).origin;
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const isDeploymentSmoke = Boolean(process.env.BASE_URL);
+const isVercelPreviewSmoke = isDeploymentSmoke && isVercelHostedOrigin(new URL(configuredBaseUrl).origin);
 const bypassHeaders = bypassSecret
   ? {
       'x-vercel-protection-bypass': bypassSecret,
       'x-vercel-set-bypass-cookie': 'true',
     }
   : undefined;
+const apiOrigin = resolveSmokeApiOrigin();
+
+function normalizeBaseUrl(value: string | undefined | null): string {
+  return typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
+}
+
+function isVercelHostedOrigin(origin: string): boolean {
+  if (!origin) {
+    return false;
+  }
+
+  try {
+    return new URL(origin).hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
+function isSuspiciousHostedBaseUrl(baseUrl: string, currentOrigin: string): boolean {
+  return Boolean(baseUrl && currentOrigin && baseUrl === currentOrigin && isVercelHostedOrigin(currentOrigin));
+}
+
+function resolveSmokeApiOrigin(): string {
+  const currentOrigin = new URL(configuredBaseUrl).origin;
+  const runtimeConfiguredBaseUrl = normalizeBaseUrl(
+    process.env.VITE_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL,
+  );
+
+  if (runtimeConfiguredBaseUrl && !isSuspiciousHostedBaseUrl(runtimeConfiguredBaseUrl, currentOrigin)) {
+    return runtimeConfiguredBaseUrl;
+  }
+
+  if (runtimeConfiguredBaseUrl) {
+    return HOSTED_DEFAULT_API_BASE_URL;
+  }
+
+  if (!isDeploymentSmoke) {
+    return currentOrigin;
+  }
+
+  return isVercelHostedOrigin(currentOrigin) ? HOSTED_DEFAULT_API_BASE_URL : currentOrigin;
+}
 
 function isIgnorableClerkPreviewIssue(message: string) {
   if (!isDeploymentSmoke || !expectClerkKey) {
@@ -171,6 +211,34 @@ function buildOnboardingResponse() {
   };
 }
 
+function buildCompletedOnboardingResponse() {
+  return {
+    status: 'completed',
+    completed: true,
+    questionnaireVersion: 'onboarding-v1',
+    answersUpdatedAt: '2026-04-01T00:00:00.000Z',
+    completedAt: '2026-04-01T00:00:00.000Z',
+    answers: {
+      questionnaireVersion: 'onboarding-v1',
+      goals: ['general_fitness'],
+      experienceLevel: 'beginner',
+      trainingDaysPerWeek: 3,
+      sessionDurationMinutes: 30,
+      equipmentAccess: ['bodyweight'],
+      focusAreas: ['upper_body', 'lower_body', 'core'],
+      limitations: [],
+      preferredStyles: ['balanced'],
+    },
+    profile: {
+      version: 'profile-v1',
+      primary_goal: 'general_fitness',
+      training_days_per_week: 3,
+      session_duration_minutes: 30,
+      updated_at: '2026-04-01T00:00:00.000Z',
+    },
+  };
+}
+
 function buildGeneratedProgramResponse() {
   return {
     ok: true,
@@ -229,6 +297,67 @@ function buildProgramResponse() {
       pushups: { sets: 1, min: 8, max: 12, last_progression: null },
       squats: { sets: 1, min: 10, max: 14, last_progression: null },
       bird_dog: { sets: 1, min: 10, max: 12, last_progression: null },
+    },
+    generator_metadata: {
+      version: 'generator-v1',
+      catalog_seed_version: 'catalog-v1',
+    },
+    generated_program_metadata: {
+      generation_reason: 'regenerate',
+      profile_version: 'profile-v1',
+      created_at: '2026-04-10T09:00:00.000Z',
+      input_summary: {
+        primaryGoal: 'general_fitness',
+        trainingDaysPerWeek: 3,
+        sessionDurationMinutes: 45,
+      },
+    },
+    progression_events: [
+      {
+        id: 'pe_smoke_1',
+        exercise_id: 'exercise_pushups',
+        catalog_exercise_id: 'catalog_pushups',
+        exercise_key: 'pushups',
+        exercise_name: 'Push-ups',
+        direction: 'up',
+        reason: 'Exceeded the top rep target',
+        before: { sets: 1, min: 8, max: 12 },
+        after: { sets: 2, min: 10, max: 14 },
+        created_at: '2026-04-16T12:00:00.000Z',
+      },
+    ],
+    program_runtime_state: {
+      last_session_logged_at: '2026-04-15T08:30:00.000Z',
+      last_progression_run_at: '2026-04-16T12:00:00.000Z',
+      created_at: '2026-04-10T09:00:00.000Z',
+      updated_at: '2026-04-16T12:00:00.000Z',
+    },
+    active_version: {
+      status: 'active',
+      program_family_id: 'program_family_smoke',
+      version_number: 3,
+      previous_version_id: 'program_smoke_prev',
+      created_at: '2026-04-10T09:00:00.000Z',
+      updated_at: '2026-04-16T12:00:00.000Z',
+      source: 'generated',
+    },
+    current_version_changes: {
+      summary: '2 schedule days were remapped (Monday, Thursday).',
+      highlights: [
+        '2 schedule days were remapped (Monday, Thursday).',
+        '1 session was added (Workout C).',
+        '2 exercise targets were adjusted.',
+      ],
+      stats: {
+        schedule_changes: 2,
+        workouts_added: 1,
+        workouts_removed: 0,
+        exercises_added: 1,
+        exercises_removed: 0,
+        target_changes: 2,
+        set_cap_changes: 1,
+        renamed: false,
+      },
     },
   };
 }
@@ -374,6 +503,14 @@ async function expectAuthPageHealthy(page: Page, route: '/login' | '/register', 
   expect(hasHorizontalOverflow).toBe(false);
   await assertNoClientIssues(issues);
 }
+
+test('deployment smoke resolves API origin away from the frontend preview host', async () => {
+  test.skip(!isVercelPreviewSmoke, 'Only relevant for Vercel preview environments.');
+
+  const previewOrigin = new URL(configuredBaseUrl).origin;
+  expect(apiOrigin).not.toBe(previewOrigin);
+  expect(apiOrigin).toBe(HOSTED_DEFAULT_API_BASE_URL);
+});
 
 test('serves required public assets', async ({ request }) => {
   const assetPaths = [
@@ -570,6 +707,68 @@ test('completed onboarding without active program routes the user to program rec
   await assertNoClientIssues(issues);
 });
 
+test('completed users do not autosave onboarding drafts when a stale flow tries to re-enter onboarding', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installLegacySession(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let onboardingDraftPosts = 0;
+  let recovered = false;
+
+  await mockApi(page, ({ url, method }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: true }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return recovered
+        ? { body: buildTodayWorkoutResponse() }
+        : { status: 409, body: { error: 'Onboarding not completed' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/onboarding') {
+      recovered = true;
+      return { body: buildCompletedOnboardingResponse() };
+    }
+
+    if (method === 'POST' && url.pathname === '/onboarding') {
+      onboardingDraftPosts += 1;
+      return {
+        body: {
+          ok: true,
+          message: 'Onboarding draft saved',
+          questionnaire_version: 'onboarding-v1',
+          updated_at: '2026-04-06T00:00:00.000Z',
+          completed_at: null,
+        },
+      };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      return { body: buildProgramResponse() };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('#onboarding-shell')).toBeHidden();
+  await expect(page.locator('#today-content')).toBeVisible();
+  await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
+  expect(onboardingDraftPosts).toBe(0);
+  expect.soft(issues.pageErrors, 'page errors').toEqual([]);
+  expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
+  expect.soft(
+    issues.consoleErrors.filter(message => !message.includes('status of 409 (Conflict)')),
+    'unexpected console errors'
+  ).toEqual([]);
+});
+
 test('history screen renders sessions list and detail diagnostics from /sessions', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installLegacySession(page);
@@ -742,6 +941,11 @@ test('today date picker, progression refresh, and manual program controls work t
 
   await page.locator('.nav-item[data-tab="program"]').click();
   await expect(page.locator('#program-summary-copy')).toContainText(/general fitness plan/i);
+  await expect(page.locator('#program-generation-summary')).toContainText(/generated from the saved onboarding profile/i);
+  await expect(page.locator('#program-runtime-summary')).toContainText(/last refresh ran on/i);
+  await expect(page.locator('#program-version-meta')).toContainText(/active/i);
+  await expect(page.locator('#program-changes-list')).toContainText(/schedule days were remapped/i);
+  await expect(page.locator('#program-timeline-list')).toContainText(/push-ups/i);
 
   await page.getByRole('button', { name: /edit plan/i }).click();
   await expect(page.locator('#program-editor')).toBeVisible();

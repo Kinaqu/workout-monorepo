@@ -4,7 +4,7 @@ import { Env } from "../env";
 import { createId } from "../lib/id";
 import { ALL_DAY_NAMES, DayName, nowIso } from "../lib/time";
 
-interface ProgramRow {
+export interface ProgramVersionSummary {
   id: string;
   program_key: string;
   program_family_id: string;
@@ -52,8 +52,8 @@ interface WorkoutExerciseRow {
 export class ProgramRepository {
   constructor(private readonly env: Env) {}
 
-  async getActiveProgramSummary(userId: string): Promise<ProgramRow | null> {
-    return fetchFirst<ProgramRow>(
+  async getActiveProgramSummary(userId: string): Promise<ProgramVersionSummary | null> {
+    return fetchFirst<ProgramVersionSummary>(
       this.env.DB.prepare(
         `SELECT id, program_key, program_family_id, version_number, previous_program_id, name, source, created_at, updated_at
          FROM programs
@@ -71,14 +71,18 @@ export class ProgramRepository {
     return this.getProgramById(program.id);
   }
 
-  async getProgramById(programId: string): Promise<ProgramTemplate | null> {
-    const program = await fetchFirst<ProgramRow>(
+  async getProgramSummaryById(programId: string): Promise<ProgramVersionSummary | null> {
+    return fetchFirst<ProgramVersionSummary>(
       this.env.DB.prepare(
         `SELECT id, program_key, program_family_id, version_number, previous_program_id, name, source, created_at, updated_at
          FROM programs
          WHERE id = ?`
       ).bind(programId)
     );
+  }
+
+  async getProgramById(programId: string): Promise<ProgramTemplate | null> {
+    const program = await this.getProgramSummaryById(programId);
 
     if (!program) return null;
 

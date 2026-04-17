@@ -380,6 +380,39 @@
               </div>
               <div id="program-summary-meta" class="program-summary-meta"></div>
             </div>
+            <div id="program-insights" class="program-insights-grid mb-4">
+              <section class="card program-info-card">
+                <div class="card-title">Why this plan exists</div>
+                <div id="program-generation-summary" class="program-info-copy"></div>
+                <div id="program-generation-meta" class="program-pill-row"></div>
+              </section>
+              <section class="card program-info-card">
+                <div class="card-title">Progression refresh</div>
+                <div id="program-runtime-summary" class="program-info-copy"></div>
+                <div id="program-runtime-meta" class="program-pill-row"></div>
+              </section>
+            </div>
+            <div class="program-detail-layout mb-4">
+              <section class="card program-version-card">
+                <div class="card-title">Version panel</div>
+                <div id="program-version-meta" class="program-detail-grid"></div>
+              </section>
+              <section class="card program-version-card">
+                <div class="card-title">What changed</div>
+                <div id="program-changes-summary" class="program-info-copy"></div>
+                <div id="program-changes-stats" class="program-pill-row"></div>
+                <div id="program-changes-list" class="program-change-list"></div>
+              </section>
+            </div>
+            <section class="card program-timeline-card mb-4">
+              <div class="program-section-header">
+                <div>
+                  <div class="card-title">Progression timeline</div>
+                  <div class="card-subtitle">Recent progression decisions for this active version.</div>
+                </div>
+              </div>
+              <div id="program-timeline-list" class="program-timeline-list"></div>
+            </section>
             <div id="program-editor" class="card program-editor hidden">
               <div class="program-editor-header">
                 <div>
@@ -462,14 +495,6 @@
   </dialog>
 
   <script type="module" src="/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
-  </script>
+  <script src="/sw-register.js"></script>
 </body>
 </html>

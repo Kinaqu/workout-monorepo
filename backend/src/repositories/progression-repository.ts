@@ -17,6 +17,36 @@ interface ProgressionRow {
   updated_at: string;
 }
 
+interface ProgressionEventRow {
+  id: string;
+  exercise_id: string;
+  catalog_exercise_id: string | null;
+  exercise_key: string;
+  exercise_name: string;
+  direction: "up" | "down";
+  reason: string;
+  before_sets: number;
+  before_target_min: number;
+  before_target_max: number;
+  after_sets: number;
+  after_target_min: number;
+  after_target_max: number;
+  created_at: string;
+}
+
+export interface ProgressionEventRecord {
+  id: string;
+  exerciseId: string;
+  catalogExerciseId: string | null;
+  exerciseKey: string;
+  exerciseName: string;
+  direction: "up" | "down";
+  reason: string;
+  before: { sets: number; min: number; max: number };
+  after: { sets: number; min: number; max: number };
+  createdAt: string;
+}
+
 export class ProgressionRepository {
   constructor(private readonly env: Env) {}
 
@@ -82,6 +112,53 @@ export class ProgressionRepository {
     }
 
     await this.env.DB.batch(statements);
+  }
+
+  async listEventsByProgram(userId: string, programId: string, limit = 12): Promise<ProgressionEventRecord[]> {
+    const rows = await fetchAll<ProgressionEventRow>(
+      this.env.DB.prepare(
+        `SELECT
+           id,
+           exercise_id,
+           catalog_exercise_id,
+           exercise_key,
+           exercise_name,
+           direction,
+           reason,
+           before_sets,
+           before_target_min,
+           before_target_max,
+           after_sets,
+           after_target_min,
+           after_target_max,
+           created_at
+         FROM progression_events
+         WHERE user_id = ? AND program_id = ?
+         ORDER BY created_at DESC
+         LIMIT ?`
+      ).bind(userId, programId, limit)
+    );
+
+    return rows.map(row => ({
+      id: row.id,
+      exerciseId: row.exercise_id,
+      catalogExerciseId: row.catalog_exercise_id,
+      exerciseKey: row.exercise_key,
+      exerciseName: row.exercise_name,
+      direction: row.direction,
+      reason: row.reason,
+      before: {
+        sets: row.before_sets,
+        min: row.before_target_min,
+        max: row.before_target_max,
+      },
+      after: {
+        sets: row.after_sets,
+        min: row.after_target_min,
+        max: row.after_target_max,
+      },
+      createdAt: row.created_at,
+    }));
   }
 
   async recordEvents(

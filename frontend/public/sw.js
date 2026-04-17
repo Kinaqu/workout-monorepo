@@ -1,8 +1,5 @@
-const CACHE_NAME = 'kinova-app-v5';
+const CACHE_NAME = 'kinova-app-v6';
 const urlsToCache = [
-  '/',
-  '/login',
-  '/register',
   '/style.css',
   '/manifest.json',
   '/favicon.svg',
@@ -74,8 +71,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  if (isNavigationRequest) {
+    event.respondWith(
+      fetch(request).then(async networkResponse => {
+        if (networkResponse.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(getNavigationCacheKey(url), networkResponse.clone());
+        }
+
+        return networkResponse;
+      }).catch(async () => {
+        const fallback = await caches.match(getNavigationCacheKey(url), { ignoreSearch: true });
+        if (fallback) {
+          return fallback;
+        }
+
+        throw new Error(`Failed to fetch ${url.pathname}`);
+      }),
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(request, { ignoreSearch: isNavigationRequest }).then(async cachedResponse => {
+    caches.match(request).then(async cachedResponse => {
       if (cachedResponse) {
         return cachedResponse;
       }
@@ -88,15 +106,6 @@ self.addEventListener('fetch', event => {
       }
 
       return networkResponse;
-    }).catch(async () => {
-      if (isNavigationRequest) {
-        const fallback = await caches.match(getNavigationCacheKey(url), { ignoreSearch: true });
-        if (fallback) {
-          return fallback;
-        }
-      }
-
-      throw new Error(`Failed to fetch ${url.pathname}`);
     }),
   );
 });

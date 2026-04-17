@@ -43,7 +43,7 @@ export function createAppContext(env: Env) {
   );
 
   return {
-    programService: new ProgramService(lifecycle, programs, progression, progressionService),
+    programService: new ProgramService(lifecycle, programs, metadata, runtime, progression, progressionService),
     programGeneratorService,
     workoutService: new WorkoutService(lifecycle, progression, progressionService),
     sessionService: new SessionService(lifecycle, sessions, runtime),
