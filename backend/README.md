@@ -198,6 +198,16 @@ Compat-only routes that stay outside the product API surface:
 - `POST /auth/register`
 - `POST /auth/login`
 
+## Runtime Configuration
+
+- `CORS_ALLOWED_ORIGINS`
+  Comma-separated allowlist of browser origins allowed to call the Worker. In production, set this to the real frontend domains only.
+  If unset, local development defaults for `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:4173`, and `http://127.0.0.1:4173` remain allowed so Vite dev and preview keep working.
+- `CLERK_ISSUER`, `CLERK_AUDIENCE`, `CLERK_JWKS_URL`
+  Clerk auth validation settings.
+- `RESET_TOKEN`
+  Internal reset/auth support token.
+
 Guard semantics:
 
 - If a route needs an active program and the user has none:
