@@ -1452,7 +1452,11 @@ test('today date picker, progression refresh, and manual program controls work t
   await expect(page.locator('#today-progression-last-run')).toContainText(/apr 16/i);
 
   await page.locator('.nav-item[data-tab="program"]').click();
-  await expect(page.locator('#program-summary-copy')).toContainText(/general fitness plan/i);
+  await expect(page.locator('#program-summary-meta')).toContainText(/general fitness plan/i);
+  await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
+  await expect(page.locator('#program-generation-summary')).toBeHidden();
+
+  await page.locator('#program-advanced-details .program-advanced-summary').click();
   await expect(page.locator('#program-generation-summary')).toContainText(/generated from the saved onboarding profile/i);
   await expect(page.locator('#program-runtime-summary')).toContainText(/last refresh ran on/i);
   await expect(page.locator('#program-version-meta')).toContainText(/active/i);
