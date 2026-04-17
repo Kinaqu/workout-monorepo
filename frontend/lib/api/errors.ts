@@ -27,6 +27,18 @@ export function isMissingProgramError(error: unknown): error is ApiError {
   return error instanceof ApiError && error.status === 409 && error.message.includes('Active program not found');
 }
 
+export function isRecommendationDraftNotFoundError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 404 && /recommendation draft/i.test(error.message);
+}
+
+export function isRecommendationDraftConflictError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 409 && /recommendation draft|slot|structure|replacement/i.test(error.message);
+}
+
+export function isRecommendationDraftUnsupportedError(error: unknown): error is ApiError {
+  return error instanceof ApiError && (error.status === 404 || error.status === 405 || error.status === 501);
+}
+
 export function isWorkoutAlreadyLoggedError(error: unknown): error is ApiError {
   return error instanceof ApiError && error.status === 409 && /already (logged|saved|exists)/i.test(error.message);
 }

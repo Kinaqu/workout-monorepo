@@ -2807,3 +2807,212 @@ body::-webkit-scrollbar-thumb:hover,
 .cl-internal-1eekank {
   color: #d7d7e5 !important;
 }
+
+/* Recommendation draft flow */
+.recommendation-meta-row,
+.recommendation-pill-row,
+.recommendation-preview-list,
+.recommendation-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.recommendation-profile-card,
+.recommendation-step-card,
+.recommendation-actions-card,
+.recommendation-panel {
+  margin-bottom: 16px;
+}
+
+.recommendation-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--copy-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.recommendation-pill.is-accent {
+  color: #dbe7ff;
+  background: rgba(18, 91, 255, 0.2);
+  border-color: rgba(138, 180, 255, 0.32);
+}
+
+.recommendation-pill.is-selected {
+  color: #e8f6ee;
+  background: rgba(46, 160, 90, 0.2);
+  border-color: rgba(105, 212, 144, 0.3);
+}
+
+.recommendation-pill.is-muted {
+  color: var(--copy-secondary);
+}
+
+.recommendation-stepper {
+  display: grid;
+  gap: 10px;
+}
+
+.recommendation-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--copy-secondary);
+  font: inherit;
+  text-align: left;
+}
+
+.recommendation-step.is-active {
+  color: var(--copy-primary);
+  border-color: rgba(138, 180, 255, 0.3);
+  background: rgba(18, 91, 255, 0.1);
+}
+
+.recommendation-step.is-complete:not(.is-active) {
+  color: var(--copy-primary);
+}
+
+.recommendation-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recommendation-step.is-active .recommendation-step-index {
+  background: rgba(18, 91, 255, 0.24);
+  border-color: rgba(138, 180, 255, 0.4);
+}
+
+.recommendation-panel-header,
+.recommendation-structure-header,
+.recommendation-workout-header,
+.recommendation-slot-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recommendation-structure-list,
+.recommendation-workout-list,
+.recommendation-review-list,
+.recommendation-option-list {
+  display: grid;
+  gap: 14px;
+}
+
+.recommendation-structure-card,
+.recommendation-workout-card,
+.recommendation-review-card {
+  display: grid;
+  gap: 14px;
+}
+
+.recommendation-structure-card.is-selected {
+  border-color: rgba(105, 212, 144, 0.3);
+  box-shadow: 0 14px 34px rgba(14, 18, 28, 0.24);
+}
+
+.recommendation-preview-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--copy-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recommendation-workout-meta {
+  display: grid;
+  gap: 8px;
+}
+
+.recommendation-workout-meta-item,
+.recommendation-change-item {
+  display: grid;
+  gap: 4px;
+}
+
+.recommendation-slot-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.recommendation-slot-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--copy-primary);
+}
+
+.recommendation-slot-note,
+.recommendation-slot-tags {
+  font-size: 13px;
+  color: var(--copy-secondary);
+}
+
+.recommendation-slot-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.recommendation-option-button {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--copy-primary);
+  font: inherit;
+  text-align: left;
+}
+
+.recommendation-option-button.is-selected {
+  border-color: rgba(105, 212, 144, 0.3);
+  background: rgba(46, 160, 90, 0.08);
+}
+
+.recommendation-option-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.recommendation-button-disabled {
+  opacity: 0.7;
+}
+
+@media (min-width: 720px) {
+  .recommendation-stepper {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recommendation-structure-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
