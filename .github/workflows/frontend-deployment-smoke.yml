@@ -54,27 +54,31 @@ jobs:
       - name: Resolve Vercel deployment URL
         env:
           DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          DEPLOYMENT_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'Production – workout-frontend' || 'Preview – workout-frontend' }}
+          DEPLOYMENT_KIND: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          DEPLOYMENT_HOST_FRAGMENT: workout-frontend-
         run: |
           set -euo pipefail
 
-          deployment_id=""
           base_url=""
 
           for attempt in $(seq 1 30); do
             deployments_json=$(gh api "repos/${GITHUB_REPOSITORY}/deployments?sha=${DEPLOYMENT_SHA}")
 
-            deployment_id=$(printf '%s' "$deployments_json" | jq -r --arg env "$DEPLOYMENT_ENVIRONMENT" '
-              map(select(.environment == $env))
+            deployment_ids=$(printf '%s' "$deployments_json" | jq -r '
+              map(select(.creator.login == "vercel[bot]"))
               | sort_by(.created_at)
-              | last
-              | .id // empty
+              | reverse
+              | .[].id
             ')
 
-            if [ -n "$deployment_id" ]; then
+            for deployment_id in $deployment_ids; do
               statuses_json=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${deployment_id}/statuses")
               state=$(printf '%s' "$statuses_json" | jq -r '.[0].state // empty')
               base_url=$(printf '%s' "$statuses_json" | jq -r '.[0].environment_url // .[0].target_url // empty')
+
+              if [ -z "$base_url" ] || [[ "$base_url" != *"$DEPLOYMENT_HOST_FRAGMENT"* ]]; then
+                continue
+              fi
 
               if [ "$state" = "success" ] && [ -n "$base_url" ]; then
                 echo "Resolved deployment URL: $base_url"
@@ -86,9 +90,9 @@ jobs:
                 echo "Vercel deployment entered state: $state"
                 exit 1
               fi
-            fi
+            done
 
-            echo "Waiting for Vercel deployment for ${DEPLOYMENT_ENVIRONMENT} on ${DEPLOYMENT_SHA} (attempt ${attempt}/30)"
+            echo "Waiting for ${DEPLOYMENT_KIND} Vercel deployment for ${DEPLOYMENT_SHA} (attempt ${attempt}/30)"
             sleep 10
           done
 
