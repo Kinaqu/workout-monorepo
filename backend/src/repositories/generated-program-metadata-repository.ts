@@ -110,6 +110,49 @@ export class GeneratedProgramMetadataRepository {
       createdAt: row.created_at,
     };
   }
+
+  async getLatestByRecommendationDraftId(
+    userId: string,
+    recommendationDraftId: string
+  ): Promise<GeneratedProgramMetadataRecord | null> {
+    const row = await fetchFirst<GeneratedProgramMetadataRow>(
+      this.env.DB.prepare(
+        `SELECT
+           program_id,
+           user_id,
+           generator_version,
+           generation_reason,
+           profile_id,
+           profile_version,
+           onboarding_answer_id,
+           catalog_seed_version,
+           input_summary_json,
+           created_at
+         FROM generated_program_metadata
+         WHERE user_id = ?
+           AND json_extract(input_summary_json, '$.recommendationDraftId') = ?
+         ORDER BY created_at DESC
+         LIMIT 1`
+      ).bind(userId, recommendationDraftId)
+    );
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      programId: row.program_id,
+      userId: row.user_id,
+      generatorVersion: row.generator_version,
+      generationReason: row.generation_reason,
+      profileId: row.profile_id,
+      profileVersion: row.profile_version,
+      onboardingAnswerId: row.onboarding_answer_id,
+      catalogSeedVersion: row.catalog_seed_version,
+      inputSummary: parseInputSummary(row.input_summary_json),
+      createdAt: row.created_at,
+    };
+  }
 }
 
 function parseInputSummary(value: string): Record<string, unknown> {

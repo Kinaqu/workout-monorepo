@@ -15,6 +15,7 @@ import { OnboardingService } from "./onboarding-service";
 import { ProgramService } from "./program-service";
 import { ProgramGeneratorService } from "./program-generator-service";
 import { ProgressionService } from "./progression-service";
+import { RecommendationDraftService } from "./recommendation-draft-service";
 import { SessionService } from "./session-service";
 import { UserLifecycleService } from "./user-lifecycle-service";
 import { WorkoutService } from "./workout-service";
@@ -43,10 +44,19 @@ export function createAppContext(env: Env) {
     progression,
     metadata
   );
+  const recommendationDraftService = new RecommendationDraftService(
+    lifecycle,
+    programGeneratorService,
+    recommendationDrafts,
+    catalog,
+    programs,
+    metadata
+  );
 
   return {
     programService: new ProgramService(lifecycle, programs, metadata, runtime, progression, progressionService),
     programGeneratorService,
+    recommendationDraftService,
     workoutService: new WorkoutService(lifecycle, progression, progressionService),
     sessionService: new SessionService(lifecycle, sessions, runtime),
     progressionService,

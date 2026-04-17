@@ -324,7 +324,23 @@ function selectRecommendedEntriesForWorkout(
   desiredCount: number
 ): ExerciseCatalogEntry[] {
   const pool = rankedEntries.length > 0 ? rankedEntries : [];
-  return pool.slice(0, desiredCount).map(item => item.entry);
+  const selected: ExerciseCatalogEntry[] = [];
+  const seenExerciseKeys = new Set<string>();
+
+  for (const item of pool) {
+    if (seenExerciseKeys.has(item.entry.exerciseKey)) {
+      continue;
+    }
+
+    selected.push(item.entry);
+    seenExerciseKeys.add(item.entry.exerciseKey);
+
+    if (selected.length >= desiredCount) {
+      break;
+    }
+  }
+
+  return selected;
 }
 
 function scoreEntry(

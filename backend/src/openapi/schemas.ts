@@ -7,6 +7,11 @@ import {
   ONBOARDING_GOALS,
   PREFERRED_STYLES,
 } from "../domain/onboarding";
+import {
+  DAY_NAMES,
+  EXERCISE_TYPES,
+  RECOMMENDATION_DRAFT_STATUSES,
+} from "../domain/recommendation-draft";
 
 const DateStringSchema = z
   .string()
@@ -115,6 +120,13 @@ const EquipmentAccessSchema = z.enum(EQUIPMENT_ACCESS).openapi("EquipmentAccess"
 const FocusAreaSchema = z.enum(FOCUS_AREAS).openapi("FocusArea");
 const LimitationTagSchema = z.enum(LIMITATION_TAGS).openapi("LimitationTag");
 const PreferredStyleSchema = z.enum(PREFERRED_STYLES).openapi("PreferredStyle");
+const RecommendationDraftStatusSchema = z
+  .enum(RECOMMENDATION_DRAFT_STATUSES)
+  .openapi("RecommendationDraftStatus");
+const RecommendationDraftDayNameSchema = z.enum(DAY_NAMES).openapi("RecommendationDraftDayName");
+const RecommendationDraftExerciseTypeSchema = z
+  .enum(EXERCISE_TYPES)
+  .openapi("RecommendationDraftExerciseType");
 
 export const OnboardingDraftSchema = z
   .object({
@@ -283,6 +295,156 @@ export const OnboardingCompleteResponseSchema = GeneratedProgramResponseSchema.e
   }),
   profile: OnboardingProfileSummarySchema.omit({ updated_at: true }),
 }).openapi("OnboardingCompleteResponse");
+
+const RecommendationDraftProfileSnapshotSchema = z
+  .object({
+    primaryGoal: z.string().openapi({ example: "strength" }),
+    experienceLevel: z.string().openapi({ example: "beginner" }),
+    trainingDaysPerWeek: z.number().int().min(2).max(5).openapi({ example: 3 }),
+    sessionDurationMinutes: z.number().int().min(20).max(75).openapi({ example: 45 }),
+    splitPreference: z.string().openapi({ example: "three_day" }),
+    volumeLevel: z.string().openapi({ example: "standard" }),
+    equipmentAccess: z.array(z.string()).openapi({ example: ["bodyweight", "bands"] }),
+    focusAreas: z.array(z.string()).openapi({ example: ["upper_body", "core"] }),
+    limitationTags: z.array(z.string()).openapi({ example: [] }),
+    preferredStyles: z.array(z.string()).openapi({ example: ["balanced"] }),
+    preferredWorkoutTags: z.array(z.string()).openapi({ example: ["strength", "upper", "core"] }),
+    excludedWorkoutTags: z.array(z.string()).openapi({ example: [] }),
+  })
+  .openapi("RecommendationDraftProfileSnapshot");
+
+const RecommendationDraftStructureWorkoutSchema = z
+  .object({
+    key: z.string().openapi({ example: "A" }),
+    name: z.string().openapi({ example: "Workout A" }),
+    tags: z.array(z.string()).openapi({ example: ["strength", "upper", "core"] }),
+  })
+  .openapi("RecommendationDraftStructureWorkout");
+
+const RecommendationDraftStructureSchema = z
+  .object({
+    id: z.string().openapi({ example: "3_day" }),
+    label: z.string().openapi({ example: "3-day split" }),
+    description: z.string().openapi({ example: "Mon / Wed / Fri" }),
+    schedule: z.record(RecommendationDraftDayNameSchema, z.string()).openapi({
+      example: {
+        monday: "A",
+        tuesday: "rest",
+        wednesday: "B",
+        thursday: "rest",
+        friday: "C",
+        saturday: "rest",
+        sunday: "rest",
+      },
+    }),
+    workouts: z.array(RecommendationDraftStructureWorkoutSchema).min(1),
+    recommended: z.boolean().openapi({ example: true }),
+  })
+  .openapi("RecommendationDraftStructure");
+
+const RecommendationDraftExerciseOptionSchema = z
+  .object({
+    catalog_exercise_id: z.string().openapi({ example: "catalog_pushups" }),
+    exercise_id: z.string().openapi({ example: "push_up" }),
+    name: z.string().openapi({ example: "Push Up" }),
+    type: RecommendationDraftExerciseTypeSchema,
+    target_min: z.number().int().positive().openapi({ example: 8 }),
+    target_max: z.number().int().positive().openapi({ example: 12 }),
+    max_sets: z.number().int().positive().openapi({ example: 4 }),
+    recommended: z.boolean().openapi({ example: true }),
+  })
+  .openapi("RecommendationDraftExerciseOption");
+
+const RecommendationDraftExerciseSlotSchema = z
+  .object({
+    slot_id: z.string().openapi({ example: "A:0" }),
+    workout_key: z.string().openapi({ example: "A" }),
+    workout_name: z.string().openapi({ example: "Workout A" }),
+    slot_index: z.number().int().min(0).openapi({ example: 0 }),
+    blueprint_tags: z.array(z.string()).openapi({ example: ["strength", "upper", "core"] }),
+    recommended_exercise_id: z.string().openapi({ example: "push_up" }),
+    selected_exercise_id: z.string().openapi({ example: "push_up" }),
+    options: z.array(RecommendationDraftExerciseOptionSchema).min(1),
+  })
+  .openapi("RecommendationDraftExerciseSlot");
+
+const RecommendationDraftActivationContextSchema = z
+  .object({
+    activated_program_id: z.string().nullable().openapi({ example: "program_123" }),
+    activated_at: IsoDateTimeSchema.nullable().openapi({ example: "2026-04-17T12:00:00.000Z" }),
+  })
+  .openapi("RecommendationDraftActivationContext");
+
+const RecommendationDraftJsonSchema = z
+  .object({
+    status: RecommendationDraftStatusSchema,
+    profile_snapshot: RecommendationDraftProfileSnapshotSchema,
+    structures: z.array(RecommendationDraftStructureSchema).min(1),
+    selected_structure_id: z.string().openapi({ example: "3_day" }),
+    exercise_slots: z.array(RecommendationDraftExerciseSlotSchema).min(1),
+    generator_version: z.string().openapi({ example: "generator-v1" }),
+    catalog_seed_version: z.string().openapi({ example: "catalog-v1" }),
+    activation_context: RecommendationDraftActivationContextSchema.optional(),
+  })
+  .openapi("RecommendationDraftJson");
+
+export const RecommendationDraftResponseSchema = z
+  .object({
+    id: z.string().openapi({ example: "rd_123" }),
+    status: RecommendationDraftStatusSchema,
+    source_onboarding_answer_id: z.string().nullable().openapi({ example: "onboarding_123" }),
+    source_profile_id: z.string().nullable().openapi({ example: "profile_123" }),
+    generator_version: z.string().openapi({ example: "generator-v1" }),
+    catalog_seed_version: z.string().openapi({ example: "catalog-v1" }),
+    selected_structure_id: z.string().openapi({ example: "3_day" }),
+    activated_program_id: z.string().nullable().openapi({ example: null }),
+    created_at: IsoDateTimeSchema,
+    updated_at: IsoDateTimeSchema,
+    activated_at: IsoDateTimeSchema.nullable().openapi({ example: null }),
+    draft: RecommendationDraftJsonSchema,
+  })
+  .openapi("RecommendationDraftResponse");
+
+export const RecommendationDraftStructureSelectRequestSchema = z
+  .object({
+    draft_id: z.string().openapi({ example: "rd_123" }),
+    structure_id: z.string().openapi({ example: "4_day" }),
+  })
+  .openapi("RecommendationDraftStructureSelectRequest");
+
+export const RecommendationDraftExerciseReplaceRequestSchema = z
+  .object({
+    draft_id: z.string().openapi({ example: "rd_123" }),
+    slot_id: z.string().openapi({ example: "A:0" }),
+    catalog_exercise_id: z.string().openapi({ example: "catalog_pushups" }),
+  })
+  .openapi("RecommendationDraftExerciseReplaceRequest");
+
+export const RecommendationDraftActivateRequestSchema = z
+  .object({
+    draft_id: z.string().openapi({ example: "rd_123" }),
+  })
+  .openapi("RecommendationDraftActivateRequest");
+
+export const RecommendationDraftActivateResponseSchema = z
+  .object({
+    ok: z.literal(true),
+    message: z.string().openapi({ example: "Recommendation draft activated" }),
+    program: ProgramDefinitionSchema.extend({
+      version_id: z.string().openapi({ example: "program_123" }),
+      source: z.string().openapi({ example: "generated" }),
+    }),
+    generator: GeneratedProgramMetadataSchema,
+    recommendation_draft: z.object({
+      id: z.string().openapi({ example: "rd_123" }),
+      status: z.literal("activated"),
+      selected_structure_id: z.string().openapi({ example: "3_day" }),
+      activated_program_id: z.string().openapi({ example: "program_123" }),
+      activated_at: IsoDateTimeSchema,
+      updated_at: IsoDateTimeSchema,
+    }),
+  })
+  .openapi("RecommendationDraftActivateResponse");
 
 export const MeResponseSchema = z
   .object({
