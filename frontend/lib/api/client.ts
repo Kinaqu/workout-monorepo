@@ -9,6 +9,11 @@ import type {
   JsonLogRequest,
   LogCreateResponse,
   MeResponse,
+  RecommendationDraftActivateRequest,
+  RecommendationDraftActivateResponse,
+  RecommendationDraftExerciseReplaceRequest,
+  RecommendationDraftResponse,
+  RecommendationDraftStructureSelectRequest,
   OnboardingAnswers,
   OnboardingDraft,
   OnboardingCompleteResponse,
@@ -186,6 +191,26 @@ export const api: ApiClient = {
     }),
   completeOnboarding: (payload: OnboardingAnswers) =>
     request<OnboardingCompleteResponse>('/onboarding/complete', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getRecommendationDraft: () => request<RecommendationDraftResponse>('/recommendation-draft'),
+  createRecommendationDraft: () =>
+    request<RecommendationDraftResponse>('/recommendation-draft', {
+      method: 'POST',
+    }),
+  selectRecommendationStructure: (payload: RecommendationDraftStructureSelectRequest) =>
+    request<RecommendationDraftResponse>('/recommendation-draft/structure', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  replaceRecommendationExercise: (payload: RecommendationDraftExerciseReplaceRequest) =>
+    request<RecommendationDraftResponse>('/recommendation-draft/exercise', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  activateRecommendationDraft: (payload: RecommendationDraftActivateRequest) =>
+    request<RecommendationDraftActivateResponse>('/recommendation-draft/activate', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

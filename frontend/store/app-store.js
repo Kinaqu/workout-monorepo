@@ -2,6 +2,16 @@ const state = {
   me: null,
   onboarding: null,
   shellMode: 'loading',
+  recommendation: {
+    supported: true,
+    status: 'idle',
+    step: 'structure',
+    draft: null,
+    activeSlotId: null,
+    pickerOpen: false,
+    errorMessage: '',
+    activationErrorMessage: '',
+  },
 };
 
 export function getAppState() {
@@ -33,6 +43,47 @@ export function selectShellMode() {
 export function setShellMode(mode) {
   state.shellMode = mode;
   return state.shellMode;
+}
+
+export function selectRecommendation() {
+  return state.recommendation;
+}
+
+export function setRecommendation(recommendation) {
+  state.recommendation = recommendation;
+  return state.recommendation;
+}
+
+export function updateRecommendation(patch) {
+  state.recommendation = {
+    ...state.recommendation,
+    ...patch,
+  };
+
+  return state.recommendation;
+}
+
+export function resetRecommendation() {
+  state.recommendation = {
+    supported: true,
+    status: 'idle',
+    step: 'structure',
+    draft: null,
+    activeSlotId: null,
+    pickerOpen: false,
+    errorMessage: '',
+    activationErrorMessage: '',
+  };
+
+  return state.recommendation;
+}
+
+export function selectRecommendationDraft() {
+  return state.recommendation.draft;
+}
+
+export function selectRecommendationFlowStep() {
+  return state.recommendation.step;
 }
 
 export function selectLifecycle() {

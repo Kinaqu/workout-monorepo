@@ -154,6 +154,125 @@ export interface GeneratedProgramResponse {
   generator: GeneratedProgramMetadata;
 }
 
+export type RecommendationDraftStatus = 'draft' | 'activated';
+export type RecommendationDraftExerciseType = 'reps' | 'time' | 'cycles';
+
+export interface RecommendationDraftProfileSnapshot {
+  primaryGoal: string;
+  experienceLevel: string;
+  trainingDaysPerWeek: number;
+  sessionDurationMinutes: number;
+  splitPreference: string;
+  volumeLevel: string;
+  equipmentAccess: string[];
+  focusAreas: string[];
+  limitationTags: string[];
+  preferredStyles: string[];
+  preferredWorkoutTags: string[];
+  excludedWorkoutTags: string[];
+}
+
+export interface RecommendationDraftStructureWorkout {
+  key: string;
+  name: string;
+  tags: string[];
+}
+
+export interface RecommendationDraftStructure {
+  id: string;
+  label: string;
+  description: string;
+  schedule: ProgramSchedule;
+  workouts: RecommendationDraftStructureWorkout[];
+  recommended: boolean;
+}
+
+export interface RecommendationDraftExerciseOption {
+  catalog_exercise_id: string;
+  exercise_id: string;
+  name: string;
+  type: RecommendationDraftExerciseType;
+  target_min: number;
+  target_max: number;
+  max_sets: number;
+  recommended: boolean;
+}
+
+export interface RecommendationDraftExerciseSlot {
+  slot_id: string;
+  workout_key: string;
+  workout_name: string;
+  slot_index: number;
+  blueprint_tags: string[];
+  recommended_exercise_id: string;
+  selected_exercise_id: string;
+  options: RecommendationDraftExerciseOption[];
+}
+
+export interface RecommendationDraftActivationContext {
+  activated_program_id?: string | null;
+  activated_at?: string | null;
+}
+
+export interface RecommendationDraftJson {
+  status: RecommendationDraftStatus;
+  profile_snapshot: RecommendationDraftProfileSnapshot;
+  structures: RecommendationDraftStructure[];
+  selected_structure_id: string;
+  exercise_slots: RecommendationDraftExerciseSlot[];
+  generator_version: string;
+  catalog_seed_version: string;
+  activation_context?: RecommendationDraftActivationContext;
+}
+
+export interface RecommendationDraftResponse {
+  id: string;
+  status: RecommendationDraftStatus;
+  source_onboarding_answer_id: string | null;
+  source_profile_id: string | null;
+  generator_version: string;
+  catalog_seed_version: string;
+  selected_structure_id: string;
+  activated_program_id: string | null;
+  created_at: string;
+  updated_at: string;
+  activated_at: string | null;
+  draft: RecommendationDraftJson;
+}
+
+export interface RecommendationDraftStructureSelectRequest {
+  draft_id: string;
+  structure_id: string;
+}
+
+export interface RecommendationDraftExerciseReplaceRequest {
+  draft_id: string;
+  slot_id: string;
+  catalog_exercise_id: string;
+}
+
+export interface RecommendationDraftActivateRequest {
+  draft_id: string;
+}
+
+export interface RecommendationDraftActivateResponse {
+  ok: true;
+  message: string;
+  program: ProgramDefinition & {
+    version_id: string;
+    source: string;
+  };
+  generator: GeneratedProgramMetadata;
+  recommendation_draft: {
+    id: string;
+    status: 'activated';
+    selected_structure_id: string;
+    activated_program_id: string;
+    activated_at: string;
+    updated_at: string;
+  };
+}
+
 export interface OnboardingCompleteResponse extends GeneratedProgramResponse {
   onboarding: {
     completed: true;
@@ -400,6 +519,17 @@ export interface ApiClient {
   getOnboarding(): Promise<OnboardingStateResponse>;
   saveOnboardingDraft(payload: OnboardingDraft): Promise<OnboardingDraftSaveResponse>;
   completeOnboarding(payload: OnboardingAnswers): Promise<OnboardingCompleteResponse>;
+  getRecommendationDraft(): Promise<RecommendationDraftResponse>;
+  createRecommendationDraft(): Promise<RecommendationDraftResponse>;
+  selectRecommendationStructure(
+    payload: RecommendationDraftStructureSelectRequest
+  ): Promise<RecommendationDraftResponse>;
+  replaceRecommendationExercise(
+    payload: RecommendationDraftExerciseReplaceRequest
+  ): Promise<RecommendationDraftResponse>;
+  activateRecommendationDraft(
+    payload: RecommendationDraftActivateRequest
+  ): Promise<RecommendationDraftActivateResponse>;
   getTodayWorkout(date?: string): Promise<WorkoutTodayResponse>;
   logWorkout(payload: JsonLogRequest, date?: string): Promise<LogCreateResponse>;
   listSessions(options?: { date?: string; limit?: number }): Promise<SessionsListResponse>;

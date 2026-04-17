@@ -285,6 +285,93 @@
       </form>
     </section>
 
+    <section id="recommendation-shell" class="hidden" aria-labelledby="recommendation-title">
+      <div class="card recommendation-hero-card">
+        <div class="onboarding-kicker">Recommended draft</div>
+        <h1 id="recommendation-title" class="section-title mb-4">
+          <span class="section-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 17h10"></path>
+              <path d="m16 17 2 2 4-4"></path>
+            </svg>
+          </span>
+          <span>Review your plan</span>
+        </h1>
+        <p class="onboarding-copy">We start with recommended defaults, then you choose what to keep before activation.</p>
+        <div class="recommendation-meta-row">
+          <div id="recommendation-status-badge" class="recommendation-pill is-accent">Draft</div>
+        </div>
+      </div>
+
+      <div id="recommendation-error" class="error-message"></div>
+      <div id="recommendation-loader" class="loader hidden"></div>
+
+      <div id="recommendation-content" class="hidden">
+        <section class="card recommendation-profile-card">
+          <div class="card-title">Built from your profile</div>
+          <div id="recommendation-profile-summary" class="recommendation-pill-row"></div>
+        </section>
+
+        <section class="card recommendation-step-card">
+          <div class="recommendation-stepper">
+            <button type="button" class="recommendation-step is-active" data-recommendation-step="structure">
+              <span class="recommendation-step-index">1</span>
+              <span>Structure</span>
+            </button>
+            <button type="button" class="recommendation-step" data-recommendation-step="exercise">
+              <span class="recommendation-step-index">2</span>
+              <span>Exercises</span>
+            </button>
+            <button type="button" class="recommendation-step" data-recommendation-step="review">
+              <span class="recommendation-step-index">3</span>
+              <span>Review</span>
+            </button>
+          </div>
+        </section>
+
+        <section id="recommendation-structure-panel" class="recommendation-panel">
+          <div class="recommendation-panel-header">
+            <div>
+              <div id="recommendation-panel-title" class="card-title">Choose your training structure</div>
+              <div class="card-subtitle">The default option is preselected, but you can switch before activating the plan.</div>
+            </div>
+          </div>
+          <div id="recommendation-structures" class="recommendation-structure-list"></div>
+        </section>
+
+        <section id="recommendation-exercise-panel" class="recommendation-panel hidden">
+          <div class="recommendation-panel-header">
+            <div>
+              <div class="card-title">Tune each exercise slot</div>
+              <div id="recommendation-exercise-summary" class="card-subtitle"></div>
+            </div>
+          </div>
+          <div id="recommendation-exercises" class="recommendation-workout-list"></div>
+        </section>
+
+        <section id="recommendation-review-panel" class="recommendation-panel hidden">
+          <div class="recommendation-panel-header">
+            <div>
+              <div class="card-title">Review before activation</div>
+              <div class="card-subtitle">Activation creates the normal active program version used by the rest of the app.</div>
+            </div>
+          </div>
+          <div id="recommendation-review-summary" class="recommendation-review-list"></div>
+        </section>
+
+        <section class="card recommendation-actions-card">
+          <div id="recommendation-action-copy" class="card-subtitle">Start from the recommended split or switch to another supported structure.</div>
+          <div class="recommendation-action-row">
+            <button id="recommendation-back-button" class="secondary-button hidden" type="button">Back</button>
+            <button id="recommendation-next-button" type="button">Continue to exercises</button>
+            <button id="recommendation-confirm-button" class="hidden" type="button">Activate plan</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
     <div id="app-shell" class="hidden">
       <div id="tab-today" class="tab-content active">
         <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"></path><path d="m2.5 21.5 1.4-1.4"></path><path d="m20.1 3.9 1.4-1.4"></path><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"></path><path d="m9.6 14.4 4.8-4.8"></path></svg></span><span>Today</span></h1>
@@ -490,6 +577,18 @@
       <div class="confirm-dialog-actions">
         <button id="confirm-dialog-cancel" class="secondary-button" type="button">Cancel</button>
         <button id="confirm-dialog-confirm" type="button">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="recommendation-option-dialog" class="confirm-dialog recommendation-option-dialog">
+    <form method="dialog" class="confirm-dialog-panel">
+      <div class="confirm-dialog-kicker">Replace exercise</div>
+      <div id="recommendation-option-title" class="card-title"></div>
+      <p id="recommendation-option-copy" class="confirm-dialog-copy"></p>
+      <div id="recommendation-option-list" class="recommendation-option-list"></div>
+      <div class="confirm-dialog-actions">
+        <button id="recommendation-option-close" class="secondary-button" type="button">Close</button>
       </div>
     </form>
   </dialog>

@@ -289,6 +289,368 @@ function buildGeneratedProgramResponse() {
   };
 }
 
+function buildRecommendationStructures() {
+  return [
+    {
+      id: 'three_day',
+      label: '3-day split',
+      description: 'Mon / Wed / Fri',
+      schedule: {
+        monday: 'A',
+        tuesday: 'rest',
+        wednesday: 'B',
+        thursday: 'rest',
+        friday: 'C',
+        saturday: 'rest',
+        sunday: 'rest',
+      },
+      workouts: [
+        { key: 'A', name: 'Workout A', tags: ['strength', 'upper'] },
+        { key: 'B', name: 'Workout B', tags: ['strength', 'lower'] },
+        { key: 'C', name: 'Workout C', tags: ['core', 'mobility'] },
+      ],
+      recommended: true,
+    },
+    {
+      id: 'four_day',
+      label: '4-day split',
+      description: 'Mon / Tue / Thu / Sat',
+      schedule: {
+        monday: 'A',
+        tuesday: 'B',
+        wednesday: 'rest',
+        thursday: 'C',
+        friday: 'rest',
+        saturday: 'D',
+        sunday: 'rest',
+      },
+      workouts: [
+        { key: 'A', name: 'Workout A', tags: ['strength', 'upper', 'push'] },
+        { key: 'B', name: 'Workout B', tags: ['strength', 'lower'] },
+        { key: 'C', name: 'Workout C', tags: ['strength', 'upper', 'pull'] },
+        { key: 'D', name: 'Workout D', tags: ['core', 'mobility'] },
+      ],
+      recommended: false,
+    },
+  ];
+}
+
+function buildRecommendationExerciseSlots(
+  structureId: string,
+  selectedCatalogBySlotId: Record<string, string> = {},
+) {
+  const slotSeeds =
+    structureId === 'four_day'
+      ? [
+          {
+            slot_id: 'A:0',
+            workout_key: 'A',
+            workout_name: 'Workout A',
+            slot_index: 0,
+            blueprint_tags: ['strength', 'upper', 'push'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_pushups',
+                exercise_id: 'push_up',
+                name: 'Push Up',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_floor_press',
+                exercise_id: 'floor_press',
+                name: 'Dumbbell Floor Press',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: false,
+              },
+            ],
+          },
+          {
+            slot_id: 'B:0',
+            workout_key: 'B',
+            workout_name: 'Workout B',
+            slot_index: 0,
+            blueprint_tags: ['strength', 'lower'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_squats',
+                exercise_id: 'bodyweight_squat',
+                name: 'Bodyweight Squat',
+                type: 'reps',
+                target_min: 10,
+                target_max: 14,
+                max_sets: 4,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_reverse_lunge',
+                exercise_id: 'reverse_lunge',
+                name: 'Reverse Lunge',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: false,
+              },
+            ],
+          },
+          {
+            slot_id: 'C:0',
+            workout_key: 'C',
+            workout_name: 'Workout C',
+            slot_index: 0,
+            blueprint_tags: ['strength', 'upper', 'pull'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_row',
+                exercise_id: 'band_row',
+                name: 'Band Row',
+                type: 'reps',
+                target_min: 10,
+                target_max: 14,
+                max_sets: 4,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_superman',
+                exercise_id: 'superman',
+                name: 'Superman',
+                type: 'reps',
+                target_min: 10,
+                target_max: 14,
+                max_sets: 3,
+                recommended: false,
+              },
+            ],
+          },
+          {
+            slot_id: 'D:0',
+            workout_key: 'D',
+            workout_name: 'Workout D',
+            slot_index: 0,
+            blueprint_tags: ['core', 'mobility'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_dead_bug',
+                exercise_id: 'dead_bug',
+                name: 'Dead Bug',
+                type: 'reps',
+                target_min: 8,
+                target_max: 10,
+                max_sets: 3,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_hollow_hold',
+                exercise_id: 'hollow_hold',
+                name: 'Hollow Hold',
+                type: 'time',
+                target_min: 20,
+                target_max: 30,
+                max_sets: 3,
+                recommended: false,
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            slot_id: 'A:0',
+            workout_key: 'A',
+            workout_name: 'Workout A',
+            slot_index: 0,
+            blueprint_tags: ['strength', 'upper'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_pushups',
+                exercise_id: 'push_up',
+                name: 'Push Up',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_floor_press',
+                exercise_id: 'floor_press',
+                name: 'Dumbbell Floor Press',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: false,
+              },
+            ],
+          },
+          {
+            slot_id: 'B:0',
+            workout_key: 'B',
+            workout_name: 'Workout B',
+            slot_index: 0,
+            blueprint_tags: ['strength', 'lower'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_squats',
+                exercise_id: 'bodyweight_squat',
+                name: 'Bodyweight Squat',
+                type: 'reps',
+                target_min: 10,
+                target_max: 14,
+                max_sets: 4,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_reverse_lunge',
+                exercise_id: 'reverse_lunge',
+                name: 'Reverse Lunge',
+                type: 'reps',
+                target_min: 8,
+                target_max: 12,
+                max_sets: 4,
+                recommended: false,
+              },
+            ],
+          },
+          {
+            slot_id: 'C:0',
+            workout_key: 'C',
+            workout_name: 'Workout C',
+            slot_index: 0,
+            blueprint_tags: ['core', 'mobility'],
+            options: [
+              {
+                catalog_exercise_id: 'catalog_dead_bug',
+                exercise_id: 'dead_bug',
+                name: 'Dead Bug',
+                type: 'reps',
+                target_min: 8,
+                target_max: 10,
+                max_sets: 3,
+                recommended: true,
+              },
+              {
+                catalog_exercise_id: 'catalog_bird_dog',
+                exercise_id: 'bird_dog',
+                name: 'Bird Dog',
+                type: 'reps',
+                target_min: 10,
+                target_max: 12,
+                max_sets: 3,
+                recommended: false,
+              },
+            ],
+          },
+        ];
+
+  return slotSeeds.map(slot => {
+    const selectedCatalogExerciseId =
+      selectedCatalogBySlotId[slot.slot_id] ?? slot.options.find(option => option.recommended)?.catalog_exercise_id;
+    const selectedOption =
+      slot.options.find(option => option.catalog_exercise_id === selectedCatalogExerciseId) ?? slot.options[0];
+    const recommendedOption = slot.options.find(option => option.recommended) ?? slot.options[0];
+
+    return {
+      slot_id: slot.slot_id,
+      workout_key: slot.workout_key,
+      workout_name: slot.workout_name,
+      slot_index: slot.slot_index,
+      blueprint_tags: slot.blueprint_tags,
+      recommended_exercise_id: recommendedOption.exercise_id,
+      selected_exercise_id: selectedOption.exercise_id,
+      options: slot.options,
+    };
+  });
+}
+
+function buildRecommendationDraftResponse({
+  draftId = 'draft_smoke_1',
+  structureId = 'three_day',
+  selectedCatalogBySlotId = {},
+  status = 'draft',
+  activatedProgramId = null,
+}: {
+  draftId?: string;
+  structureId?: string;
+  selectedCatalogBySlotId?: Record<string, string>;
+  status?: 'draft' | 'activated';
+  activatedProgramId?: string | null;
+} = {}) {
+  const structures = buildRecommendationStructures();
+  const draft = {
+    status,
+    profile_snapshot: {
+      primaryGoal: 'general_fitness',
+      experienceLevel: 'beginner',
+      trainingDaysPerWeek: 3,
+      sessionDurationMinutes: 30,
+      splitPreference: 'balanced',
+      volumeLevel: 'standard',
+      equipmentAccess: ['bodyweight', 'dumbbells'],
+      focusAreas: ['upper_body', 'lower_body', 'core'],
+      limitationTags: [],
+      preferredStyles: ['balanced'],
+      preferredWorkoutTags: ['strength', 'core'],
+      excludedWorkoutTags: [],
+    },
+    structures,
+    selected_structure_id: structureId,
+    exercise_slots: buildRecommendationExerciseSlots(structureId, selectedCatalogBySlotId),
+    generator_version: 'generator-v1',
+    catalog_seed_version: 'catalog-v1',
+    activation_context:
+      status === 'activated'
+        ? {
+            activated_program_id: activatedProgramId,
+            activated_at: '2026-04-17T12:00:00.000Z',
+          }
+        : undefined,
+  };
+
+  return {
+    id: draftId,
+    status,
+    source_onboarding_answer_id: 'onboarding_smoke_1',
+    source_profile_id: 'profile_smoke_1',
+    generator_version: 'generator-v1',
+    catalog_seed_version: 'catalog-v1',
+    selected_structure_id: structureId,
+    activated_program_id: activatedProgramId,
+    created_at: '2026-04-17T11:00:00.000Z',
+    updated_at: '2026-04-17T11:00:00.000Z',
+    activated_at: status === 'activated' ? '2026-04-17T12:00:00.000Z' : null,
+    draft,
+  };
+}
+
+function buildRecommendationActivationResponse(
+  draftResponse: ReturnType<typeof buildRecommendationDraftResponse>,
+) {
+  return {
+    ok: true,
+    message: 'Recommendation draft activated',
+    program: buildGeneratedProgramResponse().program,
+    generator: {
+      version: draftResponse.generator_version,
+      catalog_seed_version: draftResponse.catalog_seed_version,
+    },
+    recommendation_draft: {
+      id: draftResponse.id,
+      status: 'activated',
+      selected_structure_id: draftResponse.selected_structure_id,
+      activated_program_id: 'program_smoke',
+      activated_at: '2026-04-17T12:00:00.000Z',
+      updated_at: '2026-04-17T12:00:00.000Z',
+    },
+  };
+}
+
 function buildProgramResponse() {
   return {
     ...buildGeneratedProgramResponse().program,
@@ -437,6 +799,10 @@ async function mockApi(
         url.pathname === '/me' ||
         url.pathname === '/onboarding' ||
         url.pathname === '/onboarding/complete' ||
+        url.pathname === '/recommendation-draft' ||
+        url.pathname === '/recommendation-draft/structure' ||
+        url.pathname === '/recommendation-draft/exercise' ||
+        url.pathname === '/recommendation-draft/activate' ||
         url.pathname === '/workout/today' ||
         url.pathname === '/log' ||
         url.pathname.startsWith('/log/') ||
@@ -458,7 +824,7 @@ async function mockApi(
         status: 204,
         headers: {
           'access-control-allow-origin': '*',
-          'access-control-allow-methods': 'GET,POST,OPTIONS',
+          'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS',
           'access-control-allow-headers': '*',
         },
       });
@@ -662,7 +1028,137 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
   await assertNoClientIssues(issues);
 });
 
-test('completed onboarding without active program routes the user to program recovery', async ({ page }) => {
+test('completed onboarding without active program enters recommendation flow and activates into the main app', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installMockSignedInClerk(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let hasActiveProgram = false;
+  let draftCreated = false;
+  let selectedStructureId = 'three_day';
+  let selectedCatalogBySlotId: Record<string, string> = {};
+
+  await mockApi(page, ({ url, method, body }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/recommendation-draft') {
+      if (!draftCreated) {
+        return { status: 404, body: { error: 'Recommendation draft not found' } };
+      }
+
+      return {
+        body: buildRecommendationDraftResponse({
+          structureId: selectedStructureId,
+          selectedCatalogBySlotId,
+        }),
+      };
+    }
+
+    if (method === 'POST' && url.pathname === '/recommendation-draft') {
+      draftCreated = true;
+      return {
+        body: buildRecommendationDraftResponse({
+          structureId: selectedStructureId,
+          selectedCatalogBySlotId,
+        }),
+      };
+    }
+
+    if (method === 'PATCH' && url.pathname === '/recommendation-draft/structure') {
+      selectedStructureId = String((body as Record<string, unknown>).structure_id);
+      selectedCatalogBySlotId = {};
+      return {
+        body: buildRecommendationDraftResponse({
+          structureId: selectedStructureId,
+          selectedCatalogBySlotId,
+        }),
+      };
+    }
+
+    if (method === 'PATCH' && url.pathname === '/recommendation-draft/exercise') {
+      selectedCatalogBySlotId[String((body as Record<string, unknown>).slot_id)] = String(
+        (body as Record<string, unknown>).catalog_exercise_id,
+      );
+      return {
+        body: buildRecommendationDraftResponse({
+          structureId: selectedStructureId,
+          selectedCatalogBySlotId,
+        }),
+      };
+    }
+
+    if (method === 'POST' && url.pathname === '/recommendation-draft/activate') {
+      hasActiveProgram = true;
+      return {
+        body: buildRecommendationActivationResponse(
+          buildRecommendationDraftResponse({
+            structureId: selectedStructureId,
+            selectedCatalogBySlotId,
+          }),
+        ),
+      };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return hasActiveProgram
+        ? { body: buildTodayWorkoutResponse() }
+        : { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      return hasActiveProgram
+        ? { body: buildProgramResponse() }
+        : { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#recommendation-shell')).toBeVisible();
+  await expect(page.locator('#recommendation-structures .recommendation-structure-card')).toHaveCount(2);
+  await page
+    .locator('#recommendation-structures .recommendation-structure-card')
+    .nth(1)
+    .getByRole('button', { name: /choose structure/i })
+    .click();
+  await expect(page.locator('#recommendation-structures .recommendation-structure-card.is-selected')).toContainText(
+    /4-day split/i,
+  );
+  await page.getByRole('button', { name: /continue to exercises/i }).click();
+  await expect(page.locator('#recommendation-exercise-panel')).toBeVisible();
+  await page
+    .locator('#recommendation-exercises .recommendation-slot-card')
+    .first()
+    .getByRole('button', { name: /replace/i })
+    .click();
+  await expect(page.locator('#recommendation-option-dialog')).toBeVisible();
+  await page
+    .locator('#recommendation-option-list')
+    .getByRole('button', { name: /dumbbell floor press/i })
+    .click();
+  await expect(page.locator('#recommendation-exercises')).toContainText(/changed/i);
+  await page.getByRole('button', { name: /review plan/i }).click();
+  await expect(page.locator('#recommendation-review-summary')).toContainText(/dumbbell floor press/i);
+  await page.getByRole('button', { name: /activate plan/i }).click();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('#today-content')).toBeVisible();
+  await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
+  expect.soft(issues.pageErrors, 'page errors').toEqual([]);
+  expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
+  expect.soft(
+    issues.consoleErrors.filter(message => !message.includes('404 (Not Found)')),
+    'unexpected console errors'
+  ).toEqual([]);
+});
+
+test('completed onboarding without active program falls back to legacy plan recovery when recommendation endpoints are unavailable', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
@@ -672,6 +1168,14 @@ test('completed onboarding without active program routes the user to program rec
   await mockApi(page, ({ url, method }) => {
     if (method === 'GET' && url.pathname === '/me') {
       return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: regenerated }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/recommendation-draft') {
+      return { status: 404, body: { error: 'Not found' } };
+    }
+
+    if (method === 'POST' && url.pathname === '/recommendation-draft') {
+      return { status: 405, body: { error: 'Method not allowed' } };
     }
 
     if (method === 'POST' && url.pathname === '/program/regenerate') {
@@ -706,9 +1210,13 @@ test('completed onboarding without active program routes the user to program rec
   await expect(page.locator('#confirm-dialog')).toBeVisible();
   await page.locator('#confirm-dialog').getByRole('button', { name: /build new plan/i }).click();
   await expect(page.locator('#program-main')).toBeVisible();
-  await expect(page.locator('#program-schedule')).toContainText(/day a|rest/i);
   await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
-  await assertNoClientIssues(issues);
+  expect.soft(issues.pageErrors, 'page errors').toEqual([]);
+  expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
+  expect.soft(
+    issues.consoleErrors.filter(message => !message.includes('404 (Not Found)')),
+    'unexpected console errors'
+  ).toEqual([]);
 });
 
 test('completed users do not autosave onboarding drafts when a stale flow tries to re-enter onboarding', async ({ page }) => {

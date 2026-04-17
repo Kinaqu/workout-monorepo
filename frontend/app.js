@@ -7,11 +7,13 @@ import { ensureClerkReady } from '/clerk-bootstrap.js';
 import { createHistoryFeature } from '/features/history/index.js';
 import { createOnboardingFeature } from '/features/onboarding/index.js';
 import { createProgramFeature } from '/features/program/index.js';
+import { createRecommendationFeature } from '/features/recommendation/index.js';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
 import { createTodayWorkoutFeature } from '/features/today-workout/index.js';
 import { selectShellMode, setShellMode, updateMeLifecycle } from '/store/app-store.js';
 
 const onboardingShell = document.getElementById('onboarding-shell');
+const recommendationShell = document.getElementById('recommendation-shell');
 const appShell = document.getElementById('app-shell');
 const appNav = document.getElementById('app-nav');
 const tabs = document.querySelectorAll('.tab-content');
@@ -20,9 +22,12 @@ const navItems = document.querySelectorAll('.nav-item');
 function showShellMode(mode) {
   setShellMode(mode);
   const isOnboarding = mode === 'onboarding';
+  const isRecommendation = mode === 'recommendation';
+  const isApp = mode === 'app';
   onboardingShell.classList.toggle('hidden', !isOnboarding);
-  appShell.classList.toggle('hidden', isOnboarding);
-  appNav.classList.toggle('hidden', isOnboarding);
+  recommendationShell.classList.toggle('hidden', !isRecommendation);
+  appShell.classList.toggle('hidden', !isApp);
+  appNav.classList.toggle('hidden', !isApp);
 }
 
 function getActiveTabId() {
@@ -36,6 +41,7 @@ let onboardingFeature;
 let todayWorkoutFeature;
 let historyFeature;
 let programFeature;
+let recommendationFeature;
 
 function handleMissingProgram() {
   updateMeLifecycle({ has_active_program: false });
@@ -62,10 +68,26 @@ async function refreshProductState() {
   await profileFeature.loadProductState();
 
   if (!profileFeature.hasCompletedOnboarding()) {
+    recommendationFeature.reset();
     await onboardingFeature.enter();
     return;
   }
 
+  if (!profileFeature.hasActiveProgram()) {
+    try {
+      await recommendationFeature.enter();
+      return;
+    } catch (error) {
+      if (error instanceof AuthRedirectError) {
+        throw error;
+      }
+
+      recommendationFeature.markUnsupported();
+      console.warn('Recommendation draft flow is unavailable, falling back to legacy app shell.', error);
+    }
+  }
+
+  recommendationFeature.reset();
   showShellMode('app');
   programFeature.setActionsVisible(profileFeature.hasActiveProgram());
 
@@ -108,6 +130,11 @@ programFeature = createProgramFeature({
 onboardingFeature = createOnboardingFeature({
   showShellMode,
   onCompleted: refreshProductState,
+});
+
+recommendationFeature = createRecommendationFeature({
+  showShellMode,
+  onActivated: refreshProductState,
 });
 
 historyFeature.init();
