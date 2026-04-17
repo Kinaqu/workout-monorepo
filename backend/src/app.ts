@@ -12,6 +12,7 @@ import { registerMeRoutes } from "./routes/me";
 import { registerOnboardingRoutes } from "./routes/onboarding";
 import { registerProgramRoutes } from "./routes/program";
 import { registerProgressionRoutes } from "./routes/progression";
+import { registerRecommendationDraftRoutes } from "./routes/recommendation-draft";
 import { registerSessionsRoutes } from "./routes/sessions";
 import { registerWorkoutRoutes } from "./routes/workout";
 
@@ -40,7 +41,7 @@ app.use("*", async (c, next) => {
   const corsMiddleware = cors({
     origin: origin => resolveCorsOrigin(origin, c.env),
     allowHeaders: ["Content-Type", "Authorization", "X-Workout-Date", "X-Reset-Token"],
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "OPTIONS"],
   });
 
   return corsMiddleware(c, next);
@@ -53,6 +54,7 @@ registerMeRoutes(app);
 registerOnboardingRoutes(app);
 registerWorkoutRoutes(app);
 registerProgramRoutes(app);
+registerRecommendationDraftRoutes(app);
 registerProgressionRoutes(app);
 registerLogRoutes(app);
 registerSessionsRoutes(app);

@@ -1,6 +1,7 @@
 import { filterCatalogForProfile } from "../domain/catalog";
 import {
   buildRecommendationDraftFromProfile,
+  GeneratedProgramResult,
   materializeProgramDefinitionFromDraftSelection,
 } from "../domain/generator";
 import { normalizeOnboardingAnswers } from "../domain/profile";
@@ -61,25 +62,14 @@ export class ProgramGeneratorService {
 
     const draft = buildRecommendationDraftFromProfile(profileRecord.profile, catalog);
     const generated = materializeProgramDefinitionFromDraftSelection(draft);
-    const current = await this.programs.getActiveProgram(userId);
-    const previousStates = current ? await this.progression.getByProgram(userId, current.versionId) : new Map();
-    const created = await this.programs.createProgramVersion(
+    const created = await this.persistGeneratedProgramVersion({
       userId,
-      createProgramDraft(generated.definition),
-      "generated"
-    );
-
-    const seeded = seedProgressionStates(created, previousStates, nowIso(), null);
-    await this.progression.replaceProgramStates(userId, created.versionId, seeded);
-    await this.metadata.save({
-      programId: created.versionId,
-      userId,
-      generatorVersion: generated.generatorVersion,
+      source: "generated",
       generationReason: reason,
+      generated,
       profileId: profileRecord.id,
       profileVersion: profileRecord.profile.version,
       onboardingAnswerId: onboarding.id,
-      catalogSeedVersion: generated.catalogSeedVersion,
       inputSummary: {
         userId: user.user_id,
         primaryGoal: profileRecord.profile.primaryGoal,
@@ -120,5 +110,42 @@ export class ProgramGeneratorService {
       id: record.id,
       profile,
     };
+  }
+
+  async persistGeneratedProgramVersion(input: {
+    userId: string;
+    source: string;
+    generationReason: string;
+    generated: GeneratedProgramResult;
+    profileId: string | null;
+    profileVersion: string | null;
+    onboardingAnswerId: string | null;
+    inputSummary: Record<string, unknown>;
+  }) {
+    const current = await this.programs.getActiveProgram(input.userId);
+    const previousStates = current
+      ? await this.progression.getByProgram(input.userId, current.versionId)
+      : new Map();
+    const created = await this.programs.createProgramVersion(
+      input.userId,
+      createProgramDraft(input.generated.definition),
+      input.source
+    );
+
+    const seeded = seedProgressionStates(created, previousStates, nowIso(), null);
+    await this.progression.replaceProgramStates(input.userId, created.versionId, seeded);
+    await this.metadata.save({
+      programId: created.versionId,
+      userId: input.userId,
+      generatorVersion: input.generated.generatorVersion,
+      generationReason: input.generationReason,
+      profileId: input.profileId,
+      profileVersion: input.profileVersion,
+      onboardingAnswerId: input.onboardingAnswerId,
+      catalogSeedVersion: input.generated.catalogSeedVersion,
+      inputSummary: input.inputSummary,
+    });
+
+    return created;
   }
 }
