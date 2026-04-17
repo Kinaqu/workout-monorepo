@@ -29,7 +29,6 @@ export class MeService {
         user_exists: true,
         onboarding_completed: Boolean(user.onboarding_completed_at),
         has_active_program: Boolean(program),
-        legacy_kv_migrated_at: user.legacy_kv_migrated_at,
       },
       onboarding,
       profile: profile

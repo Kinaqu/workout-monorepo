@@ -123,9 +123,14 @@ async function assertNoClientIssues(issues: ReturnType<typeof attachClientIssueC
   expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
 }
 
-async function installLegacySession(page: Page) {
+async function installMockSignedInClerk(page: Page) {
   await page.addInitScript(() => {
-    window.localStorage.setItem('token', 'smoke-test-token');
+    (window as Window & { Clerk: Record<string, unknown> }).Clerk = {
+      status: 'ready',
+      loaded: true,
+      isSignedIn: true,
+      session: { id: 'sess_smoke' },
+    };
   });
 }
 
@@ -155,7 +160,6 @@ function buildMeResponse({
       user_exists: true,
       onboarding_completed: onboardingCompleted,
       has_active_program: hasActiveProgram,
-      legacy_kv_migrated_at: '2026-04-01T00:00:00.000Z',
     },
     onboarding: {
       status: onboardingCompleted ? 'completed' : 'not_started',
@@ -564,7 +568,7 @@ test('register page renders cleanly', async ({ page }) => {
 
 test('authenticated user with incomplete onboarding sees onboarding UI', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
 
@@ -590,7 +594,7 @@ test('authenticated user with incomplete onboarding sees onboarding UI', async (
 
 test('completing onboarding transitions to the main app', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let completed = false;
@@ -660,7 +664,7 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
 
 test('completed onboarding without active program routes the user to program recovery', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let regenerated = false;
@@ -709,7 +713,7 @@ test('completed onboarding without active program routes the user to program rec
 
 test('completed users do not autosave onboarding drafts when a stale flow tries to re-enter onboarding', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let onboardingDraftPosts = 0;
@@ -771,7 +775,7 @@ test('completed users do not autosave onboarding drafts when a stale flow tries 
 
 test('history screen renders sessions list and detail diagnostics from /sessions', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   const sessionOne = buildSessionRecord();
@@ -845,7 +849,7 @@ test('history screen renders sessions list and detail diagnostics from /sessions
 
 test('today date picker, progression refresh, and manual program controls work together', async ({ page }) => {
   await enableVercelProtectionBypass(page);
-  await installLegacySession(page);
+  await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let savedProgramBody: Record<string, unknown> | null = null;

@@ -7,7 +7,6 @@ import type {
   ApiErrorPayload,
   GeneratedProgramResponse,
   JsonLogRequest,
-  LegacyLogByDateResponse,
   LogCreateResponse,
   MeResponse,
   OnboardingAnswers,
@@ -25,7 +24,6 @@ import type {
 } from './types.ts';
 
 const LOGIN_PATH = '/login?reauth=1';
-const LEGACY_TOKEN_STORAGE_KEY = 'token';
 
 interface ClerkInstance {
   session?: unknown;
@@ -52,30 +50,10 @@ function getClerkInstance(): ClerkInstance | null {
   return window.Clerk ?? null;
 }
 
-function getStoredLegacyToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return window.localStorage.getItem(LEGACY_TOKEN_STORAGE_KEY);
-}
-
-function clearStoredLegacyToken(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
-}
-
-export function hasStoredLegacyToken(): boolean {
-  return Boolean(getStoredLegacyToken());
-}
-
 async function resolveAuthToken(options?: ClerkTokenOptions): Promise<string | null> {
   const clerk = getClerkInstance();
   if (!clerk) {
-    return getStoredLegacyToken();
+    return null;
   }
 
   try {
@@ -84,10 +62,10 @@ async function resolveAuthToken(options?: ClerkTokenOptions): Promise<string | n
       return clerkToken;
     }
   } catch (error) {
-    console.warn('Unable to resolve Clerk token, falling back to legacy token storage.', error);
+    console.warn('Unable to resolve Clerk token.', error);
   }
 
-  return getStoredLegacyToken();
+  return null;
 }
 
 function getErrorMessage(data: ApiErrorPayload, fallbackStatus: number): string {
@@ -117,8 +95,6 @@ function isExpiredSession(response: Response): boolean {
 }
 
 export function startAuthSessionFlow(message = 'Session expired. Please sign in again.'): never {
-  clearStoredLegacyToken();
-
   if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
     window.location.replace(LOGIN_PATH);
   }
@@ -235,7 +211,6 @@ export const api: ApiClient = {
       })}`
     ),
   getSession: (id: string) => request<WorkoutSessionRecord>(`/sessions/${id}`),
-  getLog: (date: string) => request<LegacyLogByDateResponse>(`/log/${date}`),
   getProgram: () => request<ProgramResponse>('/program'),
   saveProgram: (payload: ProgramDefinition) =>
     request<ProgramMutationResponse>('/program', {

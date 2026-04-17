@@ -295,7 +295,6 @@ export const MeResponseSchema = z
       user_exists: z.literal(true),
       onboarding_completed: z.boolean(),
       has_active_program: z.boolean(),
-      legacy_kv_migrated_at: z.string().nullable().openapi({ example: "2026-04-01T09:00:00.000Z" }),
     }),
     onboarding: z.object({
       status: z.enum(["not_started", "draft", "completed"]),
@@ -326,17 +325,6 @@ export const MeResponseSchema = z
       .nullable(),
   })
   .openapi("MeResponse");
-
-export const DisabledAuthResponseSchema = z
-  .object({
-    error: z
-      .string()
-      .openapi({
-        example:
-          "Local auth is disabled. Use Clerk authentication on the frontend and send the Clerk Bearer token.",
-      }),
-  })
-  .openapi("DisabledAuthResponse");
 
 export const ProgramResponseSchema = ProgramDefinitionSchema.extend({
   version_id: z.string().openapi({ example: "program_123" }),
@@ -471,13 +459,6 @@ export const JsonLogRequestSchema = z
   })
   .openapi("JsonLogRequest");
 
-export const PlainTextLogRequestSchema = z
-  .string()
-  .openapi({
-    example: "Push-ups 10 10 9\nSquats 15 15 15",
-    description: "Legacy plain-text log format.",
-  });
-
 export const SessionLogExerciseSchema = z
   .object({
     id: z.string().openapi({ example: "pushups" }),
@@ -537,11 +518,6 @@ export const LogCreateResponseSchema = z
     session: WorkoutSessionRecordSchema,
   })
   .openapi("LogCreateResponse");
-
-export const LegacyLogByDateResponseSchema = LegacyLogEntrySchema.extend({
-  session_count: z.number().int().openapi({ example: 1 }),
-  sessions: z.array(WorkoutSessionRecordSchema),
-}).openapi("LegacyLogByDateResponse");
 
 export const SessionsListResponseSchema = z
   .object({

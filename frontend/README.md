@@ -88,7 +88,7 @@ The frontend is a lightweight client application configured to interact with a s
 - a shared API client in `lib/api/client.js`
 - Vite multi-page builds for the main app and auth pages
 
-> **Security Note:** The primary auth flow is Clerk-first. The frontend sends the Clerk session token as a Bearer token when available. A legacy `localStorage` token path still exists for compatibility, but it is no longer the main authentication model.
+> **Security Note:** The auth flow is Clerk-only. The frontend sends the Clerk session token as a Bearer token when available and redirects to `/login` when the Clerk session is missing or expired.
 
 ### Live Infrastructure
 - **Frontend Deployment:** Vercel
@@ -240,18 +240,17 @@ The frontend application communicates with the Workout Manager backend through a
 | `POST` | `/onboarding/complete` | Complete onboarding and trigger backend-owned program generation |
 | `GET` | `/workout/today` | Fetch today's generated workout plan |
 | `POST` | `/log` | Save a completed workout session |
-| `GET` | `/log/{date}` | Retrieve workout history for a specific date |
+| `GET` | `/sessions` | Retrieve workout history, optionally filtered by date |
 | `GET` | `/program` | Load the active training program |
 | `POST` | `/program/regenerate` | Regenerate the active program from stored onboarding/profile preferences |
 | `POST` | `/progression/run` | Trigger progression recalculation |
 
-The frontend client intentionally does not expose `/auth/login` or `/auth/register`. Authentication is Clerk-first, and any remaining legacy local-token support is limited to compatibility fallback during session resolution.
+The frontend client intentionally does not expose compat-only routes such as `/auth/login`, `/auth/register`, or `/log/import-text`. Authentication is Clerk-first, and workout history loads through `/sessions` rather than legacy `/log/{date}` responses.
 
 ---
 
 ## 🔮 Future Improvements
 
-- [ ] Remove the remaining local-token fallback once Clerk-only auth is fully enforced end-to-end.
 - [ ] Expand offline support beyond static asset caching.
 - [ ] Migrate more of the main application UI from vanilla JavaScript to a consistent component model.
 

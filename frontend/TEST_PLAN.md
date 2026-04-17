@@ -150,7 +150,7 @@ What to verify:
 
 - `GET /workout/today`
 - `GET /program`
-- `GET /log/{date}`
+- `GET /sessions?date=...`
 - `POST /log`
 - `POST /progression/run`
 
@@ -198,7 +198,7 @@ What to verify:
 - backend unavailable
 - API returns non-JSON
 - expired token
-- invalid token in `localStorage`
+- missing or expired Clerk session
 - missing `__session` cookie
 - missing fields in exercise data
 - workout with an empty exercise list
