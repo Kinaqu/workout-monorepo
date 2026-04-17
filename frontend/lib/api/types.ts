@@ -173,7 +173,6 @@ export interface MeResponse {
     user_exists: true;
     onboarding_completed: boolean;
     has_active_program: boolean;
-    legacy_kv_migrated_at: string | null;
   };
   onboarding: {
     status: 'not_started' | 'draft' | 'completed';
@@ -396,11 +395,6 @@ export interface LogCreateResponse {
   session: WorkoutSessionRecord;
 }
 
-export interface LegacyLogByDateResponse extends LegacyLogEntry {
-  session_count: number;
-  sessions: WorkoutSessionRecord[];
-}
-
 export interface ApiClient {
   getMe(): Promise<MeResponse>;
   getOnboarding(): Promise<OnboardingStateResponse>;
@@ -410,7 +404,6 @@ export interface ApiClient {
   logWorkout(payload: JsonLogRequest, date?: string): Promise<LogCreateResponse>;
   listSessions(options?: { date?: string; limit?: number }): Promise<SessionsListResponse>;
   getSession(id: string): Promise<WorkoutSessionRecord>;
-  getLog(date: string): Promise<LegacyLogByDateResponse>;
   getProgram(): Promise<ProgramResponse>;
   saveProgram(payload: ProgramDefinition): Promise<ProgramMutationResponse>;
   resetProgram(resetToken: string): Promise<ProgramMutationResponse>;

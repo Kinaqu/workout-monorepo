@@ -3,10 +3,12 @@ import { app } from "../../src/app";
 import { fetchJson } from "../helpers/runtime";
 
 describe("public and auth-protected routes", () => {
-  it("serves OpenAPI and legacy auth compatibility endpoints", async () => {
+  it("serves OpenAPI and keeps legacy auth compatibility handlers active", async () => {
     const openApi = await fetchJson(app.request.bind(app), "/openapi.json");
     expect(openApi.response.status).toBe(200);
     expect((openApi.body as { info: { title: string } }).info.title).toBe("Workout Manager Backend API");
+    expect(JSON.stringify(openApi.body)).not.toContain("/auth/register");
+    expect(JSON.stringify(openApi.body)).not.toContain("/auth/login");
 
     const register = await fetchJson(app.request.bind(app), "/auth/register", { method: "POST" });
     expect(register.response.status).toBe(410);

@@ -79,25 +79,6 @@ export class SessionService {
     };
   }
 
-  async getLegacyLogByDate(userId: string, username: string, date: string) {
-    if (!isValidDate(date)) {
-      badRequest("Invalid date. Use format: 2026-03-11");
-    }
-
-    await this.lifecycle.ensureUserExists(userId, username);
-    const sessions = await this.sessions.listSessionsByDate(userId, date);
-    if (sessions.length === 0) {
-      return null;
-    }
-
-    return {
-      ...sessionToLegacyLogResponse(sessions[0]),
-      date,
-      session_count: sessions.length,
-      sessions,
-    };
-  }
-
   async listSessions(userId: string, username: string, limit: number, date?: string) {
     if (date && !isValidDate(date)) {
       badRequest("Invalid date. Use format: 2026-03-11");

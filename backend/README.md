@@ -188,10 +188,15 @@ Protected endpoints require `Authorization: Bearer <clerk-jwt>`.
 - `POST /program/reset`
 - `GET /workout/today`
 - `POST /log`
-- `GET /log/{date}`
 - `GET /sessions`
 - `GET /sessions/{id}`
 - `POST /progression/run`
+
+Compat-only routes that stay outside the product API surface:
+
+- `POST /log/import-text`
+- `POST /auth/register`
+- `POST /auth/login`
 
 Guard semantics:
 

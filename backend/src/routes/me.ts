@@ -13,7 +13,7 @@ const meRoute = createRoute({
   tags: ["User"],
   summary: "Get current user product state",
   description:
-    "Returns the authenticated user identity together with onboarding, profile, legacy migration, and active-program state.",
+    "Returns the authenticated user identity together with onboarding, profile, and active-program state.",
   responses: {
     200: {
       description: "Current user state.",
@@ -58,4 +58,3 @@ export function registerMeRoutes(app: OpenAPIHono<AppEnv>) {
     )
   );
 }
-

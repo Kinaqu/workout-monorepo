@@ -212,13 +212,16 @@ describe("documented product flow", () => {
     expect(secondLog.response.status).toBe(200);
 
     const firstLogBody = firstLog.body as { session: { id: string } };
-    const logByDate = await fetchJson(app.request.bind(app), `/log/${sessionDateOne}`, { headers: headers() });
-    expect(logByDate.response.status).toBe(200);
-    expect((logByDate.body as { session_count: number }).session_count).toBe(1);
 
     const sessions = await fetchJson(app.request.bind(app), "/sessions?limit=10", { headers: headers() });
     expect(sessions.response.status).toBe(200);
     expect((sessions.body as { count: number }).count).toBe(2);
+
+    const sessionsByDate = await fetchJson(app.request.bind(app), `/sessions?date=${sessionDateOne}&limit=10`, {
+      headers: headers(),
+    });
+    expect(sessionsByDate.response.status).toBe(200);
+    expect((sessionsByDate.body as { count: number }).count).toBe(1);
 
     const session = await fetchJson(app.request.bind(app), `/sessions/${firstLogBody.session.id}`, {
       headers: headers(),

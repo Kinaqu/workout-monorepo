@@ -38,12 +38,11 @@ describe("legacy KV import", () => {
     expect(first.response.status).toBe(200);
 
     const firstBody = first.body as {
-      lifecycle: { has_active_program: boolean; legacy_kv_migrated_at: string | null };
+      lifecycle: { has_active_program: boolean };
       active_program: { source: string } | null;
     };
 
     expect(firstBody.lifecycle.has_active_program).toBe(true);
-    expect(firstBody.lifecycle.legacy_kv_migrated_at).not.toBeNull();
     expect(firstBody.active_program?.source).toBe("legacy-kv");
 
     const sessions = await fetchJson(app.request.bind(app), "/sessions", { headers: headers() });
@@ -51,6 +50,5 @@ describe("legacy KV import", () => {
 
     const second = await fetchJson(app.request.bind(app), "/me", { headers: headers() });
     expect(second.response.status).toBe(200);
-    expect((second.body as { lifecycle: { legacy_kv_migrated_at: string | null } }).lifecycle.legacy_kv_migrated_at).not.toBeNull();
   });
 });

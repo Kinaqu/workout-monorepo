@@ -1,6 +1,5 @@
 import {
   AuthRedirectError,
-  hasStoredLegacyToken,
   isMissingProgramError,
   isOnboardingIncompleteError,
 } from '/lib/api/index.js';
@@ -140,17 +139,14 @@ async function bootstrapApp() {
   try {
     const { isSignedIn } = await ensureClerkReady();
 
-    if (!hasStoredLegacyToken() && !isSignedIn) {
+    if (!isSignedIn) {
       window.location.replace('/login');
       return;
     }
   } catch (error) {
     console.error('Failed to initialize Clerk on the main app page:', error);
-
-    if (!hasStoredLegacyToken()) {
-      window.location.replace('/login');
-      return;
-    }
+    window.location.replace('/login');
+    return;
   }
 
   try {

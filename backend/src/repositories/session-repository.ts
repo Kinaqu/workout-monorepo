@@ -183,19 +183,6 @@ export class SessionRepository {
     return this.loadSessionAggregate(session);
   }
 
-  async listSessionsByDate(userId: string, sessionDate: string): Promise<WorkoutSessionRecord[]> {
-    const sessions = await fetchAll<SessionRow>(
-      this.env.DB.prepare(
-        `SELECT id, session_date, workout_key, workout_name, note, source, created_at, updated_at
-         FROM workout_sessions
-         WHERE user_id = ? AND session_date = ?
-         ORDER BY created_at DESC`
-      ).bind(userId, sessionDate)
-    );
-
-    return Promise.all(sessions.map(session => this.loadSessionAggregate(session)));
-  }
-
   async listSessions(userId: string, limit: number, sessionDate?: string): Promise<WorkoutSessionRecord[]> {
     const query = sessionDate
       ? this.env.DB.prepare(

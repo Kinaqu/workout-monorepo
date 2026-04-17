@@ -27,16 +27,16 @@ function isClerkReady(clerk) {
 }
 
 export function ensureClerkReady() {
-  if (!hasClerkKey || typeof document === 'undefined') {
-    return Promise.resolve({ isLoaded: false, isSignedIn: false });
-  }
-
   const readyClerk = getClerkInstance();
   if (isClerkReady(readyClerk)) {
     return Promise.resolve({
       isLoaded: true,
       isSignedIn: Boolean(readyClerk.session || readyClerk.isSignedIn),
     });
+  }
+
+  if (!hasClerkKey || typeof document === 'undefined') {
+    return Promise.resolve({ isLoaded: false, isSignedIn: false });
   }
 
   if (!clerkBootstrapPromise) {
