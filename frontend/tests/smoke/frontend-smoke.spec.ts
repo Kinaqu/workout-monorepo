@@ -1,19 +1,59 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test';
 
+const HOSTED_DEFAULT_API_BASE_URL = 'https://workout-api.dimer133745.workers.dev';
 const expectClerkKey = process.env.EXPECT_CLERK_PUBLISHABLE_KEY === 'true';
 const configuredBaseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173';
-const apiOrigin =
-  process.env.VITE_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  new URL(configuredBaseUrl).origin;
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const isDeploymentSmoke = Boolean(process.env.BASE_URL);
+const isVercelPreviewSmoke = isDeploymentSmoke && isVercelHostedOrigin(new URL(configuredBaseUrl).origin);
 const bypassHeaders = bypassSecret
   ? {
       'x-vercel-protection-bypass': bypassSecret,
       'x-vercel-set-bypass-cookie': 'true',
     }
   : undefined;
+const apiOrigin = resolveSmokeApiOrigin();
+
+function normalizeBaseUrl(value: string | undefined | null): string {
+  return typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
+}
+
+function isVercelHostedOrigin(origin: string): boolean {
+  if (!origin) {
+    return false;
+  }
+
+  try {
+    return new URL(origin).hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
+function isSuspiciousHostedBaseUrl(baseUrl: string, currentOrigin: string): boolean {
+  return Boolean(baseUrl && currentOrigin && baseUrl === currentOrigin && isVercelHostedOrigin(currentOrigin));
+}
+
+function resolveSmokeApiOrigin(): string {
+  const currentOrigin = new URL(configuredBaseUrl).origin;
+  const runtimeConfiguredBaseUrl = normalizeBaseUrl(
+    process.env.VITE_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL,
+  );
+
+  if (runtimeConfiguredBaseUrl && !isSuspiciousHostedBaseUrl(runtimeConfiguredBaseUrl, currentOrigin)) {
+    return runtimeConfiguredBaseUrl;
+  }
+
+  if (runtimeConfiguredBaseUrl) {
+    return HOSTED_DEFAULT_API_BASE_URL;
+  }
+
+  if (!isDeploymentSmoke) {
+    return currentOrigin;
+  }
+
+  return isVercelHostedOrigin(currentOrigin) ? HOSTED_DEFAULT_API_BASE_URL : currentOrigin;
+}
 
 function isIgnorableClerkPreviewIssue(message: string) {
   if (!isDeploymentSmoke || !expectClerkKey) {
@@ -463,6 +503,14 @@ async function expectAuthPageHealthy(page: Page, route: '/login' | '/register', 
   expect(hasHorizontalOverflow).toBe(false);
   await assertNoClientIssues(issues);
 }
+
+test('deployment smoke resolves API origin away from the frontend preview host', async () => {
+  test.skip(!isVercelPreviewSmoke, 'Only relevant for Vercel preview environments.');
+
+  const previewOrigin = new URL(configuredBaseUrl).origin;
+  expect(apiOrigin).not.toBe(previewOrigin);
+  expect(apiOrigin).toBe(HOSTED_DEFAULT_API_BASE_URL);
+});
 
 test('serves required public assets', async ({ request }) => {
   const assetPaths = [
