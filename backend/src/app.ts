@@ -3,6 +3,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import type { AuthContext } from "./auth/clerk";
 import type { Env } from "./env";
+import { getAllowedCorsOrigins } from "./http/cors";
 import { isAppError } from "./lib/app-error";
 import { createOpenApiDocument } from "./openapi/config";
 import { registerAuthRoutes } from "./routes/auth";
@@ -35,14 +36,15 @@ const app = new OpenAPIHono<AppEnv>({
   },
 });
 
-app.use(
-  "*",
-  cors({
-    origin: "*",
+app.use("*", async (c, next) => {
+  const corsMiddleware = cors({
+    origin: getAllowedCorsOrigins(c.env),
     allowHeaders: ["Content-Type", "Authorization", "X-Workout-Date", "X-Reset-Token"],
     allowMethods: ["GET", "POST", "OPTIONS"],
-  })
-);
+  });
+
+  return corsMiddleware(c, next);
+});
 
 app.options("*", c => c.body(null, 204));
 

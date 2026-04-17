@@ -158,10 +158,6 @@ Make sure you have [Node.js](https://nodejs.org/) and `npm` installed on your ma
    ```bash
    VITE_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
    ```
-   Optional:
-   ```bash
-   GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-   ```
 
 4. **Start the development server**
    ```bash
@@ -200,6 +196,9 @@ VITE_API_BASE_URL=http://127.0.0.1:8787
 ```
 
 This keeps the client free of hardcoded deployment URLs while still allowing runtime overrides when needed.
+
+The frontend should only receive public browser-safe env vars such as `VITE_*` and `NEXT_PUBLIC_*`.
+Server-side secrets must stay in backend/runtime configuration and must not be injected into the Vite bundle.
 
 ### Build & Deployment
 
