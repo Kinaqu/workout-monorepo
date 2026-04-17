@@ -1,5 +1,8 @@
 import { filterCatalogForProfile } from "../domain/catalog";
-import { generateProgramFromProfile } from "../domain/generator";
+import {
+  buildRecommendationDraftFromProfile,
+  materializeProgramDefinitionFromDraftSelection,
+} from "../domain/generator";
 import { normalizeOnboardingAnswers } from "../domain/profile";
 import { createProgramDraft, programTemplateToApi } from "../domain/program";
 import { seedProgressionStates } from "../domain/progression";
@@ -26,7 +29,7 @@ export class ProgramGeneratorService {
     private readonly metadata: GeneratedProgramMetadataRepository
   ) {}
 
-  async generateFromStoredProfile(userId: string, username: string, reason: "onboarding-complete" | "regenerate") {
+  private async loadStoredProfileGenerationInputs(userId: string, username: string) {
     const user = await this.lifecycle.ensureUserExists(userId, username);
     const onboarding = await this.onboarding.getByUserId(userId);
     const profileRecord = await this.profiles.getByUserId(userId);
@@ -40,7 +43,24 @@ export class ProgramGeneratorService {
       conflict("Exercise catalog cannot satisfy the current profile");
     }
 
-    const generated = generateProgramFromProfile(profileRecord.profile, catalog);
+    return { user, onboarding, profileRecord, catalog };
+  }
+
+  async buildRecommendationDraftFromStoredProfile(userId: string, username: string) {
+    const { onboarding, profileRecord, catalog } = await this.loadStoredProfileGenerationInputs(userId, username);
+
+    return {
+      sourceOnboardingAnswerId: onboarding.id,
+      sourceProfileId: profileRecord.id,
+      draft: buildRecommendationDraftFromProfile(profileRecord.profile, catalog),
+    };
+  }
+
+  async generateFromStoredProfile(userId: string, username: string, reason: "onboarding-complete" | "regenerate") {
+    const { user, onboarding, profileRecord, catalog } = await this.loadStoredProfileGenerationInputs(userId, username);
+
+    const draft = buildRecommendationDraftFromProfile(profileRecord.profile, catalog);
+    const generated = materializeProgramDefinitionFromDraftSelection(draft);
     const current = await this.programs.getActiveProgram(userId);
     const previousStates = current ? await this.progression.getByProgram(userId, current.versionId) : new Map();
     const created = await this.programs.createProgramVersion(
