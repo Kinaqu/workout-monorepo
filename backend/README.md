@@ -203,6 +203,10 @@ Compat-only routes that stay outside the product API surface:
 - `CORS_ALLOWED_ORIGINS`
   Comma-separated allowlist of browser origins allowed to call the Worker. In production, set this to the real frontend domains only.
   If unset, local development defaults for `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:4173`, and `http://127.0.0.1:4173` remain allowed so Vite dev and preview keep working.
+- `CORS_ALLOWED_ORIGIN_PATTERNS`
+  Optional comma-separated wildcard origin patterns for browser hosts that rotate per deployment, such as Vercel preview URLs.
+  Patterns must be full origins and may use `*` inside the hostname only, for example `https://workout-frontend-*.vercel.app`.
+  Exact origins from `CORS_ALLOWED_ORIGINS` stay supported and are checked before wildcard patterns.
 - `CLERK_ISSUER`, `CLERK_AUDIENCE`, `CLERK_JWKS_URL`
   Clerk auth validation settings.
 - `RESET_TOKEN`
