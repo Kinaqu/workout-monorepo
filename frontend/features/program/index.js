@@ -52,6 +52,7 @@ const programEditorWorkouts = document.getElementById('program-editor-workouts')
 const programSaveButton = document.getElementById('program-save-button');
 const programCancelEditButton = document.getElementById('program-cancel-edit-button');
 const programAddWorkoutButton = document.getElementById('program-add-workout-button');
+const programAdvancedDetails = document.getElementById('program-advanced-details');
 const confirmDialog = document.getElementById('confirm-dialog');
 const confirmDialogTitle = document.getElementById('confirm-dialog-title');
 const confirmDialogCopy = document.getElementById('confirm-dialog-copy');
@@ -470,8 +471,12 @@ export function createProgramFeature({
     programRegenerateButton.classList.toggle('hidden', !visible);
     programEditButton.classList.toggle('hidden', !visible);
     programResetButton.classList.toggle('hidden', !visible);
+    programAdvancedDetails?.classList.toggle('hidden', !visible);
 
     if (!visible) {
+      if (programAdvancedDetails) {
+        programAdvancedDetails.open = false;
+      }
       stopEditing({ keepStatus: false, keepProgram: true });
     }
   }
@@ -500,7 +505,7 @@ export function createProgramFeature({
     renderEmptyState(
       programEmptyState,
       'No plan available',
-      'Use your saved preferences to build a fresh plan, then edit it manually when needed.',
+      'Build a fresh plan from your saved preferences.',
       { text: 'Build plan', type: 'regenerate-program' }
     );
   }
@@ -541,12 +546,10 @@ export function createProgramFeature({
     const latestProgressionDate = getLatestProgressionDate(program.progressionState ?? {});
     const workoutCount = Object.keys(program.workouts ?? {}).length;
     const exerciseCount = countProgramExercises(program);
-    const versionLabel = Number.isInteger(program.active_version?.version_number)
-      ? `v${program.active_version.version_number}`
-      : program.version_id || 'Current';
+    const cadenceLabel = `${workoutCount} ${workoutCount === 1 ? 'session' : 'sessions'} · ${exerciseCount} exercises`;
 
     if (programSummaryCopy) {
-      programSummaryCopy.textContent = `${program.name} · ${program.id}`;
+      programSummaryCopy.textContent = cadenceLabel;
     }
 
     if (programSummaryBadge) {
@@ -555,11 +558,10 @@ export function createProgramFeature({
 
     if (programSummaryMeta) {
       programSummaryMeta.innerHTML = '';
-      programSummaryMeta.appendChild(createStat('Version', versionLabel));
-      programSummaryMeta.appendChild(createStat('Sessions', `${workoutCount}`));
-      programSummaryMeta.appendChild(createStat('Exercises', `${exerciseCount}`));
+      programSummaryMeta.appendChild(createStat('Plan', program.name));
+      programSummaryMeta.appendChild(createStat('Schedule', cadenceLabel));
       programSummaryMeta.appendChild(
-        createStat('Last progression', latestProgressionDate ? formatLongDateLabel(latestProgressionDate) : 'Not yet')
+        createStat('Last update', latestProgressionDate ? formatLongDateLabel(latestProgressionDate) : 'Not yet')
       );
     }
   }
@@ -963,6 +965,9 @@ export function createProgramFeature({
     editorDirty = false;
     editorState = cloneProgramForEditor(currentProgram);
     programMain.classList.remove('hidden');
+    if (programAdvancedDetails) {
+      programAdvancedDetails.open = true;
+    }
     programEditButton.textContent = 'Close editor';
     renderEditor();
   }

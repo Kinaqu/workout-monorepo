@@ -27,7 +27,6 @@ const recommendationExerciseSummary = document.getElementById('recommendation-ex
 const recommendationExercises = document.getElementById('recommendation-exercises');
 const recommendationReviewPanel = document.getElementById('recommendation-review-panel');
 const recommendationReviewSummary = document.getElementById('recommendation-review-summary');
-const recommendationActionCopy = document.getElementById('recommendation-action-copy');
 const recommendationBackButton = document.getElementById('recommendation-back-button');
 const recommendationNextButton = document.getElementById('recommendation-next-button');
 const recommendationConfirmButton = document.getElementById('recommendation-confirm-button');
@@ -84,12 +83,12 @@ function formatStepTitle(step) {
 
 function formatStepCopy(step) {
   if (step === 'structure') {
-    return 'Start from the recommended split or switch to another supported structure.';
+    return 'Choose the split you want to start with.';
   }
   if (step === 'exercise') {
-    return 'Keep the defaults or swap individual exercises with compatible alternatives.';
+    return 'Swap any slot if you want a different exercise.';
   }
-  return 'Activation creates the normal active program version used by Today, History, and Plan.';
+  return 'Confirm this version to start using it across the app.';
 }
 
 function buildSchedulePreview(schedule) {
@@ -217,18 +216,14 @@ function renderStructureCards(draft, status) {
     buildSchedulePreview(structure.schedule).forEach(item => {
       schedulePreview.appendChild(el('span', 'recommendation-preview-chip', item));
     });
+    schedulePreview.appendChild(
+      el(
+        'span',
+        'recommendation-preview-chip recommendation-preview-chip-muted',
+        `${structure.workouts.length} ${structure.workouts.length === 1 ? 'session' : 'sessions'}`
+      )
+    );
     card.appendChild(schedulePreview);
-
-    const workoutMeta = el('div', 'recommendation-workout-meta');
-    structure.workouts.forEach(workout => {
-      const workoutItem = el('div', 'recommendation-workout-meta-item');
-      workoutItem.appendChild(el('strong', '', workout.name));
-      workoutItem.appendChild(
-        el('span', 'text-secondary', workout.tags.map(tag => humanizeToken(tag)).join(' · '))
-      );
-      workoutMeta.appendChild(workoutItem);
-    });
-    card.appendChild(workoutMeta);
 
     const action = el(
       'button',
@@ -254,19 +249,19 @@ function renderExerciseCards(draft, status) {
   recommendationExercises.innerHTML = '';
 
   workouts.forEach(workout => {
+    const slots = draft.exercise_slots
+      .filter(slot => slot.workout_key === workout.key)
+      .sort((left, right) => left.slot_index - right.slot_index);
+
     const workoutCard = el('section', 'card recommendation-workout-card');
     const header = el('div', 'recommendation-workout-header');
     const titleWrap = el('div', 'recommendation-workout-copy');
     titleWrap.appendChild(el('div', 'card-title', workout.name));
     titleWrap.appendChild(
-      el('div', 'card-subtitle', workout.tags.map(tag => humanizeToken(tag)).join(' · '))
+      el('div', 'card-subtitle', `${slots.length} ${slots.length === 1 ? 'slot' : 'slots'}`)
     );
     header.appendChild(titleWrap);
     workoutCard.appendChild(header);
-
-    const slots = draft.exercise_slots
-      .filter(slot => slot.workout_key === workout.key)
-      .sort((left, right) => left.slot_index - right.slot_index);
 
     slots.forEach(slot => {
       const selectedOption = getSelectedOption(slot);
@@ -312,14 +307,6 @@ function renderExerciseCards(draft, status) {
           el('div', 'recommendation-slot-note', `Default: ${recommendedOption.name}`)
         );
       }
-
-      slotCard.appendChild(
-        el(
-          'div',
-          'recommendation-slot-tags',
-          slot.blueprint_tags.map(tag => humanizeToken(tag)).join(' · ')
-        )
-      );
 
       const actionRow = el('div', 'recommendation-slot-actions');
       const replaceButton = el(
@@ -515,10 +502,6 @@ function render() {
   recommendationExercisePanel?.classList.toggle('hidden', recommendation.step !== 'exercise');
   recommendationReviewPanel?.classList.toggle('hidden', recommendation.step !== 'review');
 
-  if (recommendationActionCopy) {
-    recommendationActionCopy.textContent = formatStepCopy(recommendation.step);
-  }
-
   if (recommendationBackButton) {
     recommendationBackButton.classList.toggle('hidden', recommendation.step === 'structure');
     recommendationBackButton.disabled = isBusyStatus(status);
@@ -540,6 +523,11 @@ function render() {
   const panelTitle = recommendationShell.querySelector('#recommendation-panel-title');
   if (panelTitle) {
     panelTitle.textContent = formatStepTitle(recommendation.step);
+  }
+
+  const panelSubtitle = recommendationShell.querySelector('#recommendation-structure-panel .card-subtitle');
+  if (panelSubtitle) {
+    panelSubtitle.textContent = formatStepCopy(recommendation.step);
   }
 
   renderOptionDialog(draft, status);

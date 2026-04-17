@@ -190,18 +190,23 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
     ];
 
     onboardingReview.innerHTML = '';
-    sections.forEach(section => {
+    sections
+      .filter(section => section.values.some(value => value !== 'None' && value !== 'Not set'))
+      .forEach(section => {
       const container = el('section', 'onboarding-review-section');
       container.appendChild(el('div', 'onboarding-review-title', section.title));
 
       const values = el('div', 'onboarding-review-values');
-      section.values.forEach(value => {
+      section.values.slice(0, 3).forEach(value => {
         values.appendChild(el('span', 'onboarding-review-pill', value));
       });
+      if (section.values.length > 3) {
+        values.appendChild(el('span', 'onboarding-review-pill onboarding-review-pill-muted', `+${section.values.length - 3}`));
+      }
 
       container.appendChild(values);
       onboardingReview.appendChild(container);
-    });
+      });
   }
 
   function syncOnboardingStepUI() {

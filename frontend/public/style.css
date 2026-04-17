@@ -818,22 +818,24 @@ input:focus, textarea:focus {
 }
 
 .program-toolbar {
-  margin-bottom: 12px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 0;
 }
 
 .program-toolbar .secondary-button {
-  width: auto;
+  width: 100%;
 }
 
 .onboarding-form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .onboarding-progress-card {
-  padding: 14px;
-  background: linear-gradient(180deg, rgba(29, 29, 34, 0.96), rgba(20, 20, 24, 0.99));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(29, 29, 34, 0.9), rgba(20, 20, 24, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .onboarding-progress-steps {
@@ -844,11 +846,11 @@ input:focus, textarea:focus {
 
 .onboarding-progress-step {
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
 }
 
@@ -887,67 +889,56 @@ input:focus, textarea:focus {
 
 .onboarding-hero-card,
 .onboarding-card {
-  background: linear-gradient(180deg, rgba(31, 31, 37, 0.97), rgba(21, 21, 27, 0.99));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.95), rgba(21, 21, 27, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .onboarding-hero-card {
-  margin-bottom: 16px;
-}
-
-.onboarding-kicker {
   margin-bottom: 12px;
-  color: var(--secondary-color);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .onboarding-copy {
   color: var(--text-secondary);
+  margin-bottom: 0;
 }
 
 .onboarding-meta-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .onboarding-meta-pill {
-  padding: 8px 12px;
+  padding: 7px 11px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.045);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .onboarding-actions-card {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  position: sticky;
+  bottom: 12px;
+  z-index: 3;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.9), rgba(21, 21, 27, 0.98));
+  backdrop-filter: blur(10px);
 }
 
 .onboarding-step-header {
-  margin-bottom: 18px;
-}
-
-.onboarding-step-kicker {
-  margin-bottom: 10px;
-  color: var(--secondary-color);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
 .onboarding-step-group + .onboarding-step-group {
-  margin-top: 22px;
+  margin-top: 18px;
 }
 
 .onboarding-group-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -987,16 +978,16 @@ input:focus, textarea:focus {
 
 .onboarding-review {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .onboarding-review-section {
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .onboarding-review-title {
@@ -1011,12 +1002,16 @@ input:focus, textarea:focus {
 }
 
 .onboarding-review-pill {
-  padding: 7px 10px;
+  padding: 6px 9px;
   border-radius: 999px;
-  background: rgba(111, 182, 255, 0.14);
-  color: #deefff;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e7eef8;
   font-size: 12px;
   font-weight: 600;
+}
+
+.onboarding-review-pill-muted {
+  color: var(--text-secondary);
 }
 
 .onboarding-review-compact {
@@ -1025,7 +1020,7 @@ input:focus, textarea:focus {
 
 .onboarding-helper-text {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .onboarding-helper-text[data-tone="pending"] {
@@ -1048,7 +1043,7 @@ input:focus, textarea:focus {
 
 .choice-grid {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -1073,21 +1068,21 @@ input:focus, textarea:focus {
 .choice-pill span {
   display: grid;
   gap: 4px;
-  min-height: 72px;
-  padding: 13px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
+  min-height: 64px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.025);
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .choice-pill strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .choice-pill small {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -2142,10 +2137,9 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 .program-toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .program-insights-grid,
@@ -2296,7 +2290,7 @@ body::-webkit-scrollbar-thumb:hover,
   display: grid;
   gap: 10px;
   margin-top: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .program-summary-stat {
@@ -2319,6 +2313,39 @@ body::-webkit-scrollbar-thumb:hover,
   font-size: 13px;
   line-height: 1.45;
   word-break: break-word;
+}
+
+.program-advanced-shell {
+  display: grid;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.94), rgba(21, 21, 27, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.program-advanced-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.program-advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.program-advanced-meta {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.program-advanced-content {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .program-editor {
@@ -2453,10 +2480,10 @@ body::-webkit-scrollbar-thumb:hover,
 
 .confirm-dialog-panel {
   display: grid;
-  gap: 16px;
-  padding: 24px;
+  gap: 14px;
+  padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
+  border-radius: 24px;
   background: linear-gradient(180deg, rgba(16, 22, 32, 0.98), rgba(10, 14, 20, 0.98));
   box-shadow: var(--shadow-xl);
 }
@@ -2541,11 +2568,39 @@ body::-webkit-scrollbar-thumb:hover,
     flex-direction: column;
   }
 
+  .program-summary-meta,
+  .recommendation-stepper,
+  .recommendation-structure-list {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation-action-row {
+    flex-direction: column-reverse;
+  }
+
+  .recommendation-action-row button,
+  .recommendation-slot-actions .secondary-button {
+    width: 100%;
+  }
+
   .program-workout-editor-grid,
   .program-exercise-editor-grid,
   .program-editor-grid,
   .program-editor-schedule {
     grid-template-columns: 1fr;
+  }
+
+  .recommendation-panel-header,
+  .recommendation-structure-header,
+  .recommendation-workout-header,
+  .recommendation-slot-header,
+  .program-advanced-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .confirm-dialog {
+    width: calc(100% - 20px);
   }
 }
 
@@ -2822,20 +2877,20 @@ body::-webkit-scrollbar-thumb:hover,
 .recommendation-step-card,
 .recommendation-actions-card,
 .recommendation-panel {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .recommendation-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 6px 10px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--copy-primary);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .recommendation-pill.is-accent {
@@ -2864,9 +2919,9 @@ body::-webkit-scrollbar-thumb:hover,
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
   color: var(--copy-secondary);
   font: inherit;
@@ -2916,37 +2971,31 @@ body::-webkit-scrollbar-thumb:hover,
 .recommendation-review-list,
 .recommendation-option-list {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .recommendation-structure-card,
 .recommendation-workout-card,
 .recommendation-review-card {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .recommendation-structure-card.is-selected {
   border-color: rgba(105, 212, 144, 0.3);
-  box-shadow: 0 14px 34px rgba(14, 18, 28, 0.24);
+  box-shadow: 0 10px 24px rgba(14, 18, 28, 0.18);
 }
 
 .recommendation-preview-chip {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--copy-secondary);
   background: rgba(255, 255, 255, 0.04);
 }
 
-.recommendation-workout-meta {
-  display: grid;
-  gap: 8px;
-}
-
-.recommendation-workout-meta-item,
 .recommendation-change-item {
   display: grid;
   gap: 4px;
@@ -2954,11 +3003,11 @@ body::-webkit-scrollbar-thumb:hover,
 
 .recommendation-slot-card {
   display: grid;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .recommendation-slot-title {
@@ -2967,8 +3016,7 @@ body::-webkit-scrollbar-thumb:hover,
   color: var(--copy-primary);
 }
 
-.recommendation-slot-note,
-.recommendation-slot-tags {
+.recommendation-slot-note {
   font-size: 13px;
   color: var(--copy-secondary);
 }
@@ -2984,9 +3032,9 @@ body::-webkit-scrollbar-thumb:hover,
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.03);
   color: var(--copy-primary);
   font: inherit;
@@ -3005,6 +3053,19 @@ body::-webkit-scrollbar-thumb:hover,
 
 .recommendation-button-disabled {
   opacity: 0.7;
+}
+
+.recommendation-preview-chip-muted {
+  color: var(--text-secondary);
+}
+
+.recommendation-actions-card {
+  position: sticky;
+  bottom: 12px;
+  z-index: 3;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(31, 31, 37, 0.9), rgba(21, 21, 27, 0.98));
+  backdrop-filter: blur(10px);
 }
 
 @media (min-width: 720px) {

@@ -15,7 +15,6 @@
   <div class="container">
     <section id="onboarding-shell" class="hidden" aria-labelledby="onboarding-title">
       <div class="card onboarding-hero-card">
-        <div class="onboarding-kicker">3 quick steps</div>
         <h1 id="onboarding-title" class="section-title mb-4">
           <span class="section-title-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -28,9 +27,8 @@
           </span>
           <span>Set up your plan</span>
         </h1>
-        <p class="onboarding-copy">Pick your goal, routine, and training preferences.</p>
+        <p class="onboarding-copy">Pick your goal, routine, and preferences.</p>
         <div class="onboarding-meta-row">
-          <div class="onboarding-meta-pill">About 1 minute</div>
           <div id="onboarding-status-badge" class="onboarding-meta-pill hidden"></div>
         </div>
       </div>
@@ -55,14 +53,12 @@
 
         <section class="card onboarding-card onboarding-step-panel" data-onboarding-step-panel="0">
           <div class="onboarding-step-header">
-            <div class="onboarding-step-kicker">Step 1 of 3</div>
             <h2 class="card-title">Start with your goal</h2>
             <p class="card-subtitle">Choose what matters most right now.</p>
           </div>
 
           <div class="onboarding-step-group">
             <h3 class="onboarding-group-title">Goals</h3>
-            <p class="onboarding-group-copy">Pick one or more.</p>
             <div class="choice-grid">
               <label class="choice-pill">
                 <input class="choice-input" type="checkbox" name="goals" value="strength">
@@ -86,7 +82,6 @@
 
           <div class="onboarding-step-group">
             <h3 class="onboarding-group-title">Level</h3>
-            <p class="onboarding-group-copy">This sets your starting difficulty.</p>
             <div class="choice-grid choice-grid-3">
               <label class="choice-pill">
                 <input class="choice-input" type="radio" name="experienceLevel" value="beginner">
@@ -107,7 +102,6 @@
 
         <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="1">
           <div class="onboarding-step-header">
-            <div class="onboarding-step-kicker">Step 2 of 3</div>
             <h2 class="card-title">Pick a routine</h2>
             <p class="card-subtitle">Choose what you can realistically stick to.</p>
           </div>
@@ -165,14 +159,12 @@
 
         <section class="card onboarding-card onboarding-step-panel hidden" data-onboarding-step-panel="2">
           <div class="onboarding-step-header">
-            <div class="onboarding-step-kicker">Step 3 of 3</div>
             <h2 class="card-title">Fine-tune the plan</h2>
             <p class="card-subtitle">Add equipment, focus areas, and anything to avoid.</p>
           </div>
 
           <div class="onboarding-step-group">
             <h3 class="onboarding-group-title">Equipment</h3>
-            <p class="onboarding-group-copy">Pick what you want included.</p>
             <div class="choice-grid">
               <label class="choice-pill">
                 <input class="choice-input" type="checkbox" name="equipmentAccess" value="bodyweight">
@@ -226,7 +218,6 @@
               <h3 class="onboarding-group-title">Avoid</h3>
               <span class="onboarding-group-meta">Optional</span>
             </div>
-            <p class="onboarding-group-copy">We will try to avoid these.</p>
             <div class="choice-grid">
               <label class="choice-pill">
                 <input class="choice-input" type="checkbox" name="limitations" value="wrist_sensitive">
@@ -274,7 +265,7 @@
 
         <section class="card onboarding-card onboarding-actions-card">
           <div id="onboarding-review" class="onboarding-review onboarding-review-compact hidden"></div>
-          <p id="onboarding-save-status" class="onboarding-helper-text">Progress saves automatically.</p>
+          <p id="onboarding-save-status" class="onboarding-helper-text">Saved automatically.</p>
           <div id="onboarding-submit-error" class="error-message onboarding-submit-error"></div>
           <div class="onboarding-action-row">
             <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
@@ -287,7 +278,6 @@
 
     <section id="recommendation-shell" class="hidden" aria-labelledby="recommendation-title">
       <div class="card recommendation-hero-card">
-        <div class="onboarding-kicker">Recommended draft</div>
         <h1 id="recommendation-title" class="section-title mb-4">
           <span class="section-title-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -299,7 +289,7 @@
           </span>
           <span>Review your plan</span>
         </h1>
-        <p class="onboarding-copy">We start with recommended defaults, then you choose what to keep before activation.</p>
+        <p class="onboarding-copy">Start from the recommended draft, then confirm the version you want to activate.</p>
         <div class="recommendation-meta-row">
           <div id="recommendation-status-badge" class="recommendation-pill is-accent">Draft</div>
         </div>
@@ -335,7 +325,7 @@
           <div class="recommendation-panel-header">
             <div>
               <div id="recommendation-panel-title" class="card-title">Choose your training structure</div>
-              <div class="card-subtitle">The default option is preselected, but you can switch before activating the plan.</div>
+              <div class="card-subtitle">Pick the split you want to start with.</div>
             </div>
           </div>
           <div id="recommendation-structures" class="recommendation-structure-list"></div>
@@ -355,14 +345,13 @@
           <div class="recommendation-panel-header">
             <div>
               <div class="card-title">Review before activation</div>
-              <div class="card-subtitle">Activation creates the normal active program version used by the rest of the app.</div>
+              <div class="card-subtitle">Check the final structure and any changed exercises.</div>
             </div>
           </div>
           <div id="recommendation-review-summary" class="recommendation-review-list"></div>
         </section>
 
         <section class="card recommendation-actions-card">
-          <div id="recommendation-action-copy" class="card-subtitle">Start from the recommended split or switch to another supported structure.</div>
           <div class="recommendation-action-row">
             <button id="recommendation-back-button" class="secondary-button hidden" type="button">Back</button>
             <button id="recommendation-next-button" type="button">Continue to exercises</button>
@@ -447,11 +436,6 @@
 
       <div id="tab-program" class="tab-content">
         <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Plan</span></h1>
-        <div class="program-toolbar">
-          <button id="program-edit-button" class="secondary-button hidden" type="button">Edit plan</button>
-          <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
-          <button id="program-reset-button" class="secondary-button hidden" type="button">Reset to default</button>
-        </div>
         <div id="program-loader" class="loader"></div>
         <div id="program-error" class="error-message"></div>
         <div id="program-content" class="hidden">
@@ -460,83 +444,12 @@
             <div class="card program-summary-card mb-4">
               <div class="program-summary-header">
                 <div>
-                  <div class="card-title">Current version</div>
+                  <div class="card-title">Current plan</div>
                   <div id="program-summary-copy" class="card-subtitle"></div>
                 </div>
                 <div id="program-summary-badge" class="program-summary-badge"></div>
               </div>
               <div id="program-summary-meta" class="program-summary-meta"></div>
-            </div>
-            <div id="program-insights" class="program-insights-grid mb-4">
-              <section class="card program-info-card">
-                <div class="card-title">Why this plan exists</div>
-                <div id="program-generation-summary" class="program-info-copy"></div>
-                <div id="program-generation-meta" class="program-pill-row"></div>
-              </section>
-              <section class="card program-info-card">
-                <div class="card-title">Progression refresh</div>
-                <div id="program-runtime-summary" class="program-info-copy"></div>
-                <div id="program-runtime-meta" class="program-pill-row"></div>
-              </section>
-            </div>
-            <div class="program-detail-layout mb-4">
-              <section class="card program-version-card">
-                <div class="card-title">Version panel</div>
-                <div id="program-version-meta" class="program-detail-grid"></div>
-              </section>
-              <section class="card program-version-card">
-                <div class="card-title">What changed</div>
-                <div id="program-changes-summary" class="program-info-copy"></div>
-                <div id="program-changes-stats" class="program-pill-row"></div>
-                <div id="program-changes-list" class="program-change-list"></div>
-              </section>
-            </div>
-            <section class="card program-timeline-card mb-4">
-              <div class="program-section-header">
-                <div>
-                  <div class="card-title">Progression timeline</div>
-                  <div class="card-subtitle">Recent progression decisions for this active version.</div>
-                </div>
-              </div>
-              <div id="program-timeline-list" class="program-timeline-list"></div>
-            </section>
-            <div id="program-editor" class="card program-editor hidden">
-              <div class="program-editor-header">
-                <div>
-                  <div class="card-title">Manual editor</div>
-                  <div class="card-subtitle">Adjust the schedule, session structure, and targets before saving a new program version.</div>
-                </div>
-                <div id="program-editor-status" class="program-editor-status"></div>
-              </div>
-              <div class="program-editor-grid">
-                <label class="program-field">
-                  <span class="program-field-label">Program id</span>
-                  <input id="program-editor-id" type="text" placeholder="generated_three_day_strength">
-                </label>
-                <label class="program-field">
-                  <span class="program-field-label">Program name</span>
-                  <input id="program-editor-name" type="text" placeholder="Strength plan">
-                </label>
-              </div>
-              <section class="program-editor-section">
-                <div class="program-section-header">
-                  <div class="program-section-title">Week schedule</div>
-                  <div class="program-section-copy">Map each weekday to an existing session or a rest day.</div>
-                </div>
-                <div id="program-editor-schedule" class="program-editor-schedule"></div>
-              </section>
-              <section class="program-editor-section">
-                <div class="program-section-header">
-                  <div class="program-section-title">Sessions</div>
-                  <div class="program-section-copy">Edit names, targets, and set caps. Save will create a new version.</div>
-                </div>
-                <div id="program-editor-workouts" class="program-editor-workouts"></div>
-                <button id="program-add-workout-button" class="secondary-button" type="button">Add session</button>
-              </section>
-              <div class="program-editor-actions">
-                <button id="program-cancel-edit-button" class="secondary-button" type="button">Cancel</button>
-                <button id="program-save-button" type="button">Save plan</button>
-              </div>
             </div>
             <div class="card mb-4">
               <div class="card-title">Week</div>
@@ -544,6 +457,90 @@
             </div>
             <h2 class="mb-4">Sessions</h2>
             <div id="program-workouts"></div>
+            <details id="program-advanced-details" class="card program-advanced-shell mb-4">
+              <summary class="program-advanced-summary">
+                <span>Advanced tools</span>
+                <span class="program-advanced-meta">Manual edit and diagnostics</span>
+              </summary>
+              <div class="program-advanced-content">
+                <div class="program-toolbar">
+                  <button id="program-edit-button" class="secondary-button hidden" type="button">Edit plan</button>
+                  <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
+                  <button id="program-reset-button" class="secondary-button hidden" type="button">Reset to default</button>
+                </div>
+                <div id="program-insights" class="program-insights-grid mb-4">
+                  <section class="card program-info-card">
+                    <div class="card-title">Plan details</div>
+                    <div id="program-generation-summary" class="program-info-copy"></div>
+                    <div id="program-generation-meta" class="program-pill-row"></div>
+                  </section>
+                  <section class="card program-info-card">
+                    <div class="card-title">Progression refresh</div>
+                    <div id="program-runtime-summary" class="program-info-copy"></div>
+                    <div id="program-runtime-meta" class="program-pill-row"></div>
+                  </section>
+                </div>
+                <div class="program-detail-layout mb-4">
+                  <section class="card program-version-card">
+                    <div class="card-title">Version details</div>
+                    <div id="program-version-meta" class="program-detail-grid"></div>
+                  </section>
+                  <section class="card program-version-card">
+                    <div class="card-title">Recent changes</div>
+                    <div id="program-changes-summary" class="program-info-copy"></div>
+                    <div id="program-changes-stats" class="program-pill-row"></div>
+                    <div id="program-changes-list" class="program-change-list"></div>
+                  </section>
+                </div>
+                <section class="card program-timeline-card mb-4">
+                  <div class="program-section-header">
+                    <div>
+                      <div class="card-title">Progression timeline</div>
+                      <div class="card-subtitle">Recent progression changes for this version.</div>
+                    </div>
+                  </div>
+                  <div id="program-timeline-list" class="program-timeline-list"></div>
+                </section>
+                <div id="program-editor" class="card program-editor hidden">
+                  <div class="program-editor-header">
+                    <div>
+                      <div class="card-title">Manual editor</div>
+                      <div class="card-subtitle">Adjust the schedule, session structure, and targets before saving a new version.</div>
+                    </div>
+                    <div id="program-editor-status" class="program-editor-status"></div>
+                  </div>
+                  <div class="program-editor-grid">
+                    <label class="program-field">
+                      <span class="program-field-label">Program id</span>
+                      <input id="program-editor-id" type="text" placeholder="generated_three_day_strength">
+                    </label>
+                    <label class="program-field">
+                      <span class="program-field-label">Program name</span>
+                      <input id="program-editor-name" type="text" placeholder="Strength plan">
+                    </label>
+                  </div>
+                  <section class="program-editor-section">
+                    <div class="program-section-header">
+                      <div class="program-section-title">Week schedule</div>
+                      <div class="program-section-copy">Map each weekday to an existing session or a rest day.</div>
+                    </div>
+                    <div id="program-editor-schedule" class="program-editor-schedule"></div>
+                  </section>
+                  <section class="program-editor-section">
+                    <div class="program-section-header">
+                      <div class="program-section-title">Sessions</div>
+                      <div class="program-section-copy">Edit names, targets, and set caps. Save will create a new version.</div>
+                    </div>
+                    <div id="program-editor-workouts" class="program-editor-workouts"></div>
+                    <button id="program-add-workout-button" class="secondary-button" type="button">Add session</button>
+                  </section>
+                  <div class="program-editor-actions">
+                    <button id="program-cancel-edit-button" class="secondary-button" type="button">Cancel</button>
+                    <button id="program-save-button" type="button">Save plan</button>
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </div>
