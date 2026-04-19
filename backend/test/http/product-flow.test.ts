@@ -39,7 +39,7 @@ describe("documented product flow", () => {
     vi.unstubAllGlobals();
   });
 
-  it("covers onboarding, program delivery, logging, progression, regenerate, and reset", async () => {
+  it("covers onboarding, draft activation, program delivery, logging, progression, regenerate, and reset", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-12T12:00:00.000Z"));
 
@@ -79,6 +79,39 @@ describe("documented product flow", () => {
     expect(completed.response.status, JSON.stringify(completed.body)).toBe(200);
 
     const completedBody = completed.body as {
+      recommendation_draft: {
+        id: string;
+        selected_structure_id: string;
+        draft: {
+          exercise_slots: Array<{
+            slot_id: string;
+            workout_key: string;
+            selected_exercise_id: string;
+            options: Array<{ catalog_exercise_id: string; exercise_id: string }>;
+          }>;
+          structures: Array<{ id: string }>;
+        };
+      };
+    };
+
+    const programBeforeActivation = await fetchJson(app.request.bind(app), "/program", { headers: headers() });
+    expect(programBeforeActivation.response.status).toBe(409);
+    expect(programBeforeActivation.body).toEqual({ error: "Active program not found" });
+
+    const currentDraft = await fetchJson(app.request.bind(app), "/recommendation-draft", { headers: headers() });
+    expect(currentDraft.response.status).toBe(200);
+    expect((currentDraft.body as { id: string }).id).toBe(completedBody.recommendation_draft.id);
+
+    const activated = await fetchJson(app.request.bind(app), "/recommendation-draft/activate", {
+      method: "POST",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        draft_id: completedBody.recommendation_draft.id,
+      }),
+    });
+    expect(activated.response.status, JSON.stringify(activated.body)).toBe(200);
+
+    const activatedBody = activated.body as {
       program: {
         version_id: string;
         workouts: Record<string, { exercises: Array<{ id: string; reps?: { min: number; max: number } }> }>;
@@ -131,12 +164,12 @@ describe("documented product flow", () => {
       progressionState: Record<string, { min: number; max: number; sets: number }>;
     };
 
-    expect(programBody.version_id).toBe(completedBody.program.version_id);
+    expect(programBody.version_id).toBe(activatedBody.program.version_id);
     expect(programBody.generator_metadata).toEqual({
       version: "generator-v1",
       catalog_seed_version: "catalog-v1",
     });
-    expect(programBody.generated_program_metadata?.generation_reason).toBe("onboarding-complete");
+    expect(programBody.generated_program_metadata?.generation_reason).toBe("recommendation-draft-activate");
     expect(programBody.generated_program_metadata?.input_summary.trainingDaysPerWeek).toBe(
       ONBOARDING_ANSWERS.trainingDaysPerWeek
     );

@@ -273,13 +273,16 @@ export interface RecommendationDraftActivateResponse {
   };
 }
 
-export interface OnboardingCompleteResponse extends GeneratedProgramResponse {
+export interface OnboardingCompleteResponse {
+  ok: true;
+  message: string;
   onboarding: {
     completed: true;
     completed_at: string;
     questionnaire_version: string;
   };
   profile: Omit<OnboardingProfileSummary, 'updated_at'>;
+  recommendation_draft: RecommendationDraftResponse;
 }
 
 export interface MeResponse {

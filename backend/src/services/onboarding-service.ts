@@ -2,8 +2,10 @@ import { normalizeOnboardingAnswers } from "../domain/profile";
 import { validateOnboardingAnswers, validateOnboardingDraft } from "../domain/onboarding";
 import { OnboardingRepository } from "../repositories/onboarding-repository";
 import { ProfileRepository } from "../repositories/profile-repository";
+import { UserRepository } from "../repositories/user-repository";
 import { UserLifecycleService } from "./user-lifecycle-service";
 import { ProgramGeneratorService } from "./program-generator-service";
+import { RecommendationDraftService } from "./recommendation-draft-service";
 import { nowIso } from "../lib/time";
 
 export class OnboardingService {
@@ -11,7 +13,9 @@ export class OnboardingService {
     private readonly lifecycle: UserLifecycleService,
     private readonly onboarding: OnboardingRepository,
     private readonly profiles: ProfileRepository,
-    private readonly programGenerator: ProgramGeneratorService
+    private readonly programGenerator: ProgramGeneratorService,
+    private readonly recommendationDrafts: RecommendationDraftService,
+    private readonly users: UserRepository
   ) {}
 
   async getState(userId: string, username: string) {
@@ -55,12 +59,14 @@ export class OnboardingService {
     const completedAt = nowIso();
     await this.onboarding.upsertDraft(userId, answers, { completedAt: null });
     await this.programGenerator.deriveAndStoreProfileFromAnswers(userId, username, answers);
-    const result = await this.programGenerator.generateFromStoredProfile(userId, username, "onboarding-complete");
+    const draft = await this.recommendationDrafts.createFromStoredProfile(userId, username);
+    await this.users.markOnboardingCompleted(userId, completedAt);
     await this.onboarding.upsertDraft(userId, answers, { completedAt });
     const profile = normalizeOnboardingAnswers(answers);
 
     return {
-      ...result,
+      ok: true,
+      message: "Onboarding completed",
       onboarding: {
         completed: true,
         completed_at: completedAt,
@@ -72,6 +78,7 @@ export class OnboardingService {
         training_days_per_week: profile.trainingDaysPerWeek,
         session_duration_minutes: profile.sessionDurationMinutes,
       },
+      recommendation_draft: draft,
     };
   }
 }

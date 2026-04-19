@@ -651,6 +651,27 @@ function buildRecommendationActivationResponse(
   };
 }
 
+function buildOnboardingCompleteDraftResponse(
+  draftResponse: ReturnType<typeof buildRecommendationDraftResponse> = buildRecommendationDraftResponse(),
+) {
+  return {
+    ok: true,
+    message: 'Onboarding completed',
+    onboarding: {
+      completed: true,
+      completed_at: '2026-04-17T12:00:00.000Z',
+      questionnaire_version: 'onboarding-v1',
+    },
+    profile: {
+      version: 'profile-v1',
+      primary_goal: 'general_fitness',
+      training_days_per_week: 3,
+      session_duration_minutes: 30,
+    },
+    recommendation_draft: draftResponse,
+  };
+}
+
 function buildProgramResponse() {
   return {
     ...buildGeneratedProgramResponse().program,
@@ -958,16 +979,17 @@ test('authenticated user with incomplete onboarding sees onboarding UI', async (
   await assertNoClientIssues(issues);
 });
 
-test('completing onboarding transitions to the main app', async ({ page }) => {
+test('completing onboarding transitions to the recommendation flow', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
   let completed = false;
+  const draftResponse = buildRecommendationDraftResponse();
 
   await mockApi(page, ({ url, method }) => {
     if (method === 'GET' && url.pathname === '/me') {
-      return { body: buildMeResponse({ onboardingCompleted: completed, hasActiveProgram: completed }) };
+      return { body: buildMeResponse({ onboardingCompleted: completed, hasActiveProgram: false }) };
     }
 
     if (method === 'GET' && url.pathname === '/onboarding') {
@@ -988,19 +1010,25 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
 
     if (method === 'POST' && url.pathname === '/onboarding/complete') {
       completed = true;
-      return { body: buildGeneratedProgramResponse() };
+      return { body: buildOnboardingCompleteDraftResponse(draftResponse) };
+    }
+
+    if (method === 'GET' && url.pathname === '/recommendation-draft') {
+      return completed
+        ? { body: draftResponse }
+        : { status: 404, body: { error: 'Recommendation draft not found' } };
+    }
+
+    if (method === 'POST' && url.pathname === '/recommendation-draft') {
+      return { body: draftResponse };
     }
 
     if (method === 'GET' && url.pathname === '/workout/today') {
-      return completed
-        ? { body: buildTodayWorkoutResponse() }
-        : { status: 409, body: { error: 'Onboarding not completed' } };
+      return { status: 409, body: { error: completed ? 'Active program not found' : 'Onboarding not completed' } };
     }
 
     if (method === 'GET' && url.pathname === '/program') {
-      return completed
-        ? { body: buildProgramResponse() }
-        : { status: 409, body: { error: 'Onboarding not completed' } };
+      return { status: 409, body: { error: completed ? 'Active program not found' : 'Onboarding not completed' } };
     }
 
     if (method === 'GET' && url.pathname === '/sessions') {
@@ -1019,12 +1047,12 @@ test('completing onboarding transitions to the main app', async ({ page }) => {
   await expect(page.locator('[data-onboarding-step-panel="2"]')).toBeVisible();
   await expect(page.locator('#onboarding-review')).toBeVisible();
   await page.getByRole('button', { name: /build plan/i }).click();
-  await expect(page.locator('#app-shell')).toBeVisible();
-  await expect(page.locator('#today-content')).toBeVisible();
-  await expect(page.locator('#today-workout-name')).toHaveText('Workout A');
-  await expect(page.locator('#today-guidance-title')).toHaveText(/log each set/i);
-  await expect(page.locator('.exercise-chip')).toContainText(['8-12 reps', '2/3 sets']);
-  await expect(page.locator('.set-row')).toHaveCount(2);
+  await expect(page.locator('#recommendation-shell')).toBeVisible();
+  await expect(page.locator('#recommendation-structure-panel')).toBeVisible();
+  await expect(page.locator('#recommendation-structures')).toContainText(/3-day split/i);
+  await expect(page.locator('#recommendation-profile-summary')).toContainText(/general fitness/i);
+  await expect(page.locator('#recommendation-profile-summary')).toContainText('3 days/week');
+  await expect(page.locator('#recommendation-profile-summary')).toContainText('30 min');
   await assertNoClientIssues(issues);
 });
 

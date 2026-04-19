@@ -67,6 +67,17 @@ async function activateTab(tabId) {
 async function refreshProductState() {
   await profileFeature.loadProductState();
 
+  if (profileFeature.hasActiveProgram()) {
+    recommendationFeature.reset();
+    showShellMode('app');
+    programFeature.setActionsVisible(true);
+
+    const activeTabId = getActiveTabId();
+    await activateTab(activeTabId);
+    await todayWorkoutFeature.load();
+    return;
+  }
+
   if (!profileFeature.hasCompletedOnboarding()) {
     recommendationFeature.reset();
     await onboardingFeature.enter();
@@ -89,23 +100,18 @@ async function refreshProductState() {
 
   recommendationFeature.reset();
   showShellMode('app');
-  programFeature.setActionsVisible(profileFeature.hasActiveProgram());
+  programFeature.setActionsVisible(false);
 
   const activeTabId = getActiveTabId();
   await activateTab(activeTabId);
 
-  if (!profileFeature.hasActiveProgram()) {
-    todayWorkoutFeature.renderRecoveryState();
-    if (activeTabId === 'program') {
-      programFeature.renderRecoveryState();
-    }
-    if (activeTabId === 'history') {
-      historyFeature.renderRecoveryState();
-    }
-    return;
+  todayWorkoutFeature.renderRecoveryState();
+  if (activeTabId === 'program') {
+    programFeature.renderRecoveryState();
   }
-
-  await todayWorkoutFeature.load();
+  if (activeTabId === 'history') {
+    historyFeature.renderRecoveryState();
+  }
 }
 
 historyFeature = createHistoryFeature({

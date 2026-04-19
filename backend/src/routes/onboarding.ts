@@ -108,9 +108,9 @@ const completeOnboardingRoute = createRoute({
   middleware: authMiddleware,
   security: bearerSecurity,
   tags: ["Onboarding"],
-  summary: "Complete onboarding and generate program",
+  summary: "Complete onboarding and create recommendation draft",
   description:
-    "Validates onboarding answers, stores the normalized profile, generates a backend-owned program from the global exercise catalog, and activates it for the user.",
+    "Validates onboarding answers, stores the normalized profile, marks onboarding complete, and creates the current recommendation draft without activating a program yet.",
   request: {
     body: {
       required: true,
@@ -123,7 +123,7 @@ const completeOnboardingRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Onboarding completed and program generated.",
+      description: "Onboarding completed and recommendation draft created.",
       content: {
         "application/json": {
           schema: OnboardingCompleteResponseSchema,
