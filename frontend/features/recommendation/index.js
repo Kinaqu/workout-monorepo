@@ -1,7 +1,9 @@
 import {
   api,
   ApiError,
+  AuthRedirectError,
   isRecommendationDraftNotFoundError,
+  isRecommendationDraftUnsupportedError,
 } from '/lib/api/index.js';
 import {
   resetRecommendation,
@@ -16,6 +18,8 @@ import { ensureApiObject } from '/shared/utils/guards.js';
 const recommendationShell = document.getElementById('recommendation-shell');
 const recommendationStatusBadge = document.getElementById('recommendation-status-badge');
 const recommendationError = document.getElementById('recommendation-error');
+const recommendationRecovery = document.getElementById('recommendation-recovery');
+const recommendationRetryButton = document.getElementById('recommendation-retry-button');
 const recommendationLoader = document.getElementById('recommendation-loader');
 const recommendationContent = document.getElementById('recommendation-content');
 const recommendationProfileSummary = document.getElementById('recommendation-profile-summary');
@@ -73,22 +77,6 @@ function formatTargetLabel(option) {
     return `${range} cycles`;
   }
   return `${range} reps`;
-}
-
-function formatStepTitle(step) {
-  if (step === 'structure') return 'Choose your training structure';
-  if (step === 'exercise') return 'Tune each exercise slot';
-  return 'Review before activation';
-}
-
-function formatStepCopy(step) {
-  if (step === 'structure') {
-    return 'Choose the split you want to start with.';
-  }
-  if (step === 'exercise') {
-    return 'Swap any slot if you want a different exercise.';
-  }
-  return 'Confirm this version to start using it across the app.';
 }
 
 function buildSchedulePreview(schedule) {
@@ -481,6 +469,13 @@ function render() {
 
   recommendationLoader?.classList.toggle('hidden', !showLoader);
   recommendationContent?.classList.toggle('hidden', !showContent);
+  recommendationRecovery?.classList.toggle(
+    'hidden',
+    showLoader || showContent || !(recommendation.errorMessage || recommendation.activationErrorMessage)
+  );
+  if (recommendationRetryButton) {
+    recommendationRetryButton.disabled = isBusyStatus(status);
+  }
 
   if (!draft) {
     closeOptionDialog();
@@ -520,16 +515,6 @@ function render() {
     recommendationConfirmButton.textContent = status === 'activating' ? 'Activating...' : 'Activate plan';
   }
 
-  const panelTitle = recommendationShell.querySelector('#recommendation-panel-title');
-  if (panelTitle) {
-    panelTitle.textContent = formatStepTitle(recommendation.step);
-  }
-
-  const panelSubtitle = recommendationShell.querySelector('#recommendation-structure-panel .card-subtitle');
-  if (panelSubtitle) {
-    panelSubtitle.textContent = formatStepCopy(recommendation.step);
-  }
-
   renderOptionDialog(draft, status);
 }
 
@@ -556,7 +541,11 @@ function getReadableErrorMessage(error, fallback) {
 export function createRecommendationFeature({ showShellMode, onActivated }) {
   async function loadOrCreateDraft() {
     try {
-      return ensureApiObject(await api.getRecommendationDraft(), 'recommendation draft');
+      const currentDraft = ensureApiObject(await api.getRecommendationDraft(), 'recommendation draft');
+      if (currentDraft.status === 'activated') {
+        return ensureApiObject(await api.createRecommendationDraft(), 'recommendation draft');
+      }
+      return currentDraft;
     } catch (error) {
       if (isRecommendationDraftNotFoundError(error)) {
         return ensureApiObject(await api.createRecommendationDraft(), 'recommendation draft');
@@ -576,10 +565,25 @@ export function createRecommendationFeature({ showShellMode, onActivated }) {
     showShellMode('recommendation');
     render();
 
-    const draftResponse = prefetchedDraft ?? (await loadOrCreateDraft());
-    setDraftResponse(draftResponse, { step: selectRecommendation().step || 'structure' });
-    render();
-    return true;
+    try {
+      const draftResponse = prefetchedDraft ?? (await loadOrCreateDraft());
+      setDraftResponse(draftResponse, { step: selectRecommendation().step || 'structure' });
+      render();
+      return true;
+    } catch (error) {
+      if (error instanceof AuthRedirectError || isRecommendationDraftUnsupportedError(error)) {
+        throw error;
+      }
+
+      updateRecommendation({
+        status: 'idle',
+        draft: null,
+        errorMessage: getReadableErrorMessage(error, 'Unable to load recommendations right now.'),
+        activationErrorMessage: '',
+      });
+      render();
+      return false;
+    }
   }
 
   function reset({ preserveSupport = false } = {}) {
@@ -734,6 +738,10 @@ export function createRecommendationFeature({ showShellMode, onActivated }) {
 
   recommendationConfirmButton?.addEventListener('click', () => {
     void handleActivateDraft();
+  });
+
+  recommendationRetryButton?.addEventListener('click', () => {
+    void enter();
   });
 
   recommendationStepItems.forEach(item => {

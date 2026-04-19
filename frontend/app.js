@@ -2,6 +2,7 @@ import {
   AuthRedirectError,
   isMissingProgramError,
   isOnboardingIncompleteError,
+  isRecommendationDraftUnsupportedError,
 } from '/lib/api/index.js';
 import { ensureClerkReady } from '/clerk-bootstrap.js';
 import { createHistoryFeature } from '/features/history/index.js';
@@ -93,8 +94,12 @@ async function refreshProductState() {
         throw error;
       }
 
-      recommendationFeature.markUnsupported();
-      console.warn('Recommendation draft flow is unavailable, falling back to legacy app shell.', error);
+      if (isRecommendationDraftUnsupportedError(error)) {
+        recommendationFeature.markUnsupported();
+        console.warn('Recommendation draft flow is unavailable, falling back to legacy app shell.', error);
+      } else {
+        throw error;
+      }
     }
   }
 

@@ -78,6 +78,16 @@ describe("documented product flow", () => {
     });
     expect(completed.response.status, JSON.stringify(completed.body)).toBe(200);
 
+    const meAfterOnboarding = await fetchJson(app.request.bind(app), "/me", { headers: headers() });
+    expect(meAfterOnboarding.response.status).toBe(200);
+    expect(
+      (meAfterOnboarding.body as { lifecycle: { onboarding_completed: boolean; has_active_program: boolean } }).lifecycle
+    ).toEqual({
+      user_exists: true,
+      onboarding_completed: true,
+      has_active_program: false,
+    });
+
     const completedBody = completed.body as {
       recommendation_draft: {
         id: string;
@@ -110,6 +120,16 @@ describe("documented product flow", () => {
       }),
     });
     expect(activated.response.status, JSON.stringify(activated.body)).toBe(200);
+
+    const meAfterActivation = await fetchJson(app.request.bind(app), "/me", { headers: headers() });
+    expect(meAfterActivation.response.status).toBe(200);
+    expect(
+      (meAfterActivation.body as { lifecycle: { onboarding_completed: boolean; has_active_program: boolean } }).lifecycle
+    ).toEqual({
+      user_exists: true,
+      onboarding_completed: true,
+      has_active_program: true,
+    });
 
     const activatedBody = activated.body as {
       program: {

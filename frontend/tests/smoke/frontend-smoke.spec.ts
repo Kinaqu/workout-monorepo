@@ -1046,7 +1046,7 @@ test('completing onboarding transitions to the recommendation flow', async ({ pa
   await page.getByRole('button', { name: /continue/i }).click();
   await expect(page.locator('[data-onboarding-step-panel="2"]')).toBeVisible();
   await expect(page.locator('#onboarding-review')).toBeVisible();
-  await page.getByRole('button', { name: /build plan/i }).click();
+  await page.getByRole('button', { name: /review recommendations/i }).click();
   await expect(page.locator('#recommendation-shell')).toBeVisible();
   await expect(page.locator('#recommendation-structure-panel')).toBeVisible();
   await expect(page.locator('#recommendation-structures')).toContainText(/3-day split/i);
@@ -1186,6 +1186,56 @@ test('completed onboarding without active program enters recommendation flow and
   ).toEqual([]);
 });
 
+test('completed onboarding with an existing pending draft resumes recommendation flow without recreating the draft', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installMockSignedInClerk(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let createDraftCalls = 0;
+
+  await mockApi(page, ({ url, method }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: false }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/recommendation-draft') {
+      return {
+        body: buildRecommendationDraftResponse({
+          draftId: 'draft_existing_smoke',
+          structureId: 'four_day',
+        }),
+      };
+    }
+
+    if (method === 'POST' && url.pathname === '/recommendation-draft') {
+      createDraftCalls += 1;
+      return { body: buildRecommendationDraftResponse() };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      return { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#recommendation-shell')).toBeVisible();
+  await expect(page.locator('#recommendation-structures .recommendation-structure-card.is-selected')).toContainText(
+    /4-day split/i,
+  );
+  expect(createDraftCalls).toBe(0);
+  await assertNoClientIssues(issues);
+});
+
 test('completed onboarding without active program falls back to legacy plan recovery when recommendation endpoints are unavailable', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installMockSignedInClerk(page);
@@ -1244,6 +1294,58 @@ test('completed onboarding without active program falls back to legacy plan reco
   expect.soft(
     issues.consoleErrors.filter(message => !message.includes('404 (Not Found)')),
     'unexpected console errors'
+  ).toEqual([]);
+});
+
+test('recoverable recommendation load failures stay in recommendation shell and can be retried', async ({ page }) => {
+  await enableVercelProtectionBypass(page);
+  await installMockSignedInClerk(page);
+  await installApiRuntimeConfig(page);
+  const issues = attachClientIssueCollector(page);
+  let draftLoadAttempts = 0;
+
+  await mockApi(page, ({ url, method }) => {
+    if (method === 'GET' && url.pathname === '/me') {
+      return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: false }) };
+    }
+
+    if (method === 'GET' && url.pathname === '/recommendation-draft') {
+      draftLoadAttempts += 1;
+      if (draftLoadAttempts === 1) {
+        return { status: 500, body: { error: 'Temporary backend issue' } };
+      }
+
+      return { body: buildRecommendationDraftResponse() };
+    }
+
+    if (method === 'GET' && url.pathname === '/sessions') {
+      return { body: { sessions: [], count: 0 } };
+    }
+
+    if (method === 'GET' && url.pathname === '/program') {
+      return { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    if (method === 'GET' && url.pathname === '/workout/today') {
+      return { status: 409, body: { error: 'Active program not found' } };
+    }
+
+    return { status: 404, body: { error: 'Not found' } };
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#recommendation-shell')).toBeVisible();
+  await expect(page.locator('#app-shell')).toBeHidden();
+  await expect(page.locator('#recommendation-error')).toContainText(/temporary backend issue/i);
+  await expect(page.locator('#recommendation-retry-button')).toBeVisible();
+  await page.getByRole('button', { name: /try again/i }).click();
+  await expect(page.locator('#recommendation-structures')).toContainText(/3-day split/i);
+  expect(draftLoadAttempts).toBe(2);
+  expect.soft(issues.pageErrors, 'page errors').toEqual([]);
+  expect.soft(issues.sameOriginFailures, 'same-origin failed requests').toEqual([]);
+  expect.soft(
+    issues.consoleErrors.filter(message => !message.includes('500 (Internal Server Error)')),
+    'unexpected console errors',
   ).toEqual([]);
 });
 
@@ -1383,16 +1485,14 @@ test('history screen renders sessions list and detail diagnostics from /sessions
   await assertNoClientIssues(issues);
 });
 
-test('today date picker, progression refresh, and manual program controls work together', async ({ page }) => {
+test('today date picker, progression refresh, and active plan summary stay stable while legacy controls stay hidden', async ({ page }) => {
   await enableVercelProtectionBypass(page);
   await installMockSignedInClerk(page);
   await installApiRuntimeConfig(page);
   const issues = attachClientIssueCollector(page);
-  let savedProgramBody: Record<string, unknown> | null = null;
-  let resetCalled = false;
   let progressionRuns = 0;
 
-  await mockApi(page, ({ url, method, body }) => {
+  await mockApi(page, ({ url, method }) => {
     if (method === 'GET' && url.pathname === '/me') {
       return { body: buildMeResponse({ onboardingCompleted: true, hasActiveProgram: true }) };
     }
@@ -1436,34 +1536,6 @@ test('today date picker, progression refresh, and manual program controls work t
       };
     }
 
-    if (method === 'POST' && url.pathname === '/program') {
-      savedProgramBody = body as Record<string, unknown>;
-      return {
-        body: {
-          ok: true,
-          message: 'Program saved',
-          program: {
-            ...(body as Record<string, unknown>),
-            version_id: 'program_saved_smoke',
-          },
-        },
-      };
-    }
-
-    if (method === 'POST' && url.pathname === '/program/reset') {
-      resetCalled = true;
-      return {
-        body: {
-          ok: true,
-          message: 'Program reset to default',
-          program: {
-            ...buildProgramResponse(),
-            version_id: 'program_reset_smoke',
-          },
-        },
-      };
-    }
-
     return { status: 404, body: { error: 'Not found' } };
   });
 
@@ -1482,25 +1554,9 @@ test('today date picker, progression refresh, and manual program controls work t
   await page.locator('.nav-item[data-tab="program"]').click();
   await expect(page.locator('#program-summary-meta')).toContainText(/general fitness plan/i);
   await expect(page.locator('#program-workouts')).toContainText(/workout a/i);
-  await expect(page.locator('#program-generation-summary')).toBeHidden();
-
-  await page.locator('#program-advanced-details .program-advanced-summary').click();
-  await expect(page.locator('#program-generation-summary')).toContainText(/generated from the saved onboarding profile/i);
-  await expect(page.locator('#program-runtime-summary')).toContainText(/last refresh ran on/i);
-  await expect(page.locator('#program-version-meta')).toContainText(/active/i);
-  await expect(page.locator('#program-changes-list')).toContainText(/schedule days were remapped/i);
-  await expect(page.locator('#program-timeline-list')).toContainText(/push-ups/i);
-
-  await page.getByRole('button', { name: /edit plan/i }).click();
-  await expect(page.locator('#program-editor')).toBeVisible();
-  await page.locator('#program-editor-name').fill('Custom strength block');
-  await page.locator('#program-save-button').click();
-  await expect.poll(() => savedProgramBody?.name).toBe('Custom strength block');
-
-  await page.getByRole('button', { name: /reset to default/i }).click();
-  await expect(page.locator('#confirm-dialog')).toBeVisible();
-  await page.locator('#confirm-dialog-input').fill('test-reset-token');
-  await page.locator('#confirm-dialog').getByRole('button', { name: /reset program/i }).click();
-  await expect.poll(() => resetCalled).toBeTruthy();
+  await expect(page.locator('#program-advanced-details')).toBeHidden();
+  await expect(page.locator('#program-edit-button')).toBeHidden();
+  await expect(page.locator('#program-regenerate-button')).toBeHidden();
+  await expect(page.locator('#program-reset-button')).toBeHidden();
   await assertNoClientIssues(issues);
 });

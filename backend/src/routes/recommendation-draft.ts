@@ -21,7 +21,7 @@ const createRecommendationDraftRoute = createRoute({
   tags: ["Recommendation Draft"],
   summary: "Create or refresh recommendation draft from stored profile",
   description:
-    "Builds an editable recommendation draft from the stored normalized profile without changing the current onboarding completion runtime path.",
+    "Builds an editable recommendation draft from the stored normalized profile without activating a program.",
   responses: {
     200: {
       description: "Recommendation draft created.",
