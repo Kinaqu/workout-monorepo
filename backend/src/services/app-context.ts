@@ -61,7 +61,14 @@ export function createAppContext(env: Env) {
     sessionService: new SessionService(lifecycle, sessions, runtime),
     progressionService,
     recommendationDrafts,
-    onboardingService: new OnboardingService(lifecycle, onboarding, profiles, programGeneratorService),
+    onboardingService: new OnboardingService(
+      lifecycle,
+      onboarding,
+      profiles,
+      programGeneratorService,
+      recommendationDraftService,
+      users
+    ),
     meService: new MeService(lifecycle, onboarding, profiles, programs),
   };
 }

@@ -287,14 +287,19 @@ export const GeneratedProgramResponseSchema = z
   })
   .openapi("GeneratedProgramResponse");
 
-export const OnboardingCompleteResponseSchema = GeneratedProgramResponseSchema.extend({
-  onboarding: z.object({
-    completed: z.literal(true),
-    completed_at: IsoDateTimeSchema,
-    questionnaire_version: z.string().openapi({ example: "onboarding-v1" }),
-  }),
-  profile: OnboardingProfileSummarySchema.omit({ updated_at: true }),
-}).openapi("OnboardingCompleteResponse");
+export const OnboardingCompleteResponseSchema = z
+  .object({
+    ok: z.literal(true),
+    message: z.string().openapi({ example: "Onboarding completed" }),
+    onboarding: z.object({
+      completed: z.literal(true),
+      completed_at: IsoDateTimeSchema,
+      questionnaire_version: z.string().openapi({ example: "onboarding-v1" }),
+    }),
+    profile: OnboardingProfileSummarySchema.omit({ updated_at: true }),
+    recommendation_draft: z.lazy(() => RecommendationDraftResponseSchema),
+  })
+  .openapi("OnboardingCompleteResponse");
 
 const RecommendationDraftProfileSnapshotSchema = z
   .object({

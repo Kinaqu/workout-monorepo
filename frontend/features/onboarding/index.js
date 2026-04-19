@@ -428,14 +428,14 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
 
     renderOnboardingErrors(errors);
     if (Object.keys(errors).length > 0) {
-      setOnboardingSubmitError('Fill the highlighted fields before building your plan.');
+      setOnboardingSubmitError('Fill the highlighted fields before preparing your draft.');
       return;
     }
 
     onboardingSubmitting = true;
     if (onboardingCompleteButton) onboardingCompleteButton.disabled = true;
     setOnboardingSubmitError('');
-    setOnboardingSaveStatus('Building your plan...', 'pending');
+    setOnboardingSaveStatus('Preparing your recommended draft...', 'pending');
 
     try {
       await api.completeOnboarding(payload);
@@ -444,7 +444,7 @@ export function createOnboardingFeature({ showShellMode, onCompleted }) {
     } catch (error) {
       if (error instanceof AuthRedirectError) return;
       setOnboardingSubmitError(error.message || 'Could not complete onboarding.');
-      setOnboardingSaveStatus('We could not build the plan yet.', 'error');
+      setOnboardingSaveStatus('We could not prepare your draft yet.', 'error');
     } finally {
       onboardingSubmitting = false;
       if (onboardingCompleteButton) onboardingCompleteButton.disabled = false;

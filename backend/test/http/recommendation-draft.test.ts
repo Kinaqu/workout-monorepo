@@ -25,16 +25,16 @@ describe("recommendation draft routes", () => {
     await resetPersistence();
   });
 
-  it("keeps old onboarding flow unchanged and supports the new recommendation draft lifecycle", async () => {
+  it("creates a recommendation draft during onboarding completion and supports the draft lifecycle", async () => {
     const headers = (extra: HeadersInit = {}) => authHeaders(extra, token);
 
     const completed = await completeOnboarding(token);
     expect(completed.response.status, JSON.stringify(completed.body)).toBe(200);
 
-    const missingDraft = await fetchJson(app.request.bind(app), "/recommendation-draft", {
+    const currentDraft = await fetchJson(app.request.bind(app), "/recommendation-draft", {
       headers: headers(),
     });
-    expect(missingDraft.response.status).toBe(404);
+    expect(currentDraft.response.status, JSON.stringify(currentDraft.body)).toBe(200);
 
     const created = await fetchJson(app.request.bind(app), "/recommendation-draft", {
       method: "POST",
