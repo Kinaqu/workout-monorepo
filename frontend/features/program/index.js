@@ -61,6 +61,7 @@ const confirmDialogInputLabel = document.getElementById('confirm-dialog-input-la
 const confirmDialogInput = document.getElementById('confirm-dialog-input');
 const confirmDialogCancel = document.getElementById('confirm-dialog-cancel');
 const confirmDialogConfirm = document.getElementById('confirm-dialog-confirm');
+const SHOW_PROGRAM_ADVANCED_TOOLS = false;
 
 function createStat(label, value) {
   const item = el('div', 'program-summary-stat');
@@ -468,12 +469,13 @@ export function createProgramFeature({
   }
 
   function setActionsVisible(visible) {
-    programRegenerateButton.classList.toggle('hidden', !visible);
-    programEditButton.classList.toggle('hidden', !visible);
-    programResetButton.classList.toggle('hidden', !visible);
-    programAdvancedDetails?.classList.toggle('hidden', !visible);
+    const showAdvancedTools = visible && SHOW_PROGRAM_ADVANCED_TOOLS;
+    programRegenerateButton.classList.toggle('hidden', !showAdvancedTools);
+    programEditButton.classList.toggle('hidden', !showAdvancedTools);
+    programResetButton.classList.toggle('hidden', !showAdvancedTools);
+    programAdvancedDetails?.classList.toggle('hidden', !showAdvancedTools);
 
-    if (!visible) {
+    if (!showAdvancedTools) {
       if (programAdvancedDetails) {
         programAdvancedDetails.open = false;
       }

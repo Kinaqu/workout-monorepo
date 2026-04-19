@@ -86,7 +86,9 @@ export class RecommendationDraftService {
 
   async getCurrentDraft(userId: string, username: string): Promise<RecommendationDraftResponseDto> {
     await this.lifecycle.ensureUserExists(userId, username);
-    return mapDraftRecordToApi(await this.requireDraft(userId));
+    const draft = await this.requireDraft(userId);
+    await this.assertReadableDraft(draft);
+    return mapDraftRecordToApi(draft);
   }
 
   async chooseStructure(
@@ -228,6 +230,21 @@ export class RecommendationDraftService {
       notFound("Recommendation draft not found");
     }
     return draft;
+  }
+
+  private async assertReadableDraft(draft: RecommendationDraftRecord): Promise<void> {
+    if (draft.status !== "activated") {
+      return;
+    }
+
+    if (!draft.activatedProgramId || !draft.activatedAt) {
+      notFound("Recommendation draft not found");
+    }
+
+    const activatedProgram = await this.programs.getProgramById(draft.activatedProgramId);
+    if (!activatedProgram) {
+      notFound("Recommendation draft not found");
+    }
   }
 
   private async requireEditableDraft(userId: string, draftId: string): Promise<RecommendationDraftRecord> {

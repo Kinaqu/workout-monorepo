@@ -270,7 +270,7 @@
           <div class="onboarding-action-row">
             <button id="onboarding-back-button" class="secondary-button hidden" type="button">Back</button>
             <button id="onboarding-next-button" type="button">Continue</button>
-            <button id="onboarding-complete-button" class="hidden" type="submit">Build plan</button>
+            <button id="onboarding-complete-button" class="hidden" type="submit">Review recommendations</button>
           </div>
         </section>
       </form>
@@ -296,6 +296,11 @@
       </div>
 
       <div id="recommendation-error" class="error-message"></div>
+      <section id="recommendation-recovery" class="card recommendation-recovery-card hidden">
+        <div class="card-title">Could not load your draft</div>
+        <p class="card-subtitle">Try again to reload your recommendations.</p>
+        <button id="recommendation-retry-button" class="secondary-button" type="button">Try again</button>
+      </section>
       <div id="recommendation-loader" class="loader hidden"></div>
 
       <div id="recommendation-content" class="hidden">
@@ -460,7 +465,7 @@
             <details id="program-advanced-details" class="card program-advanced-shell mb-4">
               <summary class="program-advanced-summary">
                 <span>Advanced tools</span>
-                <span class="program-advanced-meta">Manual edit and diagnostics</span>
+                <span class="program-advanced-meta">Compatibility only</span>
               </summary>
               <div class="program-advanced-content">
                 <div class="program-toolbar">

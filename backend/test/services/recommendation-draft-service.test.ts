@@ -339,4 +339,13 @@ describe("recommendation draft service", () => {
     expect(result.recommendation_draft.activated_program_id).toBe("program_2");
     expect(dependencies.programGenerator.persistGeneratedProgramVersion).not.toHaveBeenCalled();
   });
+
+  it("treats an activated draft without a persisted program as not found on read", async () => {
+    const activatedDraft = buildActivatedDraftRecord();
+    const { service, dependencies } = buildService();
+    dependencies.recommendationDrafts.getByUserId.mockResolvedValue(activatedDraft);
+    dependencies.programs.getProgramById.mockResolvedValue(null);
+
+    await expect(service.getCurrentDraft("user_1", "demo@example.com")).rejects.toThrowError(AppError);
+  });
 });
