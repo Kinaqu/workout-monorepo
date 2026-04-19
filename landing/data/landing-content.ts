@@ -30,15 +30,15 @@ export const trustStats = [
   },
   {
     label: "Plan response",
-    value: "Advance, hold, or scale back",
-    detail: "The next session reacts to what actually happened.",
+    value: "Adjust when needed",
+    detail: "The next workout changes when your week changes.",
   },
 ] as const;
 
 export const flowSteps = [
   {
     number: "01",
-    title: "Start with a fast fit check",
+    title: "Start with a quick setup",
     description:
       "Tell Kinova your level, goal, available equipment, schedule, and any movement limits.",
     detailLabel: "Example input",
@@ -54,18 +54,18 @@ export const flowSteps = [
   },
   {
     number: "03",
-    title: "Train and log the signal",
+    title: "Train and log how it felt",
     description:
-      "Complete the session and note what felt smooth, heavy, or incomplete so the plan stays useful.",
-    detailLabel: "Session signal",
+      "Complete the workout and note what felt smooth, heavy, or incomplete so the plan stays useful.",
+    detailLabel: "Workout note",
     detailValue: "Grip fatigue high, core strong, finished in 31 minutes",
   },
   {
     number: "04",
-    title: "Let the next step adapt",
+    title: "Get the next workout adjusted",
     description:
       "Strong sessions move you forward. Rough weeks trigger smarter regressions without breaking momentum.",
-    detailLabel: "Adaptive update",
+    detailLabel: "Plan update",
     detailValue: "Volume trimmed, progression path preserved, next workout still clear",
   },
 ] as const;
@@ -73,7 +73,7 @@ export const flowSteps = [
 export const featureCards = [
   {
     title: "Progression that meets the day",
-    body: "Kinova raises difficulty when the signal is good and scales back when recovery, adherence, or form says it should.",
+    body: "Kinova raises difficulty when workouts are going well and scales back when recovery, consistency, or form says it should.",
     eyebrow: "Adaptive engine",
     accent: "from-[#125bff]/30 via-[#125bff]/10 to-transparent",
     span: "lg:col-span-2 lg:row-span-2",
@@ -100,7 +100,7 @@ export const featureCards = [
   },
   {
     title: "Useful feedback, not noise",
-    body: "A few honest session signals are enough to keep the route moving in the right direction.",
+    body: "A few honest workout notes are enough to keep the plan moving in the right direction.",
     eyebrow: "Feedback loop",
     accent: "from-[#7cf2c8]/18 via-[#7cf2c8]/5 to-transparent",
     span: "lg:col-span-1",
@@ -119,11 +119,11 @@ export const comparisonRows = [
   },
   {
     generic: "A rough week breaks the rhythm",
-    kinova: "The route adapts and keeps momentum alive",
+    kinova: "The plan adjusts and keeps momentum alive",
   },
   {
     generic: "Progression feels unclear",
-    kinova: "Each next step reacts to performance and readiness",
+    kinova: "Each next workout reflects performance and readiness",
   },
 ] as const;
 
@@ -152,19 +152,19 @@ export const audienceCards = [
 
 export const progressionStates = [
   {
-    title: "Advance when the signal is strong",
+    title: "Move forward when you're ready",
     description:
-      "Good form, stable volume, and strong session feedback unlock the next progression step.",
+      "Good form, stable volume, and strong workout feedback unlock the next progression step.",
   },
   {
     title: "Hold or scale back when needed",
     description:
-      "Kinova can reduce load or complexity without making the user feel like they lost the whole week.",
+      "Kinova can reduce load or complexity without making the user feel like the whole week was lost.",
   },
   {
     title: "Protect momentum after imperfect weeks",
     description:
-      "Schedule breaks and uneven recovery change the route, not the overall direction.",
+      "Schedule breaks and uneven recovery change the plan, not the overall direction.",
   },
 ] as const;
 
@@ -206,7 +206,7 @@ export const testimonials = [
 
 export const methodologyPoints = [
   "Assessment-led planning before week one starts",
-  "Progression logic tied to readiness and session signal",
+  "Progression tied to readiness and workout feedback",
   "Movement quality, strength, and consistency treated as one system",
   "Designed for limited time and limited equipment",
 ] as const;
@@ -216,7 +216,7 @@ export const pricingTiers = [
     name: "Early Access",
     price: "Free",
     description:
-      "Join the first Kinova cohort and help shape the adaptive planning experience from the start.",
+      "Join the first Kinova group and help shape the adaptive planning experience from the start.",
     points: [
       "Access to the early planning flow",
       "Product updates as new capabilities ship",
@@ -232,7 +232,7 @@ export const pricingTiers = [
     points: [
       "We review goal, setup, and current fit",
       "You get a clear next step by email",
-      "New users are invited in focused batches",
+      "New users are invited in small batches",
     ],
     highlighted: false,
   },

@@ -31,8 +31,8 @@ export default function EarlyAccessPage() {
             Tell Kinova how you train now.
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
-            Share your goal, setup, and current routine. Kinova uses that
-            signal to prioritize fit and onboard new users in focused batches.
+            Share your goal, setup, and routine. We use it to check fit and
+            invite new users in small batches.
           </p>
 
           <div className="mt-8 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 text-sm text-white/72 sm:grid-cols-3">
@@ -46,7 +46,7 @@ export default function EarlyAccessPage() {
               <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
                 02
               </p>
-              <p className="mt-2">Kinova reviews fit for the next cohort.</p>
+              <p className="mt-2">We review whether Kinova fits your setup.</p>
             </div>
             <div>
               <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
@@ -118,19 +118,18 @@ export default function EarlyAccessPage() {
 
             <label className="grid gap-2">
               <span className="text-sm font-medium text-white/78">
-                Training context
+                Your routine
               </span>
               <textarea
                 name="context"
                 rows={5}
                 className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none transition placeholder:text-white/28 focus:border-[#125bff]"
-                placeholder="How often you train, where you are starting from, and what usually gets in the way."
+                placeholder="How often you train, where you train, and what usually gets in the way."
               />
             </label>
 
             <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-white/64">
-              Submitting opens your email client with the application details
-              prefilled to{" "}
+              This button opens your email app with these details filled in for{" "}
               <a
                 href={`mailto:${siteConfig.email}`}
                 className="text-white underline decoration-white/25 underline-offset-4"
@@ -144,7 +143,7 @@ export default function EarlyAccessPage() {
               type="submit"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-4 text-sm font-semibold text-[#05070b] transition hover:bg-[#dbe7ff]"
             >
-              Send Early Access Request
+              Open Email Draft
               <ArrowIcon />
             </button>
           </form>
