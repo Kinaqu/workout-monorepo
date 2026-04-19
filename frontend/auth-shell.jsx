@@ -1,5 +1,7 @@
 import React from 'react';
+import { Skeleton } from 'boneyard-js/react';
 import { ArrowRight, CalendarSync, Dumbbell, ShieldCheck, Sparkles } from 'lucide-react';
+import './bones/registry';
 
 const authHighlights = [
   {
@@ -139,6 +141,79 @@ export function AuthLinkRow({ href, children }) {
       <span>{children}</span>
       <ArrowRight size={15} strokeWidth={2} />
     </a>
+  );
+}
+
+function AuthStageFixture({ mode }) {
+  const isSignUp = mode === 'sign-up';
+  const title = isSignUp ? 'Create your account' : 'Sign in to continue';
+  const copy = isSignUp
+    ? 'Start your adaptive setup with a fast account flow that keeps the product shell intact.'
+    : 'Pick up your current route, recent sessions, and progression without leaving the Kinova shell.';
+  const buttonLabel = isSignUp ? 'Create account' : 'Continue';
+  const alternateLabel = isSignUp ? 'Already have an account? Sign in' : 'Need an account? Create one';
+
+  return (
+    <section className="card auth-stage-fixture" aria-hidden="true">
+      <div className="auth-stage-fixture-topline">{isSignUp ? 'New member setup' : 'Member access'}</div>
+
+      <div className="auth-stage-fixture-copy">
+        <h2>{title}</h2>
+        <p>{copy}</p>
+      </div>
+
+      <button type="button" className="auth-stage-fixture-provider">
+        Continue with Google
+      </button>
+
+      <div className="auth-stage-fixture-divider" />
+
+      <div className="auth-stage-fixture-field">
+        <span>Email address</span>
+        <div className="auth-stage-fixture-input" />
+      </div>
+
+      {isSignUp ? (
+        <div className="auth-stage-fixture-field-row">
+          <div className="auth-stage-fixture-field">
+            <span>First name</span>
+            <div className="auth-stage-fixture-input" />
+          </div>
+          <div className="auth-stage-fixture-field">
+            <span>Last name</span>
+            <div className="auth-stage-fixture-input" />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="auth-stage-fixture-field">
+        <span>Password</span>
+        <div className="auth-stage-fixture-input" />
+      </div>
+
+      <button type="button" className="auth-stage-fixture-submit">
+        {buttonLabel}
+      </button>
+
+      <div className="auth-stage-fixture-footer">{alternateLabel}</div>
+    </section>
+  );
+}
+
+export function AuthStageSkeleton({ name, loading, mode, children }) {
+  const label = mode === 'sign-up' ? 'sign up' : 'sign in';
+  const fixture = <AuthStageFixture mode={mode} />;
+
+  return (
+    <Skeleton
+      name={name}
+      loading={loading}
+      fixture={fixture}
+      fallback={<AuthSkeleton label={label} />}
+      transition
+    >
+      {children ?? fixture}
+    </Skeleton>
   );
 }
 
