@@ -203,7 +203,7 @@ input:focus, textarea:focus {
   padding: 20px;
   max-width: 680px;
   margin: 0 auto;
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Auth Pages */
@@ -1057,10 +1057,22 @@ input:focus, textarea:focus {
 
 .choice-pill {
   display: block;
+  position: relative;
 }
 
 .choice-input {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
 }
@@ -2032,6 +2044,49 @@ body::-webkit-scrollbar-thumb:hover,
   line-height: 1.6;
 }
 
+.history-details-shell {
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+}
+
+.history-details-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  cursor: pointer;
+  color: var(--copy-primary);
+  font-weight: 700;
+}
+
+.history-details-summary::after {
+  content: '+';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.history-details-shell[open] .history-details-summary::after {
+  content: '−';
+}
+
+.history-details-body {
+  display: grid;
+  gap: 14px;
+  padding: 0 14px 14px;
+}
+
 @media (min-width: 920px) {
   .history-layout {
     grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
@@ -2511,6 +2566,13 @@ body::-webkit-scrollbar-thumb:hover,
     grid-template-columns: 1fr;
   }
 
+  .onboarding-actions-card,
+  .recommendation-actions-card {
+    position: static;
+    bottom: auto;
+    padding-bottom: 16px;
+  }
+
   .today-overview-card {
     align-items: flex-start;
     flex-direction: column;
@@ -2601,6 +2663,29 @@ body::-webkit-scrollbar-thumb:hover,
 
   .confirm-dialog {
     width: calc(100% - 20px);
+  }
+}
+
+@media (min-width: 960px) {
+  .container {
+    max-width: 760px;
+    padding-bottom: 56px;
+  }
+
+  .bottom-nav {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    width: min(520px, calc(100% - 48px));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    transform: translateX(-50%);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .nav-item {
+    padding: 12px 0 13px;
+    font-size: 13px;
   }
 }
 
@@ -2834,6 +2919,98 @@ body::-webkit-scrollbar-thumb:hover,
 @keyframes authShimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -20% 0; }
+}
+
+.auth-stage-fixture {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(138, 180, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(10, 19, 33, 0.98) 0%, rgba(8, 14, 24, 0.94) 100%);
+}
+
+.auth-stage-fixture-topline {
+  color: var(--copy-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-stage-fixture-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-stage-fixture-copy h2 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--copy-primary);
+}
+
+.auth-stage-fixture-copy p,
+.auth-stage-fixture-field span,
+.auth-stage-fixture-footer {
+  color: var(--copy-secondary);
+  font-size: 0.92rem;
+}
+
+.auth-stage-fixture-provider,
+.auth-stage-fixture-submit {
+  min-height: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(138, 180, 255, 0.16);
+  font-weight: 700;
+}
+
+.auth-stage-fixture-provider {
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--copy-primary);
+}
+
+.auth-stage-fixture-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(138, 180, 255, 0) 0%, rgba(138, 180, 255, 0.22) 50%, rgba(138, 180, 255, 0) 100%);
+}
+
+.auth-stage-fixture-field-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.auth-stage-fixture-field {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-stage-fixture-field span {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.auth-stage-fixture-input {
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.auth-stage-fixture-submit {
+  background: linear-gradient(135deg, rgba(18, 91, 255, 0.98) 0%, rgba(82, 155, 255, 0.9) 100%);
+  color: #f7fbff;
+}
+
+.auth-stage-fixture-footer {
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .auth-stage-fixture-field-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 

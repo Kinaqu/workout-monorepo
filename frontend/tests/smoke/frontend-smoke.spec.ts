@@ -1474,13 +1474,13 @@ test('history screen renders sessions list and detail diagnostics from /sessions
 
   await expect(page.locator('#history-session-list .history-session-item')).toHaveCount(2);
   await expect(page.locator('#history-session-summary')).toContainText(/2 sessions/i);
-  await expect(page.locator('#history-detail')).toContainText(/source: structured/i);
-  await expect(page.locator('#history-detail')).toContainText(/matched exercises/i);
-  await expect(page.locator('#history-detail')).toContainText(/raw import/i);
+  await expect(page.locator('#history-detail')).toContainText(/source: saved workout/i);
+  await expect(page.locator('#history-detail')).toContainText(/saved exercises/i);
+  await expect(page.locator('#history-detail')).toContainText(/original text entry/i);
 
   await page.locator('#history-session-list .history-session-item').nth(1).click();
-  await expect(page.locator('#history-detail')).toContainText(/source: text import/i);
-  await expect(page.locator('#history-detail')).toContainText(/unmatched import lines/i);
+  await expect(page.locator('#history-detail')).toContainText(/source: quick text entry/i);
+  await expect(page.locator('#history-detail')).toContainText(/extra text lines/i);
   await expect(page.locator('#history-detail')).toContainText(/burpees 8 8/i);
   await assertNoClientIssues(issues);
 });
@@ -1546,8 +1546,8 @@ test('today date picker, progression refresh, and active plan summary stay stabl
   await page.locator('#today-date').dispatchEvent('change');
   await expect(page.locator('#today-workout-date')).toContainText(/apr 19/i);
 
-  await page.getByRole('button', { name: /refresh progression/i }).click();
-  await expect(page.locator('#today-progression-feedback')).toContainText(/progression refreshed/i);
+  await page.getByRole('button', { name: /update plan/i }).click();
+  await expect(page.locator('#today-progression-feedback')).toContainText(/plan updated/i);
   await expect(page.locator('#today-progression-feedback')).toContainText(/push-ups/i);
   await expect(page.locator('#today-progression-last-run')).toContainText(/apr 16/i);
 
