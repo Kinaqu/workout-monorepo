@@ -158,9 +158,9 @@ export function createTodayWorkoutFeature({
 
     if (progressionRunInFlight) {
       todayProgressionFeedback.classList.remove('hidden');
-      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Refreshing progression…'));
+      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Updating plan…'));
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'Evaluating recent sessions and reseeding the next targets.')
+        el('p', 'card-subtitle', 'Checking recent workouts and adjusting the next targets.')
       );
       return;
     }
@@ -168,9 +168,9 @@ export function createTodayWorkoutFeature({
     if (!lastProgressionRun) {
       if (lastProgressionDate) {
         todayProgressionFeedback.classList.remove('hidden');
-        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Progression is up to date'));
+        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Plan is up to date'));
         todayProgressionFeedback.appendChild(
-          el('p', 'card-subtitle', `The backend last changed progression on ${formatLongDateLabel(lastProgressionDate)}.`)
+          el('p', 'card-subtitle', `The latest plan update ran on ${formatLongDateLabel(lastProgressionDate)}.`)
         );
       } else {
         todayProgressionFeedback.classList.add('hidden');
@@ -183,7 +183,7 @@ export function createTodayWorkoutFeature({
 
     todayProgressionFeedback.classList.remove('hidden');
     todayProgressionFeedback.appendChild(
-      el('div', 'card-title', `Progression refreshed for ${formatLongDateLabel(lastProgressionRun.progression_date)}`)
+      el('div', 'card-title', `Plan updated for ${formatLongDateLabel(lastProgressionRun.progression_date)}`)
     );
 
     const summary = el('div', 'today-progression-summary');
@@ -213,7 +213,7 @@ export function createTodayWorkoutFeature({
       todayProgressionFeedback.appendChild(list);
     } else {
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'No targets changed this run. Recent sessions did not trigger an update.')
+        el('p', 'card-subtitle', 'No targets changed this run. Recent workouts did not trigger an update.')
       );
     }
   }
@@ -492,7 +492,7 @@ export function createTodayWorkoutFeature({
         return;
       }
 
-      setTodayError('Could not refresh progression: ' + error.message);
+      setTodayError('Could not update plan: ' + error.message);
     } finally {
       progressionRunInFlight = false;
       renderProgressionFeedback();

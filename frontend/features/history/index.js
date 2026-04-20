@@ -238,13 +238,13 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     historyDetail.appendChild(createOverviewCard(session, matchedExercises, unmatchedExercises));
     historyDetail.appendChild(createParsedResultCard(session, matchedExercises, unmatchedExercises));
     historyDetail.appendChild(
-      createExerciseSection('Matched exercises', matchedExercises, 'Exercises linked to the current program surface.')
+      createExerciseSection('Saved exercises', matchedExercises, 'Exercises from this workout that matched your current plan.')
     );
     historyDetail.appendChild(
       createExerciseSection(
-        'Unmatched exercises',
+        'Extra text lines',
         unmatchedExercises,
-        'Saved import entries that could not be linked to a known exercise.'
+        'Lines saved from your original entry that were not matched to a known exercise.'
       )
     );
     historyDetail.appendChild(createRawImportCard(session));
@@ -272,12 +272,12 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     meta.appendChild(createMetaStat('Workout slot', session.workoutType ? formatWorkoutTypeLabel(session.workoutType) : 'Unassigned'));
     meta.appendChild(createMetaStat('Created', formatDateTime(session.createdAt)));
     meta.appendChild(createMetaStat('Updated', formatDateTime(session.updatedAt)));
-    meta.appendChild(createMetaStat('Import issues', session.unmatched.length ? `${session.unmatched.length} lines` : 'None'));
+    meta.appendChild(createMetaStat('Extra text lines', session.unmatched.length ? `${session.unmatched.length} lines` : 'None'));
     card.appendChild(meta);
 
     const stats = el('div', 'history-pill-row');
-    stats.appendChild(createPill(`${matchedExercises.length} matched`, 'history-stat-pill'));
-    stats.appendChild(createPill(`${unmatchedExercises.length} unmatched`, 'history-stat-pill history-stat-pill-warning'));
+    stats.appendChild(createPill(`${matchedExercises.length} saved exercises`, 'history-stat-pill'));
+    stats.appendChild(createPill(`${unmatchedExercises.length} extra text lines`, 'history-stat-pill history-stat-pill-warning'));
     stats.appendChild(createPill(`${session.exercises.length} saved`, 'history-stat-pill history-stat-pill-neutral'));
     card.appendChild(stats);
 
@@ -286,25 +286,25 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
 
   function createParsedResultCard(session, matchedExercises, unmatchedExercises) {
     const card = el('article', 'card history-detail-card');
-    card.appendChild(el('div', 'card-title', 'Parsed result'));
+    card.appendChild(el('div', 'card-title', 'Saved workout details'));
     card.appendChild(
       el(
         'p',
         'history-detail-copy',
-        'Normalized payload persisted by the backend after structured logging or parser import.'
+        'This saved workout keeps both the matched exercises and the original text that was entered.'
       )
     );
 
     const summary = el('div', 'history-parsed-grid');
-    summary.appendChild(createMetaStat('Matched exercises', String(matchedExercises.length)));
-    summary.appendChild(createMetaStat('Unmatched exercises', String(unmatchedExercises.length)));
-    summary.appendChild(createMetaStat('Parser leftovers', String(session.unmatched.length)));
-    summary.appendChild(createMetaStat('Logged note', session.note ? 'Present' : 'Empty'));
+    summary.appendChild(createMetaStat('Saved exercises', String(matchedExercises.length)));
+    summary.appendChild(createMetaStat('Extra text lines', String(unmatchedExercises.length)));
+    summary.appendChild(createMetaStat('Original text lines', String(session.unmatched.length)));
+    summary.appendChild(createMetaStat('Workout note', session.note ? 'Present' : 'Empty'));
     card.appendChild(summary);
 
     if (session.unmatched.length > 0) {
       const issueBlock = el('div', 'history-block');
-      issueBlock.appendChild(el('div', 'history-block-title', 'Unmatched import lines'));
+      issueBlock.appendChild(el('div', 'history-block-title', 'Extra text lines'));
       const list = el('div', 'history-text-list');
       session.unmatched.forEach(line => {
         list.appendChild(el('div', 'history-text-chip', line));
@@ -392,14 +392,14 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
 
   function createRawImportCard(session) {
     const card = el('article', 'card history-detail-card');
-    card.appendChild(el('div', 'card-title', 'Raw import'));
+    card.appendChild(el('div', 'card-title', 'Original text entry'));
     card.appendChild(
       el(
         'p',
         'history-detail-copy',
         session.rawText
-          ? 'Original import payload preserved by the backend.'
-          : 'No raw import payload is stored for this session. It was likely created through structured JSON logging.'
+          ? 'The original text from this workout entry was saved for reference.'
+          : 'No original text entry was saved for this workout.'
       )
     );
 
@@ -445,9 +445,9 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   }
 
   function formatSourceLabel(source) {
-    if (source === 'json') return 'Structured';
-    if (source === 'text') return 'Text import';
-    if (source === 'legacy-kv') return 'Legacy import';
+    if (source === 'json') return 'Saved workout';
+    if (source === 'text') return 'Quick text entry';
+    if (source === 'legacy-kv') return 'Legacy workout entry';
     return humanizeToken(source || 'unknown');
   }
 
