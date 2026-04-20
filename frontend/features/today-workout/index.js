@@ -158,9 +158,9 @@ export function createTodayWorkoutFeature({
 
     if (progressionRunInFlight) {
       todayProgressionFeedback.classList.remove('hidden');
-      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Updating your plan…'));
+      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Updating plan…'));
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'Checking recent workouts and refreshing the next recommended targets.')
+        el('p', 'card-subtitle', 'Checking recent workouts and adjusting the next targets.')
       );
       return;
     }
@@ -168,9 +168,9 @@ export function createTodayWorkoutFeature({
     if (!lastProgressionRun) {
       if (lastProgressionDate) {
         todayProgressionFeedback.classList.remove('hidden');
-        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Your plan is up to date'));
+        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Plan is up to date'));
         todayProgressionFeedback.appendChild(
-          el('p', 'card-subtitle', `Last updated on ${formatLongDateLabel(lastProgressionDate)}.`)
+          el('p', 'card-subtitle', `The latest plan update ran on ${formatLongDateLabel(lastProgressionDate)}.`)
         );
       } else {
         todayProgressionFeedback.classList.add('hidden');
@@ -213,7 +213,7 @@ export function createTodayWorkoutFeature({
       todayProgressionFeedback.appendChild(list);
     } else {
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'No targets changed this time. Your next workout stays the same.')
+        el('p', 'card-subtitle', 'No targets changed this run. Recent workouts did not trigger an update.')
       );
     }
   }
@@ -492,7 +492,7 @@ export function createTodayWorkoutFeature({
         return;
       }
 
-      setTodayError('Could not update your plan: ' + error.message);
+      setTodayError('Could not update plan: ' + error.message);
     } finally {
       progressionRunInFlight = false;
       renderProgressionFeedback();

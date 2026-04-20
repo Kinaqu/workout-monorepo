@@ -236,11 +236,16 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     historyDetail.innerHTML = '';
     historyDetail.classList.remove('hidden');
     historyDetail.appendChild(createOverviewCard(session, matchedExercises, unmatchedExercises));
-    if (session.note) {
-      historyDetail.appendChild(createNoteCard(session.note));
-    }
+    historyDetail.appendChild(createParsedResultCard(session, matchedExercises, unmatchedExercises));
     historyDetail.appendChild(
-      createExerciseSection('Saved exercises', matchedExercises, 'Exercises linked to this workout.')
+      createExerciseSection('Saved exercises', matchedExercises, 'Exercises from this workout that matched your current plan.')
+    );
+    historyDetail.appendChild(
+      createExerciseSection(
+        'Extra text lines',
+        unmatchedExercises,
+        'Lines saved from your original entry that were not matched to a known exercise.'
+      )
     );
     if (unmatchedExercises.length > 0) {
       historyDetail.appendChild(
@@ -275,12 +280,12 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     meta.appendChild(createMetaStat('Plan day', session.workoutType ? formatWorkoutTypeLabel(session.workoutType) : 'Not assigned'));
     meta.appendChild(createMetaStat('Saved', formatDateTime(session.createdAt)));
     meta.appendChild(createMetaStat('Updated', formatDateTime(session.updatedAt)));
-    meta.appendChild(createMetaStat('Extra lines', session.unmatched.length ? `${session.unmatched.length}` : 'None'));
+    meta.appendChild(createMetaStat('Extra text lines', session.unmatched.length ? `${session.unmatched.length} lines` : 'None'));
     card.appendChild(meta);
 
     const stats = el('div', 'history-pill-row');
-    stats.appendChild(createPill(`${matchedExercises.length} tracked`, 'history-stat-pill'));
-    stats.appendChild(createPill(`${unmatchedExercises.length} extra`, 'history-stat-pill history-stat-pill-warning'));
+    stats.appendChild(createPill(`${matchedExercises.length} saved exercises`, 'history-stat-pill'));
+    stats.appendChild(createPill(`${unmatchedExercises.length} extra text lines`, 'history-stat-pill history-stat-pill-warning'));
     stats.appendChild(createPill(`${session.exercises.length} saved`, 'history-stat-pill history-stat-pill-neutral'));
     card.appendChild(stats);
 
@@ -289,20 +294,20 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
 
   function createParsedResultCard(session, matchedExercises, unmatchedExercises) {
     const card = el('article', 'card history-detail-card');
-    card.appendChild(el('div', 'card-title', 'Import details'));
+    card.appendChild(el('div', 'card-title', 'Saved workout details'));
     card.appendChild(
       el(
         'p',
         'history-detail-copy',
-        'Extra details about how this workout entry was saved.'
+        'This saved workout keeps both the matched exercises and the original text that was entered.'
       )
     );
 
     const summary = el('div', 'history-parsed-grid');
-    summary.appendChild(createMetaStat('Tracked exercises', String(matchedExercises.length)));
-    summary.appendChild(createMetaStat('Extra exercises', String(unmatchedExercises.length)));
-    summary.appendChild(createMetaStat('Extra text lines', String(session.unmatched.length)));
-    summary.appendChild(createMetaStat('Saved note', session.note ? 'Yes' : 'No'));
+    summary.appendChild(createMetaStat('Saved exercises', String(matchedExercises.length)));
+    summary.appendChild(createMetaStat('Extra text lines', String(unmatchedExercises.length)));
+    summary.appendChild(createMetaStat('Original text lines', String(session.unmatched.length)));
+    summary.appendChild(createMetaStat('Workout note', session.note ? 'Present' : 'Empty'));
     card.appendChild(summary);
 
     if (session.unmatched.length > 0) {
@@ -395,8 +400,8 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
         'p',
         'history-detail-copy',
         session.rawText
-          ? 'Original text kept with this workout entry.'
-          : 'No original text was saved for this workout entry.'
+          ? 'The original text from this workout entry was saved for reference.'
+          : 'No original text entry was saved for this workout.'
       )
     );
 
@@ -468,7 +473,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   function formatSourceLabel(source) {
     if (source === 'json') return 'Saved workout';
     if (source === 'text') return 'Quick text entry';
-    if (source === 'legacy-kv') return 'Imported workout';
+    if (source === 'legacy-kv') return 'Legacy workout entry';
     return humanizeToken(source || 'unknown');
   }
 
