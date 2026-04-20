@@ -36,6 +36,30 @@ function getLoaderWidth(element) {
   );
 }
 
+function sanitizeLoaderMarkup(root) {
+  if (!(root instanceof HTMLElement)) return;
+
+  root.querySelectorAll('[id]').forEach(node => {
+    node.removeAttribute('id');
+  });
+
+  root.querySelectorAll('[for]').forEach(node => {
+    node.removeAttribute('for');
+  });
+
+  root
+    .querySelectorAll(
+      '[aria-labelledby], [aria-describedby], [aria-controls], [aria-owns], [aria-activedescendant]'
+    )
+    .forEach(node => {
+      node.removeAttribute('aria-labelledby');
+      node.removeAttribute('aria-describedby');
+      node.removeAttribute('aria-controls');
+      node.removeAttribute('aria-owns');
+      node.removeAttribute('aria-activedescendant');
+    });
+}
+
 export function renderBoneyardLoader(element, explicitName = '') {
   if (!element) return;
 
@@ -49,6 +73,7 @@ export function renderBoneyardLoader(element, explicitName = '') {
   element.classList.add('app-boneyard-loader');
   element.setAttribute('aria-hidden', 'true');
   element.innerHTML = renderBones(activeBones, 'rgba(52, 92, 160, 0.32)', false);
+  sanitizeLoaderMarkup(element);
 }
 
 export function primeVisibleBoneyardLoaders(root = document) {
