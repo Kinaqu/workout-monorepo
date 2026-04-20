@@ -99,7 +99,7 @@ export function createTodayWorkoutFeature({
       todayDateLabel.textContent =
         safeDate === getTodayDateString()
           ? `Today · ${formatLongDateLabel(safeDate)}`
-          : `Planned for · ${formatLongDateLabel(safeDate)}`;
+          : `Viewing · ${formatLongDateLabel(safeDate)}`;
     }
   }
 
@@ -158,9 +158,9 @@ export function createTodayWorkoutFeature({
 
     if (progressionRunInFlight) {
       todayProgressionFeedback.classList.remove('hidden');
-      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Refreshing progression…'));
+      todayProgressionFeedback.appendChild(el('div', 'card-title', 'Updating your plan…'));
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'Evaluating recent sessions and reseeding the next targets.')
+        el('p', 'card-subtitle', 'Checking recent workouts and refreshing the next recommended targets.')
       );
       return;
     }
@@ -168,9 +168,9 @@ export function createTodayWorkoutFeature({
     if (!lastProgressionRun) {
       if (lastProgressionDate) {
         todayProgressionFeedback.classList.remove('hidden');
-        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Progression is up to date'));
+        todayProgressionFeedback.appendChild(el('div', 'card-title', 'Your plan is up to date'));
         todayProgressionFeedback.appendChild(
-          el('p', 'card-subtitle', `The backend last changed progression on ${formatLongDateLabel(lastProgressionDate)}.`)
+          el('p', 'card-subtitle', `Last updated on ${formatLongDateLabel(lastProgressionDate)}.`)
         );
       } else {
         todayProgressionFeedback.classList.add('hidden');
@@ -183,15 +183,15 @@ export function createTodayWorkoutFeature({
 
     todayProgressionFeedback.classList.remove('hidden');
     todayProgressionFeedback.appendChild(
-      el('div', 'card-title', `Progression refreshed for ${formatLongDateLabel(lastProgressionRun.progression_date)}`)
+      el('div', 'card-title', `Plan updated for ${formatLongDateLabel(lastProgressionRun.progression_date)}`)
     );
 
     const summary = el('div', 'today-progression-summary');
     summary.appendChild(
-      el('div', 'today-progression-pill', `${changed.length} ${changed.length === 1 ? 'change' : 'changes'}`)
+      el('div', 'today-progression-pill', `${changed.length} ${changed.length === 1 ? 'update' : 'updates'}`)
     );
     summary.appendChild(
-      el('div', 'today-progression-pill is-muted', `${skipped.length} ${skipped.length === 1 ? 'skip' : 'skips'}`)
+      el('div', 'today-progression-pill is-muted', `${skipped.length} unchanged`)
     );
     todayProgressionFeedback.appendChild(summary);
 
@@ -213,7 +213,7 @@ export function createTodayWorkoutFeature({
       todayProgressionFeedback.appendChild(list);
     } else {
       todayProgressionFeedback.appendChild(
-        el('p', 'card-subtitle', 'No targets changed this run. Recent sessions did not trigger an update.')
+        el('p', 'card-subtitle', 'No targets changed this time. Your next workout stays the same.')
       );
     }
   }
@@ -240,7 +240,7 @@ export function createTodayWorkoutFeature({
     renderEmptyState(
       todayEmptyState,
       'No plan yet',
-      'Build a plan first, then the generated workout will appear here for any date you inspect.',
+      'Build your first plan, then today’s workout will show up here.',
       { text: 'Open Plan', type: 'open-tab', targetTab: 'program' }
     );
     setTodayGuidanceContent('', '');
@@ -492,7 +492,7 @@ export function createTodayWorkoutFeature({
         return;
       }
 
-      setTodayError('Could not refresh progression: ' + error.message);
+      setTodayError('Could not update your plan: ' + error.message);
     } finally {
       progressionRunInFlight = false;
       renderProgressionFeedback();

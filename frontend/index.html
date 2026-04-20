@@ -408,6 +408,25 @@
             <p>No workout today. Recover and come back tomorrow.</p>
           </div>
           <div id="today-locked-message" class="card today-status-card hidden"></div>
+          <div class="card today-controls-card">
+            <div class="today-controls-header">
+              <div>
+                <div class="card-title">Plan tools</div>
+                <div id="today-selected-date-label" class="card-subtitle">Choose a date or refresh your plan.</div>
+              </div>
+              <button id="today-run-progression-button" class="secondary-button" type="button">Update plan</button>
+            </div>
+            <div class="today-date-toolbar">
+              <button id="today-date-prev-button" class="secondary-button today-date-button" type="button" aria-label="Previous day">Prev</button>
+              <input type="date" id="today-date">
+              <button id="today-date-next-button" class="secondary-button today-date-button" type="button" aria-label="Next day">Next</button>
+            </div>
+            <div class="today-date-shortcuts">
+              <button id="today-date-reset-button" class="secondary-button today-date-shortcut" type="button">Jump to today</button>
+              <div id="today-progression-last-run" class="today-inline-meta hidden"></div>
+            </div>
+            <div id="today-progression-feedback" class="today-progression-feedback hidden"></div>
+          </div>
         </div>
       </div>
 
