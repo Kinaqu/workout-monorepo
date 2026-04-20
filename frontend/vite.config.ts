@@ -13,7 +13,7 @@ export default defineConfig(() => {
       boneyardPlugin({
         framework: 'react',
         out: './bones',
-        routes: ['/login.html', '/register.html'],
+        routes: ['/login.html', '/register.html', '/bones.html'],
       }),
     ],
     resolve: {

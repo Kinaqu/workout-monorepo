@@ -1,7 +1,18 @@
 import React from 'react';
-import { Skeleton } from 'boneyard-js/react';
+import { Skeleton, configureBoneyard } from 'boneyard-js/react';
 import { ArrowRight, CalendarSync, Dumbbell, ShieldCheck, Sparkles } from 'lucide-react';
 import './bones/registry';
+
+configureBoneyard({
+  color: 'rgba(55, 101, 173, 0.28)',
+  darkColor: 'rgba(67, 113, 186, 0.32)',
+  animate: 'shimmer',
+  shimmerColor: 'rgba(122, 174, 255, 0.34)',
+  darkShimmerColor: 'rgba(108, 159, 240, 0.26)',
+  speed: '1.85s',
+  shimmerAngle: 104,
+  transition: 220,
+});
 
 const authHighlights = [
   {
@@ -146,56 +157,44 @@ export function AuthLinkRow({ href, children }) {
 
 function AuthStageFixture({ mode }) {
   const isSignUp = mode === 'sign-up';
-  const title = isSignUp ? 'Create your account' : 'Sign in to continue';
-  const copy = isSignUp
-    ? 'Start your adaptive setup with a fast account flow that keeps the product shell intact.'
-    : 'Pick up your current route, recent sessions, and progression without leaving the Kinova shell.';
-  const buttonLabel = isSignUp ? 'Create account' : 'Continue';
-  const alternateLabel = isSignUp ? 'Already have an account? Sign in' : 'Need an account? Create one';
 
   return (
     <section className="card auth-stage-fixture" aria-hidden="true">
-      <div className="auth-stage-fixture-topline">{isSignUp ? 'New member setup' : 'Member access'}</div>
+      <div className="auth-stage-fixture-topline" />
+      <div className="auth-stage-fixture-title" />
+      <div className="auth-stage-fixture-copyline auth-stage-fixture-copyline-wide" />
+      <div className="auth-stage-fixture-copyline" />
 
-      <div className="auth-stage-fixture-copy">
-        <h2>{title}</h2>
-        <p>{copy}</p>
-      </div>
-
-      <button type="button" className="auth-stage-fixture-provider">
-        Continue with Google
-      </button>
+      <div className="auth-stage-fixture-provider" />
 
       <div className="auth-stage-fixture-divider" />
 
       <div className="auth-stage-fixture-field">
-        <span>Email address</span>
+        <div className="auth-stage-fixture-field-label" />
         <div className="auth-stage-fixture-input" />
       </div>
 
       {isSignUp ? (
         <div className="auth-stage-fixture-field-row">
           <div className="auth-stage-fixture-field">
-            <span>First name</span>
+            <div className="auth-stage-fixture-field-label" />
             <div className="auth-stage-fixture-input" />
           </div>
           <div className="auth-stage-fixture-field">
-            <span>Last name</span>
+            <div className="auth-stage-fixture-field-label" />
             <div className="auth-stage-fixture-input" />
           </div>
         </div>
       ) : null}
 
       <div className="auth-stage-fixture-field">
-        <span>Password</span>
+        <div className="auth-stage-fixture-field-label" />
         <div className="auth-stage-fixture-input" />
       </div>
 
-      <button type="button" className="auth-stage-fixture-submit">
-        {buttonLabel}
-      </button>
+      <div className="auth-stage-fixture-submit" />
 
-      <div className="auth-stage-fixture-footer">{alternateLabel}</div>
+      <div className="auth-stage-fixture-footer" />
     </section>
   );
 }
