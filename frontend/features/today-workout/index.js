@@ -99,7 +99,7 @@ export function createTodayWorkoutFeature({
       todayDateLabel.textContent =
         safeDate === getTodayDateString()
           ? `Today · ${formatLongDateLabel(safeDate)}`
-          : `Planned for · ${formatLongDateLabel(safeDate)}`;
+          : `Viewing · ${formatLongDateLabel(safeDate)}`;
     }
   }
 
@@ -188,10 +188,10 @@ export function createTodayWorkoutFeature({
 
     const summary = el('div', 'today-progression-summary');
     summary.appendChild(
-      el('div', 'today-progression-pill', `${changed.length} ${changed.length === 1 ? 'change' : 'changes'}`)
+      el('div', 'today-progression-pill', `${changed.length} ${changed.length === 1 ? 'update' : 'updates'}`)
     );
     summary.appendChild(
-      el('div', 'today-progression-pill is-muted', `${skipped.length} ${skipped.length === 1 ? 'skip' : 'skips'}`)
+      el('div', 'today-progression-pill is-muted', `${skipped.length} unchanged`)
     );
     todayProgressionFeedback.appendChild(summary);
 
@@ -240,7 +240,7 @@ export function createTodayWorkoutFeature({
     renderEmptyState(
       todayEmptyState,
       'No plan yet',
-      'Build a plan first, then the generated workout will appear here for any date you inspect.',
+      'Build your first plan, then today’s workout will show up here.',
       { text: 'Open Plan', type: 'open-tab', targetTab: 'program' }
     );
     setTodayGuidanceContent('', '');
