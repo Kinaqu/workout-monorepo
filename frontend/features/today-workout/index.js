@@ -10,6 +10,7 @@ import {
   startAuthSessionFlow,
 } from '/lib/api/index.js';
 import { hasActiveProgram } from '/store/app-store.js';
+import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
 import { el, renderEmptyState } from '/shared/ui/dom.js';
 import { getTodayDateString, shiftDateString } from '/shared/utils/date.js';
 import { formatDateLabel, formatLongDateLabel, formatWorkoutTypeLabel } from '/shared/utils/format.js';
@@ -515,6 +516,7 @@ export function createTodayWorkoutFeature({
     renderProgressionFeedback();
 
     loader.classList.remove('hidden');
+    renderBoneyardLoader(loader);
     content.classList.add('hidden');
     exercisesContainer.classList.remove('hidden');
     restMessage.classList.add('hidden');

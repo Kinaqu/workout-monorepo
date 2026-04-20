@@ -5,6 +5,7 @@ import {
   isOnboardingIncompleteError,
 } from '/lib/api/index.js';
 import { hasActiveProgram, hasCompletedOnboarding } from '/store/app-store.js';
+import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
 import { el, renderEmptyState } from '/shared/ui/dom.js';
 import { formatDateTimeLabel, formatLongDateLabel } from '/shared/utils/date.js';
 import { formatPlanSlotLabel, formatWorkoutTypeLabel, humanizeToken } from '/shared/utils/format.js';
@@ -1085,6 +1086,7 @@ export function createProgramFeature({
     }
 
     loader.classList.remove('hidden');
+    renderBoneyardLoader(loader);
     content.classList.add('hidden');
     programMain.classList.add('hidden');
 

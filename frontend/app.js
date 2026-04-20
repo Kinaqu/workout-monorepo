@@ -11,6 +11,7 @@ import { createProgramFeature } from '/features/program/index.js';
 import { createRecommendationFeature } from '/features/recommendation/index.js';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
 import { createTodayWorkoutFeature } from '/features/today-workout/index.js';
+import { primeVisibleBoneyardLoaders } from '/shared/ui/boneyard.js';
 import { selectShellMode, setShellMode, updateMeLifecycle } from '/store/app-store.js';
 
 const onboardingShell = document.getElementById('onboarding-shell');
@@ -30,6 +31,8 @@ function showShellMode(mode) {
   appShell.classList.toggle('hidden', !isApp);
   appNav.classList.toggle('hidden', !isApp);
 }
+
+primeVisibleBoneyardLoaders();
 
 function getActiveTabId() {
   const active = document.querySelector('.nav-item.active');

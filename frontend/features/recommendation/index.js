@@ -11,6 +11,7 @@ import {
   selectRecommendationDraft,
   updateRecommendation,
 } from '/store/app-store.js';
+import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
 import { el } from '/shared/ui/dom.js';
 import { humanizeToken } from '/shared/utils/format.js';
 import { ensureApiObject } from '/shared/utils/guards.js';
@@ -466,6 +467,10 @@ function render() {
   }
 
   setFeatureError(recommendation.activationErrorMessage || recommendation.errorMessage || '');
+
+  if (showLoader && recommendationLoader) {
+    renderBoneyardLoader(recommendationLoader);
+  }
 
   recommendationLoader?.classList.toggle('hidden', !showLoader);
   recommendationContent?.classList.toggle('hidden', !showContent);

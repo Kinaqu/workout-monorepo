@@ -5,6 +5,7 @@ import {
   isOnboardingIncompleteError,
 } from '/lib/api/index.js';
 import { hasActiveProgram } from '/store/app-store.js';
+import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
 import { el } from '/shared/ui/dom.js';
 import { formatDateLabel, formatWorkoutTypeLabel, humanizeToken } from '/shared/utils/format.js';
 
@@ -58,6 +59,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     const empty = document.getElementById('history-empty');
 
     loader.classList.remove('hidden');
+    renderBoneyardLoader(loader);
     content.classList.add('hidden');
     empty.classList.add('hidden');
     errorEl.textContent = '';
