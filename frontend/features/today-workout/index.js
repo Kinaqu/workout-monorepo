@@ -11,38 +11,58 @@ import {
 } from '/lib/api/index.js';
 import { hasActiveProgram } from '/store/app-store.js';
 import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
-import { el, renderEmptyState } from '/shared/ui/dom.js';
+import { clearElement, collectRefs, el, renderEmptyState } from '/shared/ui/dom.js';
 import { getTodayDateString, shiftDateString } from '/shared/utils/date.js';
 import { formatDateLabel, formatLongDateLabel, formatWorkoutTypeLabel } from '/shared/utils/format.js';
 import { ensureApiObject } from '/shared/utils/guards.js';
+import { getLatestProgressionDate } from '/shared/utils/progression.js';
+import { WORKOUT_TYPE } from '/shared/constants.js';
 
-const todayEmptyState = document.getElementById('today-empty-state');
-const todayGuidance = document.getElementById('today-guidance');
-const todayGuidanceTitle = document.getElementById('today-guidance-title');
-const todayGuidanceCopy = document.getElementById('today-guidance-copy');
-const todayDateInput = document.getElementById('today-date');
-const todayDateLabel = document.getElementById('today-selected-date-label');
-const todayDatePrevButton = document.getElementById('today-date-prev-button');
-const todayDateNextButton = document.getElementById('today-date-next-button');
-const todayDateResetButton = document.getElementById('today-date-reset-button');
-const todayWorkoutDateLabel = document.getElementById('today-workout-date');
-const todayRunProgressionButton = document.getElementById('today-run-progression-button');
-const todayProgressionLastRun = document.getElementById('today-progression-last-run');
-const todayProgressionFeedback = document.getElementById('today-progression-feedback');
-
-function getLatestProgressionDate(progressionState = {}) {
-  return Object.values(progressionState).reduce((latest, state) => {
-    if (!state?.last_progression) {
-      return latest;
-    }
-
-    if (!latest || state.last_progression > latest) {
-      return state.last_progression;
-    }
-
-    return latest;
-  }, '');
-}
+const {
+  todayEmptyState,
+  todayGuidance,
+  todayGuidanceTitle,
+  todayGuidanceCopy,
+  todayDateInput,
+  todayDateLabel,
+  todayDatePrevButton,
+  todayDateNextButton,
+  todayDateResetButton,
+  todayWorkoutDateLabel,
+  todayRunProgressionButton,
+  todayProgressionLastRun,
+  todayProgressionFeedback,
+  todayError,
+  todayLockedMessage,
+  todayLoader,
+  todayContent,
+  todayExercises,
+  todayRestMessage,
+  todayWorkoutNameLabel,
+  todayWorkoutTypeLabel,
+} = collectRefs({
+  todayEmptyState: 'today-empty-state',
+  todayGuidance: 'today-guidance',
+  todayGuidanceTitle: 'today-guidance-title',
+  todayGuidanceCopy: 'today-guidance-copy',
+  todayDateInput: 'today-date',
+  todayDateLabel: 'today-selected-date-label',
+  todayDatePrevButton: 'today-date-prev-button',
+  todayDateNextButton: 'today-date-next-button',
+  todayDateResetButton: 'today-date-reset-button',
+  todayWorkoutDateLabel: 'today-workout-date',
+  todayRunProgressionButton: 'today-run-progression-button',
+  todayProgressionLastRun: 'today-progression-last-run',
+  todayProgressionFeedback: 'today-progression-feedback',
+  todayError: 'today-error',
+  todayLockedMessage: 'today-locked-message',
+  todayLoader: 'today-loader',
+  todayContent: 'today-content',
+  todayExercises: 'today-exercises',
+  todayRestMessage: 'today-rest-message',
+  todayWorkoutNameLabel: 'today-workout-name',
+  todayWorkoutTypeLabel: 'today-workout-type',
+});
 
 export function createTodayWorkoutFeature({
   getHistorySelectedDate,
@@ -109,11 +129,11 @@ export function createTodayWorkoutFeature({
   }
 
   function setTodayError(message = '') {
-    document.getElementById('today-error').textContent = message;
+    todayError.textContent = message;
   }
 
   function setTodayLockedMessage(message = '') {
-    document.getElementById('today-locked-message').textContent = message;
+    todayLockedMessage.textContent = message;
   }
 
   function setTodayGuidanceContent(title = '', copy = '') {
@@ -126,7 +146,7 @@ export function createTodayWorkoutFeature({
   }
 
   function clearTodayEmptyState() {
-    todayEmptyState.innerHTML = '';
+    clearElement(todayEmptyState);
     todayEmptyState.classList.add('hidden');
   }
 
@@ -154,7 +174,7 @@ export function createTodayWorkoutFeature({
 
     if (!todayProgressionFeedback) return;
 
-    todayProgressionFeedback.innerHTML = '';
+    clearElement(todayProgressionFeedback);
 
     if (progressionRunInFlight) {
       todayProgressionFeedback.classList.remove('hidden');
@@ -219,22 +239,16 @@ export function createTodayWorkoutFeature({
   }
 
   function renderRecoveryState() {
-    const loader = document.getElementById('today-loader');
-    const content = document.getElementById('today-content');
-    const exercisesContainer = document.getElementById('today-exercises');
-    const restMessage = document.getElementById('today-rest-message');
-    const lockedMessage = document.getElementById('today-locked-message');
-
-    loader.classList.add('hidden');
-    content.classList.remove('hidden');
-    document.getElementById('today-workout-name').textContent = 'No plan yet';
-    document.getElementById('today-workout-type').textContent = 'Build one to start';
+    todayLoader.classList.add('hidden');
+    todayContent.classList.remove('hidden');
+    todayWorkoutNameLabel.textContent = 'No plan yet';
+    todayWorkoutTypeLabel.textContent = 'Build one to start';
     if (todayWorkoutDateLabel) {
       todayWorkoutDateLabel.textContent = formatLongDateLabel(getSelectedDate());
     }
-    exercisesContainer.classList.add('hidden');
-    restMessage.classList.add('hidden');
-    lockedMessage.classList.add('hidden');
+    todayExercises.classList.add('hidden');
+    todayRestMessage.classList.add('hidden');
+    todayLockedMessage.classList.add('hidden');
     setTodayError('');
     setTodayLockedMessage('');
     renderEmptyState(
@@ -339,11 +353,11 @@ export function createTodayWorkoutFeature({
   }
 
   function formatTodayExerciseTarget(exercise) {
-    if (exercise.type === 'reps') {
+    if (exercise.type === WORKOUT_TYPE.REPS) {
       return formatTodayTargetRange(exercise.reps, 'reps');
     }
 
-    if (exercise.type === 'time') {
+    if (exercise.type === WORKOUT_TYPE.TIME) {
       return formatTodayTargetRange(exercise.duration, 'sec');
     }
 
@@ -389,19 +403,18 @@ export function createTodayWorkoutFeature({
     const input = el('input', 'set-input');
     input.type = 'number';
     input.min = '0';
-    input.placeholder = type === 'time' ? 'Sec' : type === 'cycles' ? 'Cycles' : 'Reps';
+    input.placeholder = type === WORKOUT_TYPE.TIME ? 'Sec' : type === WORKOUT_TYPE.CYCLES ? 'Cycles' : 'Reps';
     row.appendChild(input);
 
     return row;
   }
 
   function syncExerciseStack() {
-    const container = document.getElementById('today-exercises');
-    if (!container) return;
+    if (!todayExercises) return;
 
-    const cards = Array.from(container.querySelectorAll('.exercise-card'));
+    const cards = Array.from(todayExercises.querySelectorAll('.exercise-card'));
     const remaining = Math.max(cards.length - activeExerciseIndex - 1, 0);
-    container.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
+    todayExercises.style.setProperty('--stack-depth', String(Math.min(remaining, 2)));
   }
 
   function setActiveExercise(nextIndex) {
@@ -500,12 +513,6 @@ export function createTodayWorkoutFeature({
   }
 
   async function load() {
-    const loader = document.getElementById('today-loader');
-    const content = document.getElementById('today-content');
-    const exercisesContainer = document.getElementById('today-exercises');
-    const restMessage = document.getElementById('today-rest-message');
-    const lockedMessage = document.getElementById('today-locked-message');
-
     setTodayError('');
     setTodayLockedMessage('');
     setTodayGuidanceContent('', '');
@@ -515,12 +522,12 @@ export function createTodayWorkoutFeature({
     todayLoadInFlight = true;
     renderProgressionFeedback();
 
-    loader.classList.remove('hidden');
-    renderBoneyardLoader(loader);
-    content.classList.add('hidden');
-    exercisesContainer.classList.remove('hidden');
-    restMessage.classList.add('hidden');
-    lockedMessage.classList.add('hidden');
+    todayLoader.classList.remove('hidden');
+    renderBoneyardLoader(todayLoader);
+    todayContent.classList.add('hidden');
+    todayExercises.classList.remove('hidden');
+    todayRestMessage.classList.add('hidden');
+    todayLockedMessage.classList.add('hidden');
 
     if (!hasActiveProgram()) {
       todayLoadInFlight = false;
@@ -542,46 +549,47 @@ export function createTodayWorkoutFeature({
 
       lastProgressionDate = getLatestProgressionDate(program.progressionState ?? {}) || lastProgressionDate;
 
-      loader.classList.add('hidden');
-      content.classList.remove('hidden');
+      todayLoader.classList.add('hidden');
+      todayContent.classList.remove('hidden');
 
       todayWorkoutDate = data.date;
-      todayWorkoutType = data.type === 'rest' ? null : data.type;
+      todayWorkoutType = data.type === WORKOUT_TYPE.REST ? null : data.type;
       todayWorkoutSaved = Boolean(existingSession);
 
-      document.getElementById('today-workout-name').textContent =
-        data.type === 'rest' ? 'Rest day' : data.name || 'Today’s workout';
-      document.getElementById('today-workout-type').textContent = formatWorkoutTypeLabel(data.type);
+      todayWorkoutNameLabel.textContent =
+        data.type === WORKOUT_TYPE.REST ? 'Rest day' : data.name || 'Today’s workout';
+      todayWorkoutTypeLabel.textContent = formatWorkoutTypeLabel(data.type);
       if (todayWorkoutDateLabel) {
         todayWorkoutDateLabel.textContent = formatLongDateLabel(data.date);
       }
 
-      exercisesContainer.classList.remove('hidden');
-      exercisesContainer.innerHTML = '';
+      todayExercises.classList.remove('hidden');
+      clearElement(todayExercises);
 
       if (todayWorkoutSaved) {
-        exercisesContainer.classList.add('hidden');
+        todayExercises.classList.add('hidden');
         setTodayGuidanceContent('Workout already logged', 'Open History if you want to review the saved sets.');
         setTodayLockedMessage(
           data.date === getTodayDateString()
             ? 'Today is already done.'
             : `${formatDateLabel(data.date)} is already logged.`
         );
-        lockedMessage.classList.remove('hidden');
+        todayLockedMessage.classList.remove('hidden');
         renderProgressionFeedback();
         return;
       }
 
-      if (data.type === 'rest') {
-        exercisesContainer.classList.add('hidden');
+      if (data.type === WORKOUT_TYPE.REST) {
+        todayExercises.classList.add('hidden');
         setTodayGuidanceContent('Recovery day', 'No logging needed for this date.');
-        restMessage.classList.remove('hidden');
+        todayRestMessage.classList.remove('hidden');
         renderProgressionFeedback();
         return;
       }
 
       if (!data.exercises || data.exercises.length === 0) {
-        exercisesContainer.innerHTML = '<div class="text-center text-secondary">No exercises</div>';
+        clearElement(todayExercises);
+        todayExercises.appendChild(el('div', 'text-center text-secondary', 'No exercises'));
         setTodayGuidanceContent('Nothing to log', 'This generated workout is currently empty.');
         renderProgressionFeedback();
         return;
@@ -613,9 +621,9 @@ export function createTodayWorkoutFeature({
 
         const helper = el('div', 'exercise-helper');
         helper.textContent =
-          exercise.type === 'time'
+          exercise.type === WORKOUT_TYPE.TIME
             ? 'Enter seconds for each set.'
-            : exercise.type === 'cycles'
+            : exercise.type === WORKOUT_TYPE.CYCLES
               ? 'Enter cycles for each set.'
               : 'Enter reps for each set.';
         card.appendChild(helper);
@@ -643,13 +651,13 @@ export function createTodayWorkoutFeature({
         footer.appendChild(confirmBtn);
         card.appendChild(footer);
 
-        exercisesContainer.appendChild(card);
+        todayExercises.appendChild(card);
       });
 
       syncExerciseStack();
       renderProgressionFeedback();
     } catch (error) {
-      loader.classList.add('hidden');
+      todayLoader.classList.add('hidden');
       if (error instanceof AuthRedirectError) return;
 
       if (isOnboardingIncompleteError(error)) {

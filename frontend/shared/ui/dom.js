@@ -6,7 +6,7 @@ export function el(tag, className, text) {
 }
 
 export function renderEmptyState(container, title, message, action = null) {
-  container.innerHTML = '';
+  clearElement(container);
   container.classList.remove('hidden');
 
   const titleEl = el('div', 'empty-state-title', title);
@@ -23,4 +23,14 @@ export function renderEmptyState(container, title, message, action = null) {
     }
     container.appendChild(button);
   }
+}
+
+export function clearElement(node) {
+  if (node) node.replaceChildren();
+}
+
+export function collectRefs(idMap) {
+  return Object.fromEntries(
+    Object.entries(idMap).map(([key, id]) => [key, document.getElementById(id)]),
+  );
 }

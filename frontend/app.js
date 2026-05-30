@@ -13,6 +13,7 @@ import { createProfileFeature } from '/features/settings-or-profile/index.js';
 import { createTodayWorkoutFeature } from '/features/today-workout/index.js';
 import { primeVisibleBoneyardLoaders } from '/shared/ui/boneyard.js';
 import { selectShellMode, setShellMode, updateMeLifecycle } from '/store/app-store.js';
+import { DATA_ACTION, SHELL_MODE, TAB } from '/shared/constants.js';
 
 const onboardingShell = document.getElementById('onboarding-shell');
 const recommendationShell = document.getElementById('recommendation-shell');
@@ -23,9 +24,9 @@ const navItems = document.querySelectorAll('.nav-item');
 
 function showShellMode(mode) {
   setShellMode(mode);
-  const isOnboarding = mode === 'onboarding';
-  const isRecommendation = mode === 'recommendation';
-  const isApp = mode === 'app';
+  const isOnboarding = mode === SHELL_MODE.ONBOARDING;
+  const isRecommendation = mode === SHELL_MODE.RECOMMENDATION;
+  const isApp = mode === SHELL_MODE.APP;
   onboardingShell.classList.toggle('hidden', !isOnboarding);
   recommendationShell.classList.toggle('hidden', !isRecommendation);
   appShell.classList.toggle('hidden', !isApp);
@@ -36,7 +37,7 @@ primeVisibleBoneyardLoaders();
 
 function getActiveTabId() {
   const active = document.querySelector('.nav-item.active');
-  return active?.getAttribute('data-tab') || 'today';
+  return active?.getAttribute('data-tab') || TAB.TODAY;
 }
 
 const profileFeature = createProfileFeature();
@@ -58,12 +59,12 @@ async function activateTab(tabId) {
   navItems.forEach(nav => nav.classList.toggle('active', nav.getAttribute('data-tab') === tabId));
   tabs.forEach(tab => tab.classList.toggle('active', tab.id === `tab-${tabId}`));
 
-  if (tabId === 'history') {
+  if (tabId === TAB.HISTORY) {
     await historyFeature.loadSelected();
     return;
   }
 
-  if (tabId === 'program') {
+  if (tabId === TAB.PROGRAM) {
     await programFeature.load();
   }
 }
@@ -73,7 +74,7 @@ async function refreshProductState() {
 
   if (profileFeature.hasActiveProgram()) {
     recommendationFeature.reset();
-    showShellMode('app');
+    showShellMode(SHELL_MODE.APP);
     programFeature.setActionsVisible(true);
 
     const activeTabId = getActiveTabId();
@@ -107,17 +108,17 @@ async function refreshProductState() {
   }
 
   recommendationFeature.reset();
-  showShellMode('app');
+  showShellMode(SHELL_MODE.APP);
   programFeature.setActionsVisible(false);
 
   const activeTabId = getActiveTabId();
   await activateTab(activeTabId);
 
   todayWorkoutFeature.renderRecoveryState();
-  if (activeTabId === 'program') {
+  if (activeTabId === TAB.PROGRAM) {
     programFeature.renderRecoveryState();
   }
-  if (activeTabId === 'history') {
+  if (activeTabId === TAB.HISTORY) {
     historyFeature.renderRecoveryState();
   }
 }
@@ -157,7 +158,7 @@ programFeature.init();
 
 navItems.forEach(item => {
   item.addEventListener('click', () => {
-    if (selectShellMode() !== 'app') return;
+    if (selectShellMode() !== SHELL_MODE.APP) return;
     void activateTab(item.getAttribute('data-tab'));
   });
 });
@@ -166,12 +167,12 @@ document.addEventListener('click', event => {
   const actionTarget = event.target.closest('[data-action]');
   if (!actionTarget) return;
 
-  if (actionTarget.dataset.action === 'regenerate-program') {
+  if (actionTarget.dataset.action === DATA_ACTION.REGENERATE_PROGRAM) {
     void programFeature.handleRegenerateProgram(actionTarget);
     return;
   }
 
-  if (actionTarget.dataset.action === 'open-tab' && selectShellMode() === 'app') {
+  if (actionTarget.dataset.action === DATA_ACTION.OPEN_TAB && selectShellMode() === SHELL_MODE.APP) {
     void activateTab(actionTarget.dataset.targetTab);
   }
 });
@@ -201,13 +202,13 @@ async function bootstrapApp() {
     }
 
     if (isMissingProgramError(error)) {
-      showShellMode('app');
+      showShellMode(SHELL_MODE.APP);
       programFeature.setActionsVisible(false);
       todayWorkoutFeature.renderRecoveryState();
       return;
     }
 
-    showShellMode('app');
+    showShellMode(SHELL_MODE.APP);
     document.getElementById('today-error').textContent = 'Error loading app: ' + error.message;
   }
 }

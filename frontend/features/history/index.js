@@ -6,15 +6,32 @@ import {
 } from '/lib/api/index.js';
 import { hasActiveProgram } from '/store/app-store.js';
 import { renderBoneyardLoader } from '/shared/ui/boneyard.js';
-import { el } from '/shared/ui/dom.js';
+import { clearElement, collectRefs, el } from '/shared/ui/dom.js';
 import { formatDateLabel, formatWorkoutTypeLabel, humanizeToken } from '/shared/utils/format.js';
 
-const historyEmpty = document.getElementById('history-empty');
-const historyNoteCard = document.getElementById('history-note-card');
-const historyDateInput = document.getElementById('history-date');
-const historySessionSummary = document.getElementById('history-session-summary');
-const historySessionList = document.getElementById('history-session-list');
-const historyDetail = document.getElementById('history-detail');
+const {
+  historyEmpty,
+  historyNoteCard,
+  historyDateInput,
+  historySessionSummary,
+  historySessionList,
+  historyDetail,
+  historyLoader,
+  historyData,
+  historyError,
+  historyNote,
+} = collectRefs({
+  historyEmpty: 'history-empty',
+  historyNoteCard: 'history-note-card',
+  historyDateInput: 'history-date',
+  historySessionSummary: 'history-session-summary',
+  historySessionList: 'history-session-list',
+  historyDetail: 'history-detail',
+  historyLoader: 'history-loader',
+  historyData: 'history-data',
+  historyError: 'history-error',
+  historyNote: 'history-note',
+});
 
 export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   let loadedSessions = [];
@@ -28,12 +45,12 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   }
 
   function renderRecoveryState() {
-    document.getElementById('history-loader').classList.add('hidden');
-    document.getElementById('history-data').classList.add('hidden');
+    historyLoader.classList.add('hidden');
+    historyData.classList.add('hidden');
     resetHistoryState();
     historyEmpty.textContent = 'No plan yet. Build one first to start logging workouts.';
     historyEmpty.classList.remove('hidden');
-    document.getElementById('history-error').textContent = '';
+    historyError.textContent = '';
   }
 
   function getSelectedDate() {
@@ -53,16 +70,11 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   async function load(date) {
     if (!date) return;
 
-    const loader = document.getElementById('history-loader');
-    const errorEl = document.getElementById('history-error');
-    const content = document.getElementById('history-data');
-    const empty = document.getElementById('history-empty');
-
-    loader.classList.remove('hidden');
-    renderBoneyardLoader(loader);
-    content.classList.add('hidden');
-    empty.classList.add('hidden');
-    errorEl.textContent = '';
+    historyLoader.classList.remove('hidden');
+    renderBoneyardLoader(historyLoader);
+    historyData.classList.add('hidden');
+    historyEmpty.classList.add('hidden');
+    historyError.textContent = '';
 
     if (!hasActiveProgram()) {
       renderRecoveryState();
@@ -71,17 +83,17 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
 
     try {
       const data = await api.listSessions({ date, limit: 50 });
-      loader.classList.add('hidden');
+      historyLoader.classList.add('hidden');
       loadedSessions = Array.isArray(data?.sessions) ? data.sessions : [];
 
       if (loadedSessions.length === 0) {
         resetHistoryState();
-        empty.textContent = 'No sessions stored for this day.';
-        empty.classList.remove('hidden');
+        historyEmpty.textContent = 'No sessions stored for this day.';
+        historyEmpty.classList.remove('hidden');
         return;
       }
 
-      content.classList.remove('hidden');
+      historyData.classList.remove('hidden');
       renderSessionSummary(date, loadedSessions);
       renderSessionListItems();
 
@@ -95,7 +107,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
         renderEmptyDetail();
       }
     } catch (error) {
-      loader.classList.add('hidden');
+      historyLoader.classList.add('hidden');
       if (error instanceof AuthRedirectError) return;
 
       if (isOnboardingIncompleteError(error)) {
@@ -109,7 +121,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
         return;
       }
 
-      errorEl.textContent = 'Could not load history: ' + error.message;
+      historyError.textContent = 'Could not load history: ' + error.message;
     }
   }
 
@@ -122,17 +134,14 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
       historySessionSummary.textContent = '';
     }
 
-    if (historySessionList) {
-      historySessionList.innerHTML = '';
-    }
+    clearElement(historySessionList);
 
     if (historyDetail) {
-      historyDetail.innerHTML = '';
+      clearElement(historyDetail);
       historyDetail.classList.add('hidden');
     }
 
     historyNoteCard?.classList.add('hidden');
-    const historyNote = document.getElementById('history-note');
     if (historyNote) {
       historyNote.textContent = '';
     }
@@ -148,7 +157,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
   function renderSessionListItems() {
     if (!historySessionList) return;
 
-    historySessionList.innerHTML = '';
+    clearElement(historySessionList);
 
     loadedSessions.forEach((session, index) => {
       const button = el('button', 'history-session-item');
@@ -197,7 +206,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
       if (!historyDetail) return;
 
       historyDetail.classList.remove('hidden');
-      historyDetail.innerHTML = '';
+      clearElement(historyDetail);
       historyDetail.appendChild(
         createEmptyCard(
           'Could not load this session right now.',
@@ -211,7 +220,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     if (!historyDetail) return;
 
     historyDetail.classList.remove('hidden');
-    historyDetail.innerHTML = '';
+    clearElement(historyDetail);
     historyDetail.appendChild(
       createEmptyCard('Loading session details…', 'Fetching the full record from /sessions/{id}.')
     );
@@ -221,7 +230,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     if (!historyDetail) return;
 
     historyDetail.classList.remove('hidden');
-    historyDetail.innerHTML = '';
+    clearElement(historyDetail);
     historyDetail.appendChild(
       createEmptyCard('No session selected.', 'Choose a session from the list to inspect the saved payload.')
     );
@@ -233,7 +242,7 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     const matchedExercises = session.exercises.filter(exercise => exercise.matched);
     const unmatchedExercises = session.exercises.filter(exercise => !exercise.matched);
 
-    historyDetail.innerHTML = '';
+    clearElement(historyDetail);
     historyDetail.classList.remove('hidden');
     historyDetail.appendChild(createOverviewCard(session, matchedExercises, unmatchedExercises));
     if (session.note) {
@@ -254,7 +263,6 @@ export function createHistoryFeature({ onEnterOnboarding, onMissingProgram }) {
     historyDetail.appendChild(createTechnicalDetailsSection(session, matchedExercises, unmatchedExercises));
 
     historyNoteCard?.classList.add('hidden');
-    const historyNote = document.getElementById('history-note');
     if (historyNote) {
       historyNote.textContent = '';
     }
