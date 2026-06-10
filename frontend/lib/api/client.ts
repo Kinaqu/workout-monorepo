@@ -26,7 +26,7 @@ import type {
   SessionsListResponse,
   WorkoutSessionRecord,
   WorkoutTodayResponse,
-} from './types.ts';
+} from './contracts.ts';
 
 const LOGIN_PATH = '/login?reauth=1';
 

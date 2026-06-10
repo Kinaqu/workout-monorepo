@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "backend/openapi.json"
       - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
   push:
@@ -11,6 +12,7 @@ on:
       - main
     paths:
       - "frontend/**"
+      - "backend/openapi.json"
       - ".github/workflows/frontend-ci.yml"
 
 permissions:

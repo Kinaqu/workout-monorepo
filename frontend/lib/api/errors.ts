@@ -1,4 +1,4 @@
-import type { ApiErrorPayload } from './types.ts';
+import type { ApiErrorPayload } from './contracts.ts';
 
 export class AuthRedirectError extends Error {
   constructor(message = 'Session expired. Please sign in again.') {
