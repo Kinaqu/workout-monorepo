@@ -1,0 +1,48 @@
+name: Landing CI
+
+on:
+  pull_request:
+    paths:
+      - "landing/**"
+      - ".github/workflows/landing-ci.yml"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "landing/**"
+      - ".github/workflows/landing-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  landing-check:
+    name: landing-ci-job
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: landing/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint landing
+        run: npm run lint
+
+      - name: Build landing
+        run: npm run build
