@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
@@ -76,11 +76,6 @@ export function registerWorkoutRoutes(app: OpenAPIHono<AppEnv>) {
     }
 
     const { workoutService } = createAppContext(c.env);
-    return c.json(
-      (await workoutService.getWorkoutForDate(auth.userId, auth.username, date)) as z.infer<
-        typeof WorkoutTodayResponseSchema
-      >,
-      200
-    );
+    return c.json(await workoutService.getWorkoutForDate(auth.userId, auth.username, date), 200);
   });
 }

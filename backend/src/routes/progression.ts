@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
@@ -53,10 +53,7 @@ export function registerProgressionRoutes(app: OpenAPIHono<AppEnv>) {
   app.openapi(progressionRunRoute, async c => {
     const auth = c.get("auth");
     const { progressionService } = createAppContext(c.env);
-    return c.json(
-      (await progressionService.run(auth.userId, auth.username)) as z.infer<typeof ProgressionRunResponseSchema>,
-      200
-    );
+    return c.json(await progressionService.run(auth.userId, auth.username), 200);
   });
 
   app.all("/progression/run", authMiddleware, c =>

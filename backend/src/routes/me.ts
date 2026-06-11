@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
@@ -46,7 +46,7 @@ export function registerMeRoutes(app: OpenAPIHono<AppEnv>) {
   app.openapi(meRoute, async c => {
     const auth = c.get("auth");
     const { meService } = createAppContext(c.env);
-    return c.json((await meService.getState(auth.userId, auth.username)) as z.infer<typeof MeResponseSchema>, 200);
+    return c.json(await meService.getState(auth.userId, auth.username), 200);
   });
 
   app.all("/me", authMiddleware, c =>

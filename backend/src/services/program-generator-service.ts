@@ -9,6 +9,7 @@ import { createProgramDraft, programTemplateToApi } from "../domain/program";
 import { seedProgressionStates } from "../domain/progression";
 import { conflict } from "../lib/app-error";
 import { nowIso } from "../lib/time";
+import type { GeneratedProgramResponse } from "../openapi/schemas";
 import { CatalogRepository } from "../repositories/catalog-repository";
 import { GeneratedProgramMetadataRepository } from "../repositories/generated-program-metadata-repository";
 import { OnboardingRepository } from "../repositories/onboarding-repository";
@@ -57,7 +58,11 @@ export class ProgramGeneratorService {
     };
   }
 
-  async generateFromStoredProfile(userId: string, username: string, reason: "onboarding-complete" | "regenerate") {
+  async generateFromStoredProfile(
+    userId: string,
+    username: string,
+    reason: "onboarding-complete" | "regenerate"
+  ): Promise<GeneratedProgramResponse> {
     const { user, onboarding, profileRecord, catalog } = await this.loadStoredProfileGenerationInputs(userId, username);
 
     const draft = buildRecommendationDraftFromProfile(profileRecord.profile, catalog);

@@ -1,3 +1,4 @@
+import type { MeResponse } from "../openapi/schemas";
 import { OnboardingRepository } from "../repositories/onboarding-repository";
 import { ProfileRepository } from "../repositories/profile-repository";
 import { ProgramRepository } from "../repositories/program-repository";
@@ -11,7 +12,7 @@ export class MeService {
     private readonly programs: ProgramRepository
   ) {}
 
-  async getState(userId: string, username: string) {
+  async getState(userId: string, username: string): Promise<MeResponse> {
     const user = await this.lifecycle.ensureUserExists(userId, username);
     const [onboarding, profile, program] = await Promise.all([
       this.onboarding.getState(userId),

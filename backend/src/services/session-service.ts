@@ -1,6 +1,7 @@
 import { ProgramTemplate } from "../domain/program";
 import { enrichSessionInput, parseLogText, sessionToLegacyLogResponse, SessionWriteInput, WorkoutSessionRecord } from "../domain/session";
 import { AppError, badRequest } from "../lib/app-error";
+import type { LogCreateResponse, SessionsListResponse } from "../openapi/schemas";
 import { isValidDate, todayDate } from "../lib/time";
 import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
 import { SessionRepository } from "../repositories/session-repository";
@@ -23,7 +24,7 @@ export class SessionService {
     private readonly runtime: ProgramRuntimeStateRepository
   ) {}
 
-  async createFromJson(userId: string, username: string, payload: unknown, requestedDate?: string) {
+  async createFromJson(userId: string, username: string, payload: unknown, requestedDate?: string): Promise<LogCreateResponse> {
     const program = await this.lifecycle.requireActiveProgram(userId, username);
     const body = validateJsonLogPayload(payload);
     const sessionDate = requestedDate ?? body.session_date ?? todayDate();
@@ -49,7 +50,7 @@ export class SessionService {
     };
   }
 
-  async createFromText(userId: string, username: string, text: string, requestedDate?: string) {
+  async createFromText(userId: string, username: string, text: string, requestedDate?: string): Promise<LogCreateResponse> {
     if (!text.trim()) {
       badRequest("Empty body");
     }
@@ -79,7 +80,7 @@ export class SessionService {
     };
   }
 
-  async listSessions(userId: string, username: string, limit: number, date?: string) {
+  async listSessions(userId: string, username: string, limit: number, date?: string): Promise<SessionsListResponse> {
     if (date && !isValidDate(date)) {
       badRequest("Invalid date. Use format: 2026-03-11");
     }

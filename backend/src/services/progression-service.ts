@@ -1,5 +1,6 @@
 import { evaluateProgression } from "../domain/progression";
 import { conflict } from "../lib/app-error";
+import type { ProgressionRunResponse } from "../openapi/schemas";
 import { daysAgo, diffUtcDays, nowIso } from "../lib/time";
 import { ProgramRepository } from "../repositories/program-repository";
 import { ProgramRuntimeStateRepository } from "../repositories/program-runtime-state-repository";
@@ -18,7 +19,7 @@ export class ProgressionService {
     private readonly sessions: SessionRepository
   ) {}
 
-  async run(userId: string, username: string, lookbackDays = 7) {
+  async run(userId: string, username: string, lookbackDays = 7): Promise<ProgressionRunResponse> {
     const program = await this.lifecycle.requireActiveProgram(userId, username);
     return this.runForProgram(userId, program.versionId, lookbackDays);
   }
@@ -55,7 +56,7 @@ export class ProgressionService {
     return true;
   }
 
-  private async runForProgram(userId: string, programId: string, lookbackDays = 7) {
+  private async runForProgram(userId: string, programId: string, lookbackDays = 7): Promise<ProgressionRunResponse> {
     const activeProgram = await this.programs.getProgramById(programId);
     if (!activeProgram) {
       conflict("Active program not found");

@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
@@ -90,14 +90,7 @@ export function registerLogRoutes(app: OpenAPIHono<AppEnv>) {
     }
 
     return c.json(
-      (await sessionService.createFromJson(
-        auth.userId,
-        auth.username,
-        c.req.valid("json"),
-        requestedDate
-      )) as z.infer<
-        typeof LogCreateResponseSchema
-      >,
+      await sessionService.createFromJson(auth.userId, auth.username, c.req.valid("json"), requestedDate),
       200
     );
   });

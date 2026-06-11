@@ -48,6 +48,17 @@ export interface ParsedTextLog {
   unmatched: string[];
 }
 
+export interface LegacyLogEntry {
+  date: string;
+  workout_type: string | null;
+  exercises: Array<{ id: string; name: string; sets: number[] }>;
+  note: string;
+  unmatched: string[];
+  source: "json" | "text" | "legacy-kv";
+  session_id: string;
+  created_at: string;
+}
+
 export function parseLogText(text: string, program: ProgramTemplate): ParsedTextLog {
   const lines = text.split("\n").map(line => line.trim()).filter(Boolean);
   const nameIndex = buildExerciseIndex(program);
@@ -102,17 +113,21 @@ export function enrichSessionInput(program: ProgramTemplate, input: SessionWrite
   };
 }
 
-export function sessionToLegacyLogResponse(session: WorkoutSessionRecord): Record<string, unknown> {
+export function sessionToLegacyLogResponse(session: WorkoutSessionRecord): LegacyLogEntry {
   return {
     date: session.sessionDate,
     workout_type: session.workoutType,
-    exercises: session.exercises
-      .filter(exercise => exercise.exerciseKey)
-      .map(exercise => ({
-        id: exercise.exerciseKey,
-        name: exercise.exerciseName,
-        sets: exercise.sets,
-      })),
+    exercises: session.exercises.flatMap(exercise =>
+      exercise.exerciseKey
+        ? [
+            {
+              id: exercise.exerciseKey,
+              name: exercise.exerciseName,
+              sets: exercise.sets,
+            },
+          ]
+        : []
+    ),
     note: session.note,
     unmatched: session.unmatched,
     source: session.source,

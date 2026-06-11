@@ -4,7 +4,6 @@ import {
   materializeProgramDefinitionFromDraftSelection,
 } from "../domain/generator";
 import {
-  RecommendationDraftJson,
   RecommendationDraftProfileSnapshot,
   validateRecommendationDraftJson,
 } from "../domain/recommendation-draft";
@@ -12,6 +11,10 @@ import { PROFILE_VERSION, NormalizedUserProfile } from "../domain/profile";
 import { programTemplateToApi } from "../domain/program";
 import { conflict, notFound } from "../lib/app-error";
 import { nowIso } from "../lib/time";
+import type {
+  RecommendationDraftActivateResponse,
+  RecommendationDraftResponse,
+} from "../openapi/schemas";
 import { CatalogRepository } from "../repositories/catalog-repository";
 import { GeneratedProgramMetadataRepository } from "../repositories/generated-program-metadata-repository";
 import {
@@ -22,41 +25,9 @@ import { ProgramRepository } from "../repositories/program-repository";
 import { ProgramGeneratorService } from "./program-generator-service";
 import { UserLifecycleService } from "./user-lifecycle-service";
 
-export interface RecommendationDraftResponseDto {
-  id: string;
-  status: RecommendationDraftRecord["status"];
-  source_onboarding_answer_id: string | null;
-  source_profile_id: string | null;
-  generator_version: string;
-  catalog_seed_version: string;
-  selected_structure_id: string;
-  activated_program_id: string | null;
-  created_at: string;
-  updated_at: string;
-  activated_at: string | null;
-  draft: RecommendationDraftJson;
-}
+export type RecommendationDraftResponseDto = RecommendationDraftResponse;
 
-export interface RecommendationDraftActivationResponseDto {
-  ok: true;
-  message: string;
-  program: ReturnType<typeof programTemplateToApi> & {
-    version_id: string;
-    source: string;
-  };
-  generator: {
-    version: string;
-    catalog_seed_version: string;
-  };
-  recommendation_draft: {
-    id: string;
-    status: "activated";
-    selected_structure_id: string;
-    activated_program_id: string;
-    activated_at: string;
-    updated_at: string;
-  };
-}
+export type RecommendationDraftActivationResponseDto = RecommendationDraftActivateResponse;
 
 export class RecommendationDraftService {
   constructor(

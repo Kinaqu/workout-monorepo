@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
@@ -217,19 +217,13 @@ export function registerProgramRoutes(app: OpenAPIHono<AppEnv>) {
   app.openapi(getProgramRoute, async c => {
     const auth = c.get("auth");
     const { programService } = createAppContext(c.env);
-    return c.json(
-      (await programService.getCurrentProgram(auth.userId, auth.username)) as z.infer<typeof ProgramResponseSchema>,
-      200
-    );
+    return c.json(await programService.getCurrentProgram(auth.userId, auth.username), 200);
   });
 
   app.openapi(saveProgramRoute, async c => {
     const auth = c.get("auth");
     const { programService } = createAppContext(c.env);
-    return c.json(
-      (await programService.saveProgram(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof ProgramMutationResponseSchema>,
-      200
-    );
+    return c.json(await programService.saveProgram(auth.userId, auth.username, c.req.valid("json")), 200);
   });
 
   app.openapi(resetProgramRoute, async c => {
@@ -244,21 +238,14 @@ export function registerProgramRoutes(app: OpenAPIHono<AppEnv>) {
     }
 
     const { programService } = createAppContext(c.env);
-    return c.json(
-      (await programService.resetProgram(auth.userId, auth.username)) as z.infer<
-        typeof ProgramMutationResponseSchema
-      >,
-      200
-    );
+    return c.json(await programService.resetProgram(auth.userId, auth.username), 200);
   });
 
   app.openapi(regenerateProgramRoute, async c => {
     const auth = c.get("auth");
     const { programGeneratorService } = createAppContext(c.env);
     return c.json(
-      (await programGeneratorService.generateFromStoredProfile(auth.userId, auth.username, "regenerate")) as z.infer<
-        typeof GeneratedProgramResponseSchema
-      >,
+      await programGeneratorService.generateFromStoredProfile(auth.userId, auth.username, "regenerate"),
       200
     );
   });

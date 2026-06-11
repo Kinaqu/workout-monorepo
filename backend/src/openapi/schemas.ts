@@ -380,7 +380,7 @@ const RecommendationDraftActivationContextSchema = z
   })
   .openapi("RecommendationDraftActivationContext");
 
-const RecommendationDraftJsonSchema = z
+export const RecommendationDraftJsonSchema = z
   .object({
     status: RecommendationDraftStatusSchema,
     profile_snapshot: RecommendationDraftProfileSnapshotSchema,
@@ -580,7 +580,7 @@ const ProgressionBoundsSchema = z
   })
   .openapi("ProgressionBounds");
 
-const ProgressionChangeSchema = z
+export const ProgressionChangeSchema = z
   .object({
     id: z.string().openapi({ example: "pushups" }),
     name: z.string().openapi({ example: "Push-ups" }),
@@ -778,3 +778,22 @@ export const WorkoutDateHeaderSchema = z.object({
       description: "Optional workout date override in YYYY-MM-DD format.",
     }),
 });
+
+// Inferred wire types. Services declare these as return types so the
+// compiler verifies, at the object-literal site, that what the API returns
+// matches the documented schema (routes previously force-cast instead).
+export type MeResponse = z.infer<typeof MeResponseSchema>;
+export type WorkoutTodayResponse = z.infer<typeof WorkoutTodayResponseSchema>;
+export type ProgramResponse = z.infer<typeof ProgramResponseSchema>;
+export type ProgramMutationResponse = z.infer<typeof ProgramMutationResponseSchema>;
+export type GeneratedProgramResponse = z.infer<typeof GeneratedProgramResponseSchema>;
+export type ProgressionRunResponse = z.infer<typeof ProgressionRunResponseSchema>;
+export type OnboardingStateResponse = z.infer<typeof OnboardingStateResponseSchema>;
+export type OnboardingDraftSaveResponse = z.infer<typeof OnboardingDraftSaveResponseSchema>;
+export type OnboardingCompleteResponse = z.infer<typeof OnboardingCompleteResponseSchema>;
+export type LogCreateResponse = z.infer<typeof LogCreateResponseSchema>;
+export type SessionsListResponse = z.infer<typeof SessionsListResponseSchema>;
+export type RecommendationDraftResponse = z.infer<typeof RecommendationDraftResponseSchema>;
+export type RecommendationDraftActivateResponse = z.infer<
+  typeof RecommendationDraftActivateResponseSchema
+>;
