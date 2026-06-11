@@ -121,3 +121,6 @@ The repository includes:
 ## Notes
 
 This structure is intentional. The goal is to keep the applications close together operationally while avoiding unnecessary coupling in code, tooling, and deployment.
+
+- Brand design tokens (colors, fonts) are deliberately duplicated between `frontend/public/style.css` and `landing/app/globals.css`; update both together.
+- The API contract is shared through a generated artifact instead of a workspace: `backend/openapi.json` is committed (refreshed by `npm run openapi:export` in `backend/`), and the frontend generates its API types from it (`npm run generate:api` in `frontend/`). Both `npm run check` scripts fail when either side is stale.

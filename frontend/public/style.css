@@ -70,6 +70,8 @@
   src: url("/fonts/sora-700.ttf") format("truetype");
 }
 
+/* Brand tokens intentionally duplicated with landing/app/globals.css -
+   update both files together; no shared package by design (root README). */
 :root {
   --background: #05070b;
   --foreground: #f8fbff;
