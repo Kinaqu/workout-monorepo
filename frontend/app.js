@@ -6,7 +6,7 @@ import {
 } from '/lib/api/index.js';
 import { ensureClerkReady } from '/clerk-bootstrap.js';
 import { createHistoryFeature } from '/features/history/index.tsx';
-import { createOnboardingFeature } from '/features/onboarding/index.js';
+import { createOnboardingFeature } from '/features/onboarding/index.tsx';
 import { createProgramFeature } from '/features/program/index.tsx';
 import { createRecommendationFeature } from '/features/recommendation/index.js';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
