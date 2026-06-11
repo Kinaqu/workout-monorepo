@@ -14,8 +14,8 @@ import {
   useRoutedApiError,
   type ApiErrorRouting,
 } from '../../shared/hooks/use-routed-api-error.ts';
-import { getTodayDateString, shiftDateString } from '../../shared/utils/date.js';
-import { formatDateLabel, formatLongDateLabel, formatWorkoutTypeLabel } from '../../shared/utils/format.js';
+import { getTodayDateString, shiftDateString } from '../../shared/utils/date.ts';
+import { formatDateLabel, formatLongDateLabel, formatWorkoutTypeLabel } from '../../shared/utils/format.ts';
 import { ExerciseStack } from './ExerciseStack.tsx';
 
 export type TodayStatus = 'idle' | 'active' | 'recovery';

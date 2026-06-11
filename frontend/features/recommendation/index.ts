@@ -10,7 +10,7 @@ import {
   isRecommendationDraftNotFoundError,
   isRecommendationDraftUnsupportedError,
 } from '../../lib/api/errors.ts';
-import { ensureApiObject } from '../../shared/utils/guards.js';
+import { ensureApiObject } from '../../shared/utils/guards.ts';
 import type {
   RecommendationShellProps,
   RecommendationStep,

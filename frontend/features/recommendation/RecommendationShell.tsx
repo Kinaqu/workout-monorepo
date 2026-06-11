@@ -2,7 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 import type { RecommendationDraftResponse } from '../../lib/api/contracts.ts';
 import { ShellSkeleton } from '../../shared/components/ShellSkeleton.tsx';
-import { humanizeToken } from '../../shared/utils/format.js';
+import { humanizeToken } from '../../shared/utils/format.ts';
 
 export type RecommendationStatus = 'idle' | 'loading' | 'ready' | 'updating' | 'activating';
 export type RecommendationStep = 'structure' | 'exercise' | 'review';

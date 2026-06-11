@@ -11,7 +11,7 @@ import {
   useRoutedApiError,
   type ApiErrorRouting,
 } from '../../shared/hooks/use-routed-api-error.ts';
-import { formatDateLabel, formatWorkoutTypeLabel, humanizeToken } from '../../shared/utils/format.js';
+import { formatDateLabel, formatWorkoutTypeLabel, humanizeToken } from '../../shared/utils/format.ts';
 
 export interface HistoryViewState {
   date: string;

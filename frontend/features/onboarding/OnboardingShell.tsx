@@ -7,7 +7,7 @@ import { getApiErrorMessage } from '../../shared/hooks/use-routed-api-error.ts';
 import {
   mergeOnboardingData,
   validateOnboardingPayload,
-} from '../../shared/utils/onboarding.js';
+} from '../../shared/utils/onboarding.ts';
 import { selectShellMode } from '../../app/product-state.ts';
 
 export interface OnboardingFormData {

@@ -19,7 +19,7 @@ import { RecommendationShell } from '../features/recommendation/RecommendationSh
 import { createTodayController } from '../features/today/index.ts';
 import { TodayTab } from '../features/today/TodayTab.tsx';
 import { getApiErrorMessage } from '../shared/hooks/use-routed-api-error.ts';
-import { ensureApiObject } from '../shared/utils/guards.js';
+import { ensureApiObject } from '../shared/utils/guards.ts';
 import {
   hasActiveProgram,
   hasCompletedOnboarding,

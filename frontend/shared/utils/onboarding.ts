@@ -1,5 +1,17 @@
 export const ONBOARDING_QUESTIONNAIRE_VERSION = 'onboarding-v1';
 
+export interface OnboardingData {
+  questionnaireVersion: string;
+  goals: string[];
+  experienceLevel: string;
+  trainingDaysPerWeek: number | null;
+  sessionDurationMinutes: number | null;
+  equipmentAccess: string[];
+  focusAreas: string[];
+  limitations: string[];
+  preferredStyles: string[];
+}
+
 export const ONBOARDING_DEFAULTS = {
   questionnaireVersion: ONBOARDING_QUESTIONNAIRE_VERSION,
   goals: ['general_fitness'],
@@ -8,11 +20,11 @@ export const ONBOARDING_DEFAULTS = {
   sessionDurationMinutes: 30,
   equipmentAccess: ['bodyweight'],
   focusAreas: ['upper_body', 'lower_body', 'core'],
-  limitations: [],
+  limitations: [] as string[],
   preferredStyles: ['balanced'],
 };
 
-export function createDefaultOnboardingData() {
+export function createDefaultOnboardingData(): OnboardingData {
   return {
     questionnaireVersion: ONBOARDING_DEFAULTS.questionnaireVersion,
     goals: ONBOARDING_DEFAULTS.goals.slice(),
@@ -26,9 +38,9 @@ export function createDefaultOnboardingData() {
   };
 }
 
-export function mergeOnboardingData(answers) {
+export function mergeOnboardingData(answers: unknown): OnboardingData {
   const defaults = createDefaultOnboardingData();
-  const source = answers && typeof answers === 'object' ? answers : {};
+  const source = (answers && typeof answers === 'object' ? answers : {}) as Partial<Record<keyof OnboardingData, unknown>>;
 
   return {
     questionnaireVersion:
@@ -37,10 +49,12 @@ export function mergeOnboardingData(answers) {
         : defaults.questionnaireVersion,
     goals: Array.isArray(source.goals) ? source.goals.slice() : defaults.goals,
     experienceLevel: typeof source.experienceLevel === 'string' ? source.experienceLevel : defaults.experienceLevel,
-    trainingDaysPerWeek:
-      Number.isInteger(source.trainingDaysPerWeek) ? source.trainingDaysPerWeek : defaults.trainingDaysPerWeek,
-    sessionDurationMinutes:
-      Number.isInteger(source.sessionDurationMinutes) ? source.sessionDurationMinutes : defaults.sessionDurationMinutes,
+    trainingDaysPerWeek: Number.isInteger(source.trainingDaysPerWeek)
+      ? (source.trainingDaysPerWeek as number)
+      : defaults.trainingDaysPerWeek,
+    sessionDurationMinutes: Number.isInteger(source.sessionDurationMinutes)
+      ? (source.sessionDurationMinutes as number)
+      : defaults.sessionDurationMinutes,
     equipmentAccess: Array.isArray(source.equipmentAccess) ? source.equipmentAccess.slice() : defaults.equipmentAccess,
     focusAreas: Array.isArray(source.focusAreas) ? source.focusAreas.slice() : defaults.focusAreas,
     limitations: Array.isArray(source.limitations) ? source.limitations.slice() : defaults.limitations,
@@ -48,8 +62,8 @@ export function mergeOnboardingData(answers) {
   };
 }
 
-export function validateOnboardingPayload(payload) {
-  const errors = {};
+export function validateOnboardingPayload(payload: OnboardingData): Record<string, string> {
+  const errors: Record<string, string> = {};
 
   if (payload.goals.length === 0) {
     errors.goals = 'Pick at least one goal.';

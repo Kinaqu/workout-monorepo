@@ -9,11 +9,11 @@ import {
 } from '../../app/product-state.ts';
 import { api } from '../../lib/api/client.ts';
 import { AuthRedirectError } from '../../lib/api/errors.ts';
-import { ensureApiObject } from '../../shared/utils/guards.js';
+import { ensureApiObject } from '../../shared/utils/guards.ts';
 import {
   ONBOARDING_QUESTIONNAIRE_VERSION,
   createDefaultOnboardingData,
-} from '../../shared/utils/onboarding.js';
+} from '../../shared/utils/onboarding.ts';
 import type { OnboardingFormData, OnboardingHydration, OnboardingShellProps } from './OnboardingShell.tsx';
 
 interface OnboardingControllerOptions {

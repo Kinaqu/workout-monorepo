@@ -3,7 +3,7 @@
 import { hasActiveProgram } from '../../app/product-state.ts';
 import { queryClient } from '../../lib/query/client.ts';
 import type { ApiErrorRouting } from '../../shared/hooks/use-routed-api-error.ts';
-import { getTodayDateString } from '../../shared/utils/date.js';
+import { getTodayDateString } from '../../shared/utils/date.ts';
 import type { HistoryTabProps, HistoryViewState } from './HistoryTab.tsx';
 
 export function createHistoryController(routing: ApiErrorRouting) {

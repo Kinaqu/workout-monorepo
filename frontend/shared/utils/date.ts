@@ -1,8 +1,8 @@
-export function getTodayDateString() {
+export function getTodayDateString(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function shiftDateString(value, dayOffset) {
+export function shiftDateString(value: string, dayOffset: number): string {
   if (!value) {
     return getTodayDateString();
   }
@@ -16,7 +16,7 @@ export function shiftDateString(value, dayOffset) {
   return date.toISOString().split('T')[0];
 }
 
-export function formatDateLabel(value) {
+export function formatDateLabel(value: string): string {
   if (!value) return '';
 
   const date = new Date(`${value}T00:00:00Z`);
@@ -30,7 +30,7 @@ export function formatDateLabel(value) {
   }).format(date);
 }
 
-export function formatLongDateLabel(value) {
+export function formatLongDateLabel(value: string): string {
   if (!value) return '';
 
   const date = new Date(`${value}T00:00:00Z`);
@@ -45,7 +45,7 @@ export function formatLongDateLabel(value) {
   }).format(date);
 }
 
-export function formatDateTimeLabel(value) {
+export function formatDateTimeLabel(value: string): string {
   if (!value) return '';
 
   const date = new Date(value);
