@@ -47,7 +47,12 @@ export function createHistoryFeature(routing: ApiErrorRouting) {
 
   function load(date: string) {
     if (!date) return;
-    setState({ date, recovery: !hasActiveProgram() });
+    const recovery = !hasActiveProgram();
+    setState({ date, recovery });
+    if (!recovery) {
+      // App-driven loads always refetch, matching the old imperative load().
+      void queryClient.invalidateQueries({ queryKey: ['sessions', { date, limit: 50 }] });
+    }
   }
 
   async function loadSelected() {

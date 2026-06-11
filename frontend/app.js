@@ -10,7 +10,7 @@ import { createOnboardingFeature } from '/features/onboarding/index.js';
 import { createProgramFeature } from '/features/program/index.js';
 import { createRecommendationFeature } from '/features/recommendation/index.js';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
-import { createTodayWorkoutFeature } from '/features/today-workout/index.js';
+import { createTodayWorkoutFeature } from '/features/today/index.tsx';
 import { primeVisibleBoneyardLoaders } from '/shared/ui/boneyard.js';
 import { selectShellMode, setShellMode, updateMeLifecycle } from '/store/app-store.js';
 
@@ -128,8 +128,6 @@ historyFeature = createHistoryFeature({
 });
 
 todayWorkoutFeature = createTodayWorkoutFeature({
-  getHistorySelectedDate: () => historyFeature.getSelectedDate(),
-  loadHistoryForDate: date => historyFeature.load(date),
   onEnterOnboarding: () => onboardingFeature.enter(),
   onMissingProgram: handleMissingProgram,
 });
