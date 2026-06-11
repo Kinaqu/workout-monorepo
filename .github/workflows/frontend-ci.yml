@@ -26,6 +26,7 @@ jobs:
   frontend-check:
     name: frontend-ci-job
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -46,8 +47,14 @@ jobs:
       - name: Verify frontend
         run: npm run check
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: bash scripts/ci-install-playwright.sh
 
       - name: Run local smoke tests
         env:
