@@ -22,6 +22,9 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["node"] 
+    "types": [
+      "node"
+    ],
+    "resolveJsonModule": false
   }
 }
