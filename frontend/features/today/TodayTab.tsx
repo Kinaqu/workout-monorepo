@@ -23,6 +23,8 @@ export type TodayStatus = 'idle' | 'active' | 'recovery';
 export interface TodayViewState {
   date: string;
   status: TodayStatus;
+  // Bootstrap-level errors the app shell surfaces through this tab.
+  externalError: string;
 }
 
 export interface TodayTabProps {
@@ -214,7 +216,7 @@ export function TodayTab({ subscribe, getViewState, setDate, enterRecovery, rout
 
   const unhandledLoadError =
     loadError && classifyApiError(loadError) === 'unhandled' ? `Could not load workout: ${getApiErrorMessage(loadError)}` : '';
-  const errorMessage = unhandledLoadError || saveError;
+  const errorMessage = unhandledLoadError || saveError || view.externalError;
 
   const showRecovery = view.status === 'recovery';
   const showContent = showRecovery || (enabled && !isLoading && Boolean(workout));

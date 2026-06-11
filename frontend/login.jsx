@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ClerkLoaded, ClerkLoading, ClerkProvider, Show, SignIn, useClerk } from '@clerk/react';
 import { AuthLinkRow, AuthMessageCard, AuthMetaList, AuthShell, AuthSkeleton, AuthStageSkeleton } from './auth-shell.jsx';
 import { clerkAppearance } from './clerkAppearance.js';
-import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './clerk.jsx';
+import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './lib/auth/clerk.ts';
 
 const shouldForceReauth = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reauth') === '1';
 

@@ -1,15 +1,11 @@
-// Coexistence bridge for the Program tab; see features/history/index.tsx.
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
-
+// Feature controller for the Program tab; see features/history/index.ts.
+import { hasActiveProgram, hasCompletedOnboarding } from '../../app/product-state.ts';
 import { queryClient } from '../../lib/query/client.ts';
 import { queryKeys } from '../../lib/query/keys.ts';
 import type { ApiErrorRouting } from '../../shared/hooks/use-routed-api-error.ts';
-import { hasActiveProgram, hasCompletedOnboarding } from '../../store/app-store.js';
-import { ProgramTab, type ProgramViewState } from './ProgramTab.tsx';
+import type { ProgramTabProps, ProgramViewState } from './ProgramTab.tsx';
 
-export function createProgramFeature({
+export function createProgramController({
   onEnterOnboarding,
   onMissingProgram,
   onRefreshProductState,
@@ -29,25 +25,16 @@ export function createProgramFeature({
     listeners.forEach(listener => listener());
   };
 
-  const container = document.getElementById('tab-program');
-  if (container) {
-    createRoot(container).render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ProgramTab
-            subscribe={subscribe}
-            getViewState={getViewState}
-            enterRecovery={() => setState({ status: 'recovery' })}
-            routing={{ onEnterOnboarding, onMissingProgram }}
-            refreshProductState={onRefreshProductState}
-          />
-        </QueryClientProvider>
-      </StrictMode>
-    );
-  }
+  const props: ProgramTabProps = {
+    subscribe,
+    getViewState,
+    enterRecovery: () => setState({ status: 'recovery' }),
+    routing: { onEnterOnboarding, onMissingProgram },
+    refreshProductState: onRefreshProductState,
+  };
 
   return {
-    init() {},
+    props,
     // App-driven loads always refetch, matching the old imperative load().
     load: async () => {
       const status = hasActiveProgram() ? 'active' : 'recovery';

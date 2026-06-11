@@ -8,7 +8,7 @@ import {
   mergeOnboardingData,
   validateOnboardingPayload,
 } from '../../shared/utils/onboarding.js';
-import { selectShellMode } from '../../store/app-store.js';
+import { selectShellMode } from '../../app/product-state.ts';
 
 export interface OnboardingFormData {
   questionnaireVersion: string;

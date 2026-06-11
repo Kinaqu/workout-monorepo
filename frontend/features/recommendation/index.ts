@@ -1,10 +1,7 @@
-// Coexistence bridge for the recommendation shell; see features/history/index.tsx.
+// Feature controller for the recommendation shell; see features/history/index.ts.
 // enter() keeps the old throwing contract: AuthRedirect and
-// draft-unsupported errors propagate so app.js can fall back to the
-// legacy plan-recovery shell.
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-
+// draft-unsupported errors propagate so the shell can fall back to the
+// legacy plan-recovery flow.
 import { api } from '../../lib/api/client.ts';
 import type { RecommendationDraftResponse } from '../../lib/api/contracts.ts';
 import {
@@ -14,14 +11,14 @@ import {
   isRecommendationDraftUnsupportedError,
 } from '../../lib/api/errors.ts';
 import { ensureApiObject } from '../../shared/utils/guards.js';
-import {
-  RecommendationShell,
-  type RecommendationStep,
-  type RecommendationViewState,
+import type {
+  RecommendationShellProps,
+  RecommendationStep,
+  RecommendationViewState,
 } from './RecommendationShell.tsx';
 
-interface RecommendationBridgeOptions {
-  showShellMode: (mode: string) => void;
+interface RecommendationControllerOptions {
+  showShellMode: (mode: 'recommendation') => void;
   onActivated: (activation: unknown) => void | Promise<void>;
 }
 
@@ -42,7 +39,7 @@ function getReadableErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export function createRecommendationFeature({ showShellMode, onActivated }: RecommendationBridgeOptions) {
+export function createRecommendationController({ showShellMode, onActivated }: RecommendationControllerOptions) {
   let state: RecommendationViewState = { ...INITIAL_STATE };
   const listeners = new Set<() => void>();
 
@@ -176,28 +173,20 @@ export function createRecommendationFeature({ showShellMode, onActivated }: Reco
     }
   }
 
-  const container = document.getElementById('recommendation-shell');
-  if (container) {
-    createRoot(container).render(
-      <StrictMode>
-        <RecommendationShell
-          subscribe={subscribe}
-          getViewState={getViewState}
-          onSelectStructure={structureId => void handleSelectStructure(structureId)}
-          onOpenSlotPicker={slotId => setState({ activeSlotId: slotId, pickerOpen: true })}
-          onPickExercise={(slotId, catalogExerciseId) => void handleReplaceExercise(slotId, catalogExerciseId)}
-          onClosePicker={() => setState({ activeSlotId: null, pickerOpen: false })}
-          onGoToStep={(step: RecommendationStep) =>
-            setState({ step, errorMessage: '', activationErrorMessage: '' })
-          }
-          onActivate={() => void handleActivateDraft()}
-          onRetry={() => void enter()}
-        />
-      </StrictMode>
-    );
-  }
+  const props: RecommendationShellProps = {
+    subscribe,
+    getViewState,
+    onSelectStructure: structureId => void handleSelectStructure(structureId),
+    onOpenSlotPicker: slotId => setState({ activeSlotId: slotId, pickerOpen: true }),
+    onPickExercise: (slotId, catalogExerciseId) => void handleReplaceExercise(slotId, catalogExerciseId),
+    onClosePicker: () => setState({ activeSlotId: null, pickerOpen: false }),
+    onGoToStep: (step: RecommendationStep) => setState({ step, errorMessage: '', activationErrorMessage: '' }),
+    onActivate: () => void handleActivateDraft(),
+    onRetry: () => void enter(),
+  };
 
   return {
+    props,
     enter,
     loadOrCreateDraft,
     markUnsupported: () => setState({ supported: false, status: 'idle', activeSlotId: null, pickerOpen: false }),

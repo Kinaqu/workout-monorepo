@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ClerkLoaded, ClerkLoading, ClerkProvider, Show, SignUp } from '@clerk/react';
 import { AuthLinkRow, AuthMessageCard, AuthMetaList, AuthShell, AuthStageSkeleton } from './auth-shell.jsx';
 import { clerkAppearance } from './clerkAppearance.js';
-import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './clerk.jsx';
+import { clerkPublishableKey, envDiagnostics, hasClerkKey } from './lib/auth/clerk.ts';
 
 function MissingKeyNotice() {
   return (

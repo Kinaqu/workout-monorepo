@@ -13,7 +13,7 @@ import {
   useRoutedApiError,
   type ApiErrorRouting,
 } from '../../shared/hooks/use-routed-api-error.ts';
-import { hasCompletedOnboarding } from '../../store/app-store.js';
+import { hasCompletedOnboarding } from '../../app/product-state.ts';
 import { formatDateTimeLabel, formatLongDateLabel } from '../../shared/utils/date.js';
 import { formatPlanSlotLabel, formatWorkoutTypeLabel, humanizeToken } from '../../shared/utils/format.js';
 import { DAY_OPTIONS, buildProgramPayload, cloneProgramForEditor, type EditorState } from './editor-model.ts';

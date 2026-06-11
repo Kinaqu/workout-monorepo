@@ -1,6 +1,13 @@
+// Clerk bootstrap shared by all three entries (/, /login, /register).
+//
+// The main app intentionally has no ClerkProvider: it only needs the
+// is-signed-in gate and Bearer tokens, both of which work against the
+// plain window.Clerk instance. This also keeps the local smoke tests
+// (which stub window.Clerk with a plain object and run without a
+// publishable key) on the same code path as production.
 import { loadClerkJsScript } from '@clerk/shared/loadClerkJsScript';
 
-export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+export const clerkPublishableKey: string = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 export const envDiagnostics = {
   hasViteKey: Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY),
@@ -10,28 +17,41 @@ export const envDiagnostics = {
 
 export const hasClerkKey = Boolean(clerkPublishableKey);
 
-let clerkBootstrapPromise = null;
+export interface ClerkReadyState {
+  isLoaded: boolean;
+  isSignedIn: boolean;
+}
 
-function getClerkInstance() {
+interface ClerkWindowInstance {
+  status?: string;
+  loaded?: boolean;
+  session?: unknown;
+  isSignedIn?: boolean;
+  load?: () => Promise<void>;
+}
+
+let clerkBootstrapPromise: Promise<ClerkReadyState> | null = null;
+
+function getClerkInstance(): ClerkWindowInstance | null {
   if (typeof window === 'undefined' || !('Clerk' in window)) {
     return null;
   }
 
-  return window.Clerk ?? null;
+  return (window.Clerk as ClerkWindowInstance | undefined) ?? null;
 }
 
-function isClerkReady(clerk) {
+function isClerkReady(clerk: ClerkWindowInstance | null): boolean {
   if (!clerk) return false;
   if (clerk.status === 'ready' || clerk.status === 'degraded') return true;
   return Boolean(clerk.loaded && !clerk.status);
 }
 
-export function ensureClerkReady() {
+export function ensureClerkReady(): Promise<ClerkReadyState> {
   const readyClerk = getClerkInstance();
   if (isClerkReady(readyClerk)) {
     return Promise.resolve({
       isLoaded: true,
-      isSignedIn: Boolean(readyClerk.session || readyClerk.isSignedIn),
+      isSignedIn: Boolean(readyClerk?.session || readyClerk?.isSignedIn),
     });
   }
 
