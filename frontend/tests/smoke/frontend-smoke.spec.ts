@@ -681,9 +681,9 @@ function buildProgramResponse() {
       bird_dog: 1,
     },
     progressionState: {
-      pushups: { sets: 1, min: 8, max: 12, last_progression: null },
-      squats: { sets: 1, min: 10, max: 14, last_progression: null },
-      bird_dog: { sets: 1, min: 10, max: 12, last_progression: null },
+      pushups: { sets: 1, min: 8, max: 12, last_progression: null as string | null },
+      squats: { sets: 1, min: 10, max: 14, last_progression: null as string | null },
+      bird_dog: { sets: 1, min: 10, max: 12, last_progression: null as string | null },
     },
     generator_metadata: {
       version: 'generator-v1',

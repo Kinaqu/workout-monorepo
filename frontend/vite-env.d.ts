@@ -1,16 +1,9 @@
 /// <reference types="vite/client" />
 
 declare module '*.bones.json' {
-  const bones: any;
+  import type { ResponsiveBones, SkeletonResult } from 'boneyard-js';
+  const bones: SkeletonResult | ResponsiveBones;
   export default bones;
-}
-
-declare module 'boneyard-js' {
-  export function registerBones(map: Record<string, any>): void;
-}
-
-declare module 'boneyard-js/react' {
-  export function registerBones(map: Record<string, any>): void;
 }
 
 interface ImportMetaEnv {

@@ -27,8 +27,30 @@ export interface ProgramWorkoutInput {
 export interface ProgramDefinitionInput {
   id: string;
   name: string;
-  schedule: Record<string, string>;
+  // validateProgramDefinition guarantees every day is present.
+  schedule: Record<DayName, string>;
   workouts: Record<string, ProgramWorkoutInput>;
+}
+
+// The wire-facing program definition produced by programTemplateToApi.
+// Unlike ProgramExerciseInput (where the target range fields are optional
+// and an internal catalogExerciseId may ride along), each variant carries
+// exactly the range field for its type, as the API contract documents.
+export type ProgramExerciseApi =
+  | { id: string; name: string; type: "reps"; max_sets: number; reps: TargetRange }
+  | { id: string; name: string; type: "time"; max_sets: number; duration: TargetRange }
+  | { id: string; name: string; type: "cycles"; max_sets: number; cycles: TargetRange };
+
+export interface ProgramWorkoutApi {
+  name: string;
+  exercises: ProgramExerciseApi[];
+}
+
+export interface ProgramDefinitionApi {
+  id: string;
+  name: string;
+  schedule: Record<DayName, string>;
+  workouts: Record<string, ProgramWorkoutApi>;
 }
 
 export interface ExerciseDefinition {
@@ -151,7 +173,7 @@ export function validateProgramDefinition(input: unknown): ProgramDefinitionInpu
     badRequest("Invalid workouts");
   }
 
-  const schedule: Record<string, string> = {};
+  const schedule = {} as Record<DayName, string>;
   for (const day of ALL_DAY_NAMES) {
     const raw = input.schedule[day];
     if (typeof raw !== "string" || raw.trim().length === 0) {
@@ -263,28 +285,28 @@ export function createProgramDraft(program: ProgramDefinitionInput): ProgramDraf
   };
 }
 
-export function programTemplateToApi(program: ProgramTemplate): ProgramDefinitionInput {
+export function programTemplateToApi(program: ProgramTemplate): ProgramDefinitionApi {
   const workouts = Object.fromEntries(
     Object.entries(program.workouts).map(([workoutKey, workout]) => [
       workoutKey,
       {
         name: workout.name,
-        exercises: workout.exercises.map(template => {
+        exercises: workout.exercises.map((template): ProgramExerciseApi => {
           const base = {
             id: template.exercise.key,
             name: template.exercise.name,
-            type: template.exercise.type,
             max_sets: template.maxSets,
           };
+          const range = { min: template.targetMin, max: template.targetMax };
 
           if (template.exercise.type === "reps") {
-            return { ...base, reps: { min: template.targetMin, max: template.targetMax } };
+            return { ...base, type: "reps", reps: range };
           }
           if (template.exercise.type === "time") {
-            return { ...base, duration: { min: template.targetMin, max: template.targetMax } };
+            return { ...base, type: "time", duration: range };
           }
 
-          return { ...base, cycles: { min: template.targetMin, max: template.targetMax } };
+          return { ...base, type: "cycles", cycles: range };
         }),
       },
     ])
@@ -292,7 +314,7 @@ export function programTemplateToApi(program: ProgramTemplate): ProgramDefinitio
 
   const schedule = Object.fromEntries(
     ALL_DAY_NAMES.map(day => [day, program.schedule[day] ?? "rest"])
-  );
+  ) as Record<DayName, string>;
 
   return {
     id: program.key,

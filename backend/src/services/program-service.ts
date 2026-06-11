@@ -2,6 +2,7 @@ import { DEFAULT_PROGRAM } from "../domain/default-program";
 import { createProgramDraft, programTemplateToApi, ProgramDefinitionInput, validateProgramDefinition } from "../domain/program";
 import { seedProgressionStates } from "../domain/progression";
 import { nowIso } from "../lib/time";
+import type { ProgramMutationResponse, ProgramResponse } from "../openapi/schemas";
 import {
   GeneratedProgramMetadataRecord,
   GeneratedProgramMetadataRepository,
@@ -22,7 +23,7 @@ export class ProgramService {
     private readonly progressionService: ProgressionService
   ) {}
 
-  async getCurrentProgram(userId: string, username: string) {
+  async getCurrentProgram(userId: string, username: string): Promise<ProgramResponse> {
     const program = await this.lifecycle.requireActiveProgram(userId, username);
     await this.progressionService.ensureFreshForProgram(userId, username, program.versionId);
     const summary = await this.programs.getActiveProgramSummary(userId);
@@ -102,13 +103,13 @@ export class ProgramService {
     };
   }
 
-  async saveProgram(userId: string, username: string, input: unknown) {
+  async saveProgram(userId: string, username: string, input: unknown): Promise<ProgramMutationResponse> {
     await this.lifecycle.ensureUserExists(userId, username);
     const definition = validateProgramDefinition(input);
     return this.createProgramVersion(userId, definition, false, "api");
   }
 
-  async resetProgram(userId: string, username: string) {
+  async resetProgram(userId: string, username: string): Promise<ProgramMutationResponse> {
     await this.lifecycle.ensureUserExists(userId, username);
     return this.createProgramVersion(userId, DEFAULT_PROGRAM, true, "reset");
   }
@@ -118,7 +119,7 @@ export class ProgramService {
     definition: ProgramDefinitionInput,
     resetProgression: boolean,
     source: string
-  ) {
+  ): Promise<ProgramMutationResponse> {
     const current = await this.programs.getActiveProgram(userId);
     const previousStates = current
       ? await this.progression.getByProgram(userId, current.versionId)

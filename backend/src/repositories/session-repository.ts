@@ -29,6 +29,7 @@ interface SessionExerciseRow {
 }
 
 interface SessionImportRow {
+  session_id: string;
   raw_text: string | null;
   unmatched_text: string | null;
 }
@@ -201,7 +202,7 @@ export class SessionRepository {
         ).bind(userId, limit);
 
     const sessions = await fetchAll<SessionRow>(query);
-    return Promise.all(sessions.map(session => this.loadSessionAggregate(session)));
+    return this.loadSessionAggregates(sessions);
   }
 
   async listRecentPerformance(
@@ -264,41 +265,55 @@ export class SessionRepository {
   }
 
   private async loadSessionAggregate(session: SessionRow): Promise<WorkoutSessionRecord> {
+    const [record] = await this.loadSessionAggregates([session]);
+    return record;
+  }
+
+  // Loads exercises, imports, and sets for all sessions in three queries
+  // total (mirrors the listRecentPerformance batching) instead of three
+  // queries per session.
+  private async loadSessionAggregates(sessions: SessionRow[]): Promise<WorkoutSessionRecord[]> {
+    if (sessions.length === 0) {
+      return [];
+    }
+
     const importStorage = await this.getSessionImportStorage();
-    const [exerciseRows, importRow, setRows] = await Promise.all([
+    const sessionIds = sessions.map(session => session.id);
+    const idPlaceholders = sessionIds.map(() => "?").join(", ");
+
+    const [exerciseRows, importRows, setRows] = await Promise.all([
       fetchAll<SessionExerciseRow>(
         this.env.DB.prepare(
           `SELECT id, session_id, program_exercise_id, catalog_exercise_id, exercise_key, exercise_name, exercise_type,
                   matched, sort_order
            FROM workout_session_exercises
-           WHERE session_id = ?
+           WHERE session_id IN (${idPlaceholders})
            ORDER BY sort_order ASC`
-        ).bind(session.id)
+        ).bind(...sessionIds)
       ),
-      fetchFirst<SessionImportRow>(
-        (
-          importStorage === "split"
-            ? this.env.DB.prepare(
-                `SELECT raw_text, unmatched_text
-                 FROM workout_session_imports
-                 WHERE session_id = ?`
-              )
-            : this.env.DB.prepare(
-                `SELECT raw_text, unmatched_text
-                 FROM workout_sessions
-                 WHERE id = ?`
-              )
-        ).bind(session.id)
+      fetchAll<SessionImportRow>(
+        (importStorage === "split"
+          ? this.env.DB.prepare(
+              `SELECT session_id, raw_text, unmatched_text
+               FROM workout_session_imports
+               WHERE session_id IN (${idPlaceholders})`
+            )
+          : this.env.DB.prepare(
+              `SELECT id AS session_id, raw_text, unmatched_text
+               FROM workout_sessions
+               WHERE id IN (${idPlaceholders})`
+            )
+        ).bind(...sessionIds)
       ),
       fetchAll<SessionSetRow>(
         this.env.DB.prepare(
           `SELECT session_exercise_id, set_order, value
            FROM workout_session_sets
            WHERE session_exercise_id IN (
-             SELECT id FROM workout_session_exercises WHERE session_id = ?
+             SELECT id FROM workout_session_exercises WHERE session_id IN (${idPlaceholders})
            )
            ORDER BY set_order ASC`
-        ).bind(session.id)
+        ).bind(...sessionIds)
       ),
     ]);
 
@@ -309,29 +324,41 @@ export class SessionRepository {
       setsByExercise.set(set.session_exercise_id, values);
     }
 
-    return {
-      id: session.id,
-      sessionDate: session.session_date,
-      workoutType: session.workout_key,
-      workoutName: session.workout_name,
-      note: session.note,
-      source: session.source,
-      rawText: importRow?.raw_text ?? null,
-      unmatched: importRow?.unmatched_text ? importRow.unmatched_text.split("\n").filter(Boolean) : [],
-      createdAt: session.created_at,
-      updatedAt: session.updated_at,
-      exercises: exerciseRows.map(exercise => ({
-        id: exercise.id,
-        programExerciseId: exercise.program_exercise_id,
-        catalogExerciseId: exercise.catalog_exercise_id,
-        exerciseKey: exercise.exercise_key,
-        exerciseName: exercise.exercise_name,
-        exerciseType: exercise.exercise_type,
-        matched: Boolean(exercise.matched),
-        sortOrder: exercise.sort_order,
-        sets: (setsByExercise.get(exercise.id) ?? []).filter(value => typeof value === "number"),
-      })),
-    };
+    const exercisesBySession = new Map<string, SessionExerciseRow[]>();
+    for (const exercise of exerciseRows) {
+      const list = exercisesBySession.get(exercise.session_id) ?? [];
+      list.push(exercise);
+      exercisesBySession.set(exercise.session_id, list);
+    }
+
+    const importsBySession = new Map(importRows.map(row => [row.session_id, row]));
+
+    return sessions.map(session => {
+      const importRow = importsBySession.get(session.id);
+      return {
+        id: session.id,
+        sessionDate: session.session_date,
+        workoutType: session.workout_key,
+        workoutName: session.workout_name,
+        note: session.note,
+        source: session.source,
+        rawText: importRow?.raw_text ?? null,
+        unmatched: importRow?.unmatched_text ? importRow.unmatched_text.split("\n").filter(Boolean) : [],
+        createdAt: session.created_at,
+        updatedAt: session.updated_at,
+        exercises: (exercisesBySession.get(session.id) ?? []).map(exercise => ({
+          id: exercise.id,
+          programExerciseId: exercise.program_exercise_id,
+          catalogExerciseId: exercise.catalog_exercise_id,
+          exerciseKey: exercise.exercise_key,
+          exerciseName: exercise.exercise_name,
+          exerciseType: exercise.exercise_type,
+          matched: Boolean(exercise.matched),
+          sortOrder: exercise.sort_order,
+          sets: (setsByExercise.get(exercise.id) ?? []).filter(value => typeof value === "number"),
+        })),
+      };
+    });
   }
 
   private async getSessionImportStorage(): Promise<SessionImportStorage> {

@@ -7,6 +7,19 @@ export const size = {
 };
 export const contentType = "image/png";
 
+// Brand tokens, duplicated from the product apps by design (the monorepo
+// intentionally has no shared package; see the root README notes).
+const brand = {
+  accent: "#125bff",
+  accentGlow: "rgba(18,91,255,0.42)",
+  accentBorder: "rgba(18,91,255,0.5)",
+  accentSoftBg: "rgba(18,91,255,0.12)",
+  accentLogoTint: "rgba(18,91,255,0.18)",
+  bgDeep: "#05070b",
+  bgPanel: "#08111f",
+  font: "Manrope, sans-serif",
+};
+
 export default function Image() {
   return new ImageResponse(
     (
@@ -17,10 +30,9 @@ export default function Image() {
           display: "flex",
           position: "relative",
           overflow: "hidden",
-          background:
-            "radial-gradient(circle at 15% 20%, rgba(18,91,255,0.42), transparent 28%), linear-gradient(180deg, #05070b 0%, #08111f 48%, #05070b 100%)",
+          background: `radial-gradient(circle at 15% 20%, ${brand.accentGlow}, transparent 28%), linear-gradient(180deg, ${brand.bgDeep} 0%, ${brand.bgPanel} 48%, ${brand.bgDeep} 100%)`,
           color: "white",
-          fontFamily: "Manrope, sans-serif",
+          fontFamily: brand.font,
         }}
       >
         <div
@@ -70,8 +82,7 @@ export default function Image() {
                   alignItems: "center",
                   justifyContent: "center",
                   border: "1px solid rgba(255,255,255,0.14)",
-                  background:
-                    "linear-gradient(180deg, rgba(18,91,255,0.18), rgba(255,255,255,0.05))",
+                  background: `linear-gradient(180deg, ${brand.accentLogoTint}, rgba(255,255,255,0.05))`,
                   fontSize: 24,
                   fontWeight: 700,
                   letterSpacing: "-0.06em",
@@ -140,7 +151,7 @@ export default function Image() {
                       width: 10,
                       height: 10,
                       borderRadius: 999,
-                      background: "#125bff",
+                      background: brand.accent,
                     }}
                   />
                   {item}
@@ -201,12 +212,9 @@ export default function Image() {
                     borderRadius: 24,
                     border:
                       index === 1
-                        ? "1px solid rgba(18,91,255,0.5)"
+                        ? `1px solid ${brand.accentBorder}`
                         : "1px solid rgba(255,255,255,0.08)",
-                    background:
-                      index === 1
-                        ? "rgba(18,91,255,0.12)"
-                        : "rgba(255,255,255,0.04)",
+                    background: index === 1 ? brand.accentSoftBg : "rgba(255,255,255,0.04)",
                     padding: "18px 18px",
                     fontSize: 20,
                     lineHeight: 1.35,

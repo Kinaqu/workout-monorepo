@@ -1,4 +1,4 @@
-import type { RuntimeAppConfig } from './types.ts';
+import type { RuntimeAppConfig } from './contracts.ts';
 
 const HOSTED_DEFAULT_API_BASE_URL = 'https://workout-api.dimer133745.workers.dev';
 let didReportApiConfig = false;

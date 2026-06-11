@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
@@ -220,25 +220,13 @@ export function registerRecommendationDraftRoutes(app: OpenAPIHono<AppEnv>) {
   app.openapi(createRecommendationDraftRoute, async c => {
     const auth = c.get("auth");
     const { recommendationDraftService } = createAppContext(c.env);
-    return c.json(
-      (await recommendationDraftService.createFromStoredProfile(
-        auth.userId,
-        auth.username
-      )) as z.infer<typeof RecommendationDraftResponseSchema>,
-      200
-    );
+    return c.json(await recommendationDraftService.createFromStoredProfile(auth.userId, auth.username), 200);
   });
 
   app.openapi(getRecommendationDraftRoute, async c => {
     const auth = c.get("auth");
     const { recommendationDraftService } = createAppContext(c.env);
-    return c.json(
-      (await recommendationDraftService.getCurrentDraft(
-        auth.userId,
-        auth.username
-      )) as z.infer<typeof RecommendationDraftResponseSchema>,
-      200
-    );
+    return c.json(await recommendationDraftService.getCurrentDraft(auth.userId, auth.username), 200);
   });
 
   app.openapi(chooseRecommendationDraftStructureRoute, async c => {
@@ -246,12 +234,7 @@ export function registerRecommendationDraftRoutes(app: OpenAPIHono<AppEnv>) {
     const body = c.req.valid("json");
     const { recommendationDraftService } = createAppContext(c.env);
     return c.json(
-      (await recommendationDraftService.chooseStructure(
-        auth.userId,
-        auth.username,
-        body.draft_id,
-        body.structure_id
-      )) as z.infer<typeof RecommendationDraftResponseSchema>,
+      await recommendationDraftService.chooseStructure(auth.userId, auth.username, body.draft_id, body.structure_id),
       200
     );
   });
@@ -261,13 +244,13 @@ export function registerRecommendationDraftRoutes(app: OpenAPIHono<AppEnv>) {
     const body = c.req.valid("json");
     const { recommendationDraftService } = createAppContext(c.env);
     return c.json(
-      (await recommendationDraftService.replaceExercise(
+      await recommendationDraftService.replaceExercise(
         auth.userId,
         auth.username,
         body.draft_id,
         body.slot_id,
         body.catalog_exercise_id
-      )) as z.infer<typeof RecommendationDraftResponseSchema>,
+      ),
       200
     );
   });
@@ -276,14 +259,7 @@ export function registerRecommendationDraftRoutes(app: OpenAPIHono<AppEnv>) {
     const auth = c.get("auth");
     const body = c.req.valid("json");
     const { recommendationDraftService } = createAppContext(c.env);
-    return c.json(
-      (await recommendationDraftService.activateDraft(
-        auth.userId,
-        auth.username,
-        body.draft_id
-      )) as z.infer<typeof RecommendationDraftActivateResponseSchema>,
-      200
-    );
+    return c.json(await recommendationDraftService.activateDraft(auth.userId, auth.username, body.draft_id), 200);
   });
 
   app.all("/recommendation-draft", authMiddleware, methodNotAllowed);

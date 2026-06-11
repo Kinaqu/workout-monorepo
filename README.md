@@ -1,11 +1,12 @@
 # Workout Monorepo
 
-This repository contains two independently deployable applications for the Workout Manager project:
+This repository contains three independently deployable applications for the Workout Manager project:
 
 - `frontend/`: the client application, deployed with Vercel
 - `backend/`: the API, deployed with Cloudflare Workers
+- `landing/`: the marketing site, deployed with Vercel
 
-The repository is intentionally maintained as a loose monorepo. Both applications live in one Git repository for convenience, but they keep separate dependencies, build steps, and deployment pipelines.
+The repository is intentionally maintained as a loose monorepo. The applications live in one Git repository for convenience, but they keep separate dependencies, build steps, and deployment pipelines.
 
 ## Overview
 
@@ -20,7 +21,8 @@ The repository is intentionally maintained as a loose monorepo. Both application
 .
 |-- .github/
 |-- backend/
-`-- frontend/
+|-- frontend/
+`-- landing/
 ```
 
 ### Frontend
@@ -36,6 +38,12 @@ The repository is intentionally maintained as a loose monorepo. Both application
 - Runtime/build tool: Cloudflare Workers with Wrangler
 - Deployment target: Cloudflare Workers
 - Project docs: [`backend/README.md`](backend/README.md)
+
+### Landing
+
+- Path: `landing/`
+- Runtime/build tool: Next.js
+- Deployment target: Vercel
 
 ## Local Development
 
@@ -60,6 +68,14 @@ npm run dev
 ```
 
 The backend runs locally through Wrangler.
+
+### Landing
+
+```bash
+cd landing
+npm install
+npm run dev
+```
 
 ## Build and Deployment
 
@@ -89,6 +105,7 @@ When contributing:
 
 - keep frontend changes scoped to `frontend/` unless repo-level docs/config must also change
 - keep backend changes scoped to `backend/` unless repo-level docs/config must also change
+- keep landing changes scoped to `landing/` unless repo-level docs/config must also change
 - avoid introducing a root package manager workspace unless there is a clear architectural reason
 - update the relevant subproject README when behavior or setup changes
 
@@ -104,3 +121,6 @@ The repository includes:
 ## Notes
 
 This structure is intentional. The goal is to keep the applications close together operationally while avoiding unnecessary coupling in code, tooling, and deployment.
+
+- Brand design tokens (colors, fonts) are deliberately duplicated between `frontend/public/style.css` and `landing/app/globals.css`; update both together.
+- The API contract is shared through a generated artifact instead of a workspace: `backend/openapi.json` is committed (refreshed by `npm run openapi:export` in `backend/`), and the frontend generates its API types from it (`npm run generate:api` in `frontend/`). Both `npm run check` scripts fail when either side is stale.

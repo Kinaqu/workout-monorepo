@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kinova-app-v6';
+const CACHE_NAME = 'kinova-app-v7';
 const urlsToCache = [
   '/style.css',
   '/manifest.json',

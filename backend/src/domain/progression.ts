@@ -14,16 +14,19 @@ export interface ExerciseProgressionState {
   updatedAt: string;
 }
 
-export interface WorkoutExerciseView {
+interface WorkoutExerciseViewBase {
   id: string;
   name: string;
-  type: WorkoutExerciseTemplate["exercise"]["type"];
   sets: number;
   max_sets: number;
-  reps?: { min: number; max: number };
-  duration?: { min: number; max: number };
-  cycles?: { min: number; max: number };
 }
+
+// Discriminated like the wire contract: each variant carries exactly the
+// range field for its type.
+export type WorkoutExerciseView =
+  | (WorkoutExerciseViewBase & { type: "reps"; reps: { min: number; max: number } })
+  | (WorkoutExerciseViewBase & { type: "time"; duration: { min: number; max: number } })
+  | (WorkoutExerciseViewBase & { type: "cycles"; cycles: { min: number; max: number } });
 
 export interface WorkoutPlan {
   date: string;
@@ -145,7 +148,6 @@ export function templateToWorkoutExerciseView(
   const base = {
     id: template.exercise.key,
     name: template.exercise.name,
-    type: template.exercise.type,
     sets: state?.currentSets ?? 1,
     max_sets: template.maxSets,
   };
@@ -154,13 +156,13 @@ export function templateToWorkoutExerciseView(
   const max = state?.currentTargetMax ?? template.targetMax;
 
   if (template.exercise.type === "reps") {
-    return { ...base, reps: { min, max } };
+    return { ...base, type: "reps", reps: { min, max } };
   }
   if (template.exercise.type === "time") {
-    return { ...base, duration: { min, max } };
+    return { ...base, type: "time", duration: { min, max } };
   }
 
-  return { ...base, cycles: { min, max } };
+  return { ...base, type: "cycles", cycles: { min, max } };
 }
 
 export function evaluateProgression(input: ProgressionEvaluationInput): ProgressionEvaluationResult {

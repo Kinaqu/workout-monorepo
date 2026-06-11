@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import type { AppEnv } from "../app";
 import { authMiddleware } from "../middleware/auth";
 import { bearerSecurity } from "../openapi/config";
@@ -169,28 +169,19 @@ export function registerOnboardingRoutes(app: OpenAPIHono<AppEnv>) {
   app.openapi(getOnboardingRoute, async c => {
     const auth = c.get("auth");
     const { onboardingService } = createAppContext(c.env);
-    return c.json(
-      (await onboardingService.getState(auth.userId, auth.username)) as z.infer<typeof OnboardingStateResponseSchema>,
-      200
-    );
+    return c.json(await onboardingService.getState(auth.userId, auth.username), 200);
   });
 
   app.openapi(saveOnboardingRoute, async c => {
     const auth = c.get("auth");
     const { onboardingService } = createAppContext(c.env);
-    return c.json(
-      (await onboardingService.saveDraft(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof OnboardingDraftSaveResponseSchema>,
-      200
-    );
+    return c.json(await onboardingService.saveDraft(auth.userId, auth.username, c.req.valid("json")), 200);
   });
 
   app.openapi(completeOnboardingRoute, async c => {
     const auth = c.get("auth");
     const { onboardingService } = createAppContext(c.env);
-    return c.json(
-      (await onboardingService.complete(auth.userId, auth.username, c.req.valid("json"))) as z.infer<typeof OnboardingCompleteResponseSchema>,
-      200
-    );
+    return c.json(await onboardingService.complete(auth.userId, auth.username, c.req.valid("json")), 200);
   });
 
   app.all("/onboarding", authMiddleware, c =>

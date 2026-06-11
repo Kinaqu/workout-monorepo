@@ -14,7 +14,12 @@ function base64UrlEncode(value: string | Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-export async function installClerkTestAuth(): Promise<{ token: string }> {
+export interface ClerkTestAuth {
+  token: string;
+  mintToken: (claims: { sub: string; username?: string }) => Promise<string>;
+}
+
+export async function installClerkTestAuth(): Promise<ClerkTestAuth> {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: "RSASSA-PKCS1-v1_5",
@@ -31,25 +36,29 @@ export async function installClerkTestAuth(): Promise<{ token: string }> {
   publicJwk.kid = "test-key";
   publicJwk.use = "sig";
 
-  const now = Math.floor(Date.now() / 1000);
-  const header = base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT", kid: "test-key" }));
-  const payload = base64UrlEncode(
-    JSON.stringify({
-      sub: TEST_USER.userId,
-      username: TEST_USER.username,
-      iss: TEST_ISSUER,
-      aud: TEST_AUDIENCE,
-      exp: now + 3600,
-      nbf: now - 60,
-    })
-  );
-  const signedPart = `${header}.${payload}`;
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    keyPair.privateKey,
-    new TextEncoder().encode(signedPart)
-  );
-  const token = `${signedPart}.${base64UrlEncode(new Uint8Array(signature))}`;
+  const mintToken = async ({ sub, username }: { sub: string; username?: string }): Promise<string> => {
+    const now = Math.floor(Date.now() / 1000);
+    const header = base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT", kid: "test-key" }));
+    const payload = base64UrlEncode(
+      JSON.stringify({
+        sub,
+        username: username ?? sub,
+        iss: TEST_ISSUER,
+        aud: TEST_AUDIENCE,
+        exp: now + 3600,
+        nbf: now - 60,
+      })
+    );
+    const signedPart = `${header}.${payload}`;
+    const signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      keyPair.privateKey,
+      new TextEncoder().encode(signedPart)
+    );
+    return `${signedPart}.${base64UrlEncode(new Uint8Array(signature))}`;
+  };
+
+  const token = await mintToken({ sub: TEST_USER.userId, username: TEST_USER.username });
 
   const originalFetch = globalThis.fetch.bind(globalThis);
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -60,5 +69,5 @@ export async function installClerkTestAuth(): Promise<{ token: string }> {
     return originalFetch(input, init);
   });
 
-  return { token };
+  return { token, mintToken };
 }

@@ -1,5 +1,10 @@
 import { normalizeOnboardingAnswers } from "../domain/profile";
 import { validateOnboardingAnswers, validateOnboardingDraft } from "../domain/onboarding";
+import type {
+  OnboardingCompleteResponse,
+  OnboardingDraftSaveResponse,
+  OnboardingStateResponse,
+} from "../openapi/schemas";
 import { OnboardingRepository } from "../repositories/onboarding-repository";
 import { ProfileRepository } from "../repositories/profile-repository";
 import { UserRepository } from "../repositories/user-repository";
@@ -18,7 +23,7 @@ export class OnboardingService {
     private readonly users: UserRepository
   ) {}
 
-  async getState(userId: string, username: string) {
+  async getState(userId: string, username: string): Promise<OnboardingStateResponse> {
     await this.lifecycle.ensureUserExists(userId, username);
     const [onboardingState, profile] = await Promise.all([
       this.onboarding.getState(userId),
@@ -39,7 +44,7 @@ export class OnboardingService {
     };
   }
 
-  async saveDraft(userId: string, username: string, input: unknown) {
+  async saveDraft(userId: string, username: string, input: unknown): Promise<OnboardingDraftSaveResponse> {
     await this.lifecycle.ensureUserExists(userId, username);
     const draft = validateOnboardingDraft(input);
     const saved = await this.onboarding.upsertDraft(userId, draft);
@@ -53,7 +58,7 @@ export class OnboardingService {
     };
   }
 
-  async complete(userId: string, username: string, input: unknown) {
+  async complete(userId: string, username: string, input: unknown): Promise<OnboardingCompleteResponse> {
     await this.lifecycle.ensureUserExists(userId, username);
     const answers = validateOnboardingAnswers(input);
     const completedAt = nowIso();

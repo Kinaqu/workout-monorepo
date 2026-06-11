@@ -63,10 +63,10 @@ function parseJwt(token: string): { header: { kid?: string; alg?: string }; payl
   }
 }
 
-async function getClerkJwks(env: Env): Promise<JwksResponse> {
+async function getClerkJwks(env: Env): Promise<{ jwks: JwksResponse; fromCache: boolean }> {
   const now = Date.now();
   if (clerkJwksCache && clerkJwksCache.expiresAt > now) {
-    return clerkJwksCache.jwks;
+    return { jwks: clerkJwksCache.jwks, fromCache: true };
   }
 
   const jwksUrl = env.CLERK_JWKS_URL ?? `${env.CLERK_ISSUER}/.well-known/jwks.json`;
@@ -85,7 +85,15 @@ async function getClerkJwks(env: Env): Promise<JwksResponse> {
     expiresAt: now + CLERK_JWKS_CACHE_TTL_MS,
   };
 
-  return jwks;
+  return { jwks, fromCache: false };
+}
+
+export function __resetClerkJwksCacheForTests(): void {
+  clerkJwksCache = null;
+}
+
+function findSigningKey(jwks: JwksResponse, kid: string): Jwk | undefined {
+  return jwks.keys.find(key => key.kid === kid && key.kty === "RSA" && key.n && key.e);
 }
 
 async function verifySignature(token: string, env: Env): Promise<ClerkJwtPayload | null> {
@@ -94,8 +102,18 @@ async function verifySignature(token: string, env: Env): Promise<ClerkJwtPayload
     return null;
   }
 
-  const jwks = await getClerkJwks(env);
-  const jwk = jwks.keys.find(key => key.kid === parsed.header.kid && key.kty === "RSA" && key.n && key.e);
+  const { jwks, fromCache } = await getClerkJwks(env);
+  let jwk = findSigningKey(jwks, parsed.header.kid);
+
+  // Unknown kid on a cached JWKS usually means Clerk rotated its keys
+  // within our cache TTL; refetch once. A kid that is still unknown on a
+  // freshly fetched JWKS is just an invalid token - no extra fetch.
+  if (!jwk && fromCache) {
+    clerkJwksCache = null;
+    const refreshed = await getClerkJwks(env);
+    jwk = findSigningKey(refreshed.jwks, parsed.header.kid);
+  }
+
   if (!jwk) {
     return null;
   }

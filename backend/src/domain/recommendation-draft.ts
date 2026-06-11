@@ -119,8 +119,10 @@ export const RecommendationDraftExerciseSlotSchema = z
 
 export const RecommendationDraftActivationContextSchema = z
   .object({
-    activated_program_id: nonEmptyString.nullable().optional(),
-    activated_at: nonEmptyString.nullable().optional(),
+    // Always written together on activation (see recommendation-draft-repository);
+    // required-nullable matches the documented wire contract.
+    activated_program_id: nonEmptyString.nullable(),
+    activated_at: nonEmptyString.nullable(),
   })
   .strict();
 

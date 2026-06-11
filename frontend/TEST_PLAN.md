@@ -11,12 +11,10 @@ Ensure frontend changes are validated before merge into `main`, tested on Vercel
 - The frontend is deployed to Vercel as a separate project: `workout-frontend`.
 - Preview deployments for PR branches are already created automatically.
 - Production deployments are created from `main`.
-- The repository previously had no dedicated frontend workflow in GitHub Actions.
-- `frontend/package.json` previously had no shared CI-level `check` script.
-- Locally, `npm run build` and the TypeScript check pass.
+- `Frontend CI` runs on PRs scoped by path filters (`frontend/**`, `backend/openapi.json`) and executes `npm run check` plus the local Playwright smoke suite headlessly.
+- `npm run check` = generated-API-types freshness check + ESLint + strict TypeScript + production build.
 - The Vercel project is configured with `nodeVersion: 24.x`.
 - The local `frontend/.vercel/project.json` contains an old `projectId` that no longer exists in Vercel.
-- There are no runtime logs for the frontend project in the last 7 days.
 
 ### Conclusions
 
@@ -43,11 +41,11 @@ Required checks:
 
 ### 2. Base PR gate
 
-These fast checks must run on every PR:
+These fast checks must run on every frontend PR:
 
 - `npm ci`
-- `npm run typecheck`
-- `npm run build`
+- `npm run check` (generated API types freshness, ESLint, strict typecheck, build)
+- `npm run test:smoke:local` (Playwright smoke suite against the built app)
 
 They are already implemented in the `Frontend CI` workflow.
 

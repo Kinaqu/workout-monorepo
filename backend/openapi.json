@@ -1,0 +1,3813 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Workout Manager Backend API",
+    "version": "1.0.0",
+    "description": "Cloudflare Workers backend for Clerk-authenticated onboarding, backend-owned program generation, workouts, sessions, and progression."
+  },
+  "servers": [
+    {
+      "url": "https://workout-api.dimer133745.workers.dev"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "user_123"
+              },
+              "username": {
+                "type": "string",
+                "nullable": true,
+                "example": "demo@example.com"
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              }
+            },
+            "required": [
+              "id",
+              "username",
+              "created_at"
+            ]
+          },
+          "lifecycle": {
+            "type": "object",
+            "properties": {
+              "user_exists": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "onboarding_completed": {
+                "type": "boolean"
+              },
+              "has_active_program": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "user_exists",
+              "onboarding_completed",
+              "has_active_program"
+            ]
+          },
+          "onboarding": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_started",
+                  "draft",
+                  "completed"
+                ]
+              },
+              "completed": {
+                "type": "boolean"
+              },
+              "questionnaireVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "answersUpdatedAt": {
+                "type": "string",
+                "nullable": true
+              },
+              "completedAt": {
+                "type": "string",
+                "nullable": true
+              },
+              "answers": {
+                "$ref": "#/components/schemas/OnboardingDraft"
+              }
+            },
+            "required": [
+              "status",
+              "completed",
+              "questionnaireVersion",
+              "answersUpdatedAt",
+              "completedAt",
+              "answers"
+            ]
+          },
+          "profile": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "version": {
+                "type": "string",
+                "example": "profile-v1"
+              },
+              "primary_goal": {
+                "type": "string",
+                "example": "strength"
+              },
+              "experience_level": {
+                "type": "string",
+                "example": "beginner"
+              },
+              "training_days_per_week": {
+                "type": "integer",
+                "example": 3
+              },
+              "session_duration_minutes": {
+                "type": "integer",
+                "example": 45
+              },
+              "updated_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              }
+            },
+            "required": [
+              "version",
+              "primary_goal",
+              "experience_level",
+              "training_days_per_week",
+              "session_duration_minutes",
+              "updated_at"
+            ]
+          },
+          "active_program": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "version_id": {
+                "type": "string",
+                "example": "program_123"
+              },
+              "key": {
+                "type": "string",
+                "example": "generated_three_day_strength"
+              },
+              "name": {
+                "type": "string",
+                "example": "Strength Plan"
+              },
+              "source": {
+                "type": "string",
+                "example": "generated"
+              },
+              "updated_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              }
+            },
+            "required": [
+              "version_id",
+              "key",
+              "name",
+              "source",
+              "updated_at"
+            ]
+          }
+        },
+        "required": [
+          "user",
+          "lifecycle",
+          "onboarding",
+          "profile",
+          "active_program"
+        ]
+      },
+      "OnboardingDraft": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "questionnaireVersion": {
+            "type": "string",
+            "example": "onboarding-v1"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingGoal"
+            },
+            "example": [
+              "strength",
+              "general_fitness"
+            ]
+          },
+          "experienceLevel": {
+            "$ref": "#/components/schemas/ExperienceLevel"
+          },
+          "trainingDaysPerWeek": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 5,
+            "example": 3
+          },
+          "sessionDurationMinutes": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 75,
+            "example": 45
+          },
+          "equipmentAccess": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentAccess"
+            },
+            "example": [
+              "bodyweight",
+              "bands"
+            ]
+          },
+          "focusAreas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FocusArea"
+            },
+            "example": [
+              "upper_body",
+              "core"
+            ]
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LimitationTag"
+            },
+            "example": [
+              "wrist_sensitive"
+            ]
+          },
+          "preferredStyles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreferredStyle"
+            },
+            "example": [
+              "balanced",
+              "low_impact"
+            ]
+          }
+        }
+      },
+      "OnboardingGoal": {
+        "type": "string",
+        "enum": [
+          "strength",
+          "muscle",
+          "general_fitness",
+          "mobility"
+        ]
+      },
+      "ExperienceLevel": {
+        "type": "string",
+        "enum": [
+          "beginner",
+          "intermediate",
+          "advanced"
+        ]
+      },
+      "EquipmentAccess": {
+        "type": "string",
+        "enum": [
+          "bodyweight",
+          "dumbbells",
+          "bands",
+          "bench",
+          "pullup_bar"
+        ]
+      },
+      "FocusArea": {
+        "type": "string",
+        "enum": [
+          "upper_body",
+          "lower_body",
+          "core",
+          "mobility"
+        ]
+      },
+      "LimitationTag": {
+        "type": "string",
+        "enum": [
+          "wrist_sensitive",
+          "knee_sensitive",
+          "lower_back_sensitive",
+          "shoulder_sensitive"
+        ]
+      },
+      "PreferredStyle": {
+        "type": "string",
+        "enum": [
+          "balanced",
+          "strength_bias",
+          "mobility_bias",
+          "low_impact"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Invalid request"
+          },
+          "detail": {
+            "type": "string",
+            "example": "Invalid date. Use format: 2026-03-11"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "OnboardingStateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "draft",
+              "completed"
+            ]
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "questionnaireVersion": {
+            "type": "string",
+            "nullable": true,
+            "example": "onboarding-v1"
+          },
+          "answersUpdatedAt": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-04-01T12:00:00.000Z"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-04-01T12:05:00.000Z"
+          },
+          "answers": {
+            "$ref": "#/components/schemas/OnboardingDraft"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/OnboardingProfileSummary"
+          }
+        },
+        "required": [
+          "status",
+          "completed",
+          "questionnaireVersion",
+          "answersUpdatedAt",
+          "completedAt",
+          "answers",
+          "profile"
+        ]
+      },
+      "OnboardingProfileSummary": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "version": {
+            "type": "string",
+            "example": "profile-v1"
+          },
+          "primary_goal": {
+            "type": "string",
+            "example": "strength"
+          },
+          "training_days_per_week": {
+            "type": "integer",
+            "example": 3
+          },
+          "session_duration_minutes": {
+            "type": "integer",
+            "example": 45
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          }
+        },
+        "required": [
+          "version",
+          "primary_goal",
+          "training_days_per_week",
+          "session_duration_minutes",
+          "updated_at"
+        ]
+      },
+      "OnboardingDraftSaveResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Onboarding draft saved"
+          },
+          "questionnaire_version": {
+            "type": "string",
+            "example": "onboarding-v1"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "questionnaire_version",
+          "updated_at",
+          "completed_at"
+        ]
+      },
+      "OnboardingCompleteResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Onboarding completed"
+          },
+          "onboarding": {
+            "type": "object",
+            "properties": {
+              "completed": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "completed_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              },
+              "questionnaire_version": {
+                "type": "string",
+                "example": "onboarding-v1"
+              }
+            },
+            "required": [
+              "completed",
+              "completed_at",
+              "questionnaire_version"
+            ]
+          },
+          "profile": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string",
+                "example": "profile-v1"
+              },
+              "primary_goal": {
+                "type": "string",
+                "example": "strength"
+              },
+              "training_days_per_week": {
+                "type": "integer",
+                "example": 3
+              },
+              "session_duration_minutes": {
+                "type": "integer",
+                "example": 45
+              }
+            },
+            "required": [
+              "version",
+              "primary_goal",
+              "training_days_per_week",
+              "session_duration_minutes"
+            ]
+          },
+          "recommendation_draft": {
+            "$ref": "#/components/schemas/RecommendationDraftResponse"
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "onboarding",
+          "profile",
+          "recommendation_draft"
+        ]
+      },
+      "RecommendationDraftResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "rd_123"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecommendationDraftStatus"
+          },
+          "source_onboarding_answer_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "onboarding_123"
+          },
+          "source_profile_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "profile_123"
+          },
+          "generator_version": {
+            "type": "string",
+            "example": "generator-v1"
+          },
+          "catalog_seed_version": {
+            "type": "string",
+            "example": "catalog-v1"
+          },
+          "selected_structure_id": {
+            "type": "string",
+            "example": "3_day"
+          },
+          "activated_program_id": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "activated_at": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "draft": {
+            "$ref": "#/components/schemas/RecommendationDraftJson"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "source_onboarding_answer_id",
+          "source_profile_id",
+          "generator_version",
+          "catalog_seed_version",
+          "selected_structure_id",
+          "activated_program_id",
+          "created_at",
+          "updated_at",
+          "activated_at",
+          "draft"
+        ]
+      },
+      "RecommendationDraftStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "activated"
+        ]
+      },
+      "RecommendationDraftJson": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/RecommendationDraftStatus"
+          },
+          "profile_snapshot": {
+            "$ref": "#/components/schemas/RecommendationDraftProfileSnapshot"
+          },
+          "structures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDraftStructure"
+            },
+            "minItems": 1
+          },
+          "selected_structure_id": {
+            "type": "string",
+            "example": "3_day"
+          },
+          "exercise_slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDraftExerciseSlot"
+            },
+            "minItems": 1
+          },
+          "generator_version": {
+            "type": "string",
+            "example": "generator-v1"
+          },
+          "catalog_seed_version": {
+            "type": "string",
+            "example": "catalog-v1"
+          },
+          "activation_context": {
+            "$ref": "#/components/schemas/RecommendationDraftActivationContext"
+          }
+        },
+        "required": [
+          "status",
+          "profile_snapshot",
+          "structures",
+          "selected_structure_id",
+          "exercise_slots",
+          "generator_version",
+          "catalog_seed_version"
+        ]
+      },
+      "RecommendationDraftProfileSnapshot": {
+        "type": "object",
+        "properties": {
+          "primaryGoal": {
+            "type": "string",
+            "example": "strength"
+          },
+          "experienceLevel": {
+            "type": "string",
+            "example": "beginner"
+          },
+          "trainingDaysPerWeek": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 5,
+            "example": 3
+          },
+          "sessionDurationMinutes": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 75,
+            "example": 45
+          },
+          "splitPreference": {
+            "type": "string",
+            "example": "three_day"
+          },
+          "volumeLevel": {
+            "type": "string",
+            "example": "standard"
+          },
+          "equipmentAccess": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "bodyweight",
+              "bands"
+            ]
+          },
+          "focusAreas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "upper_body",
+              "core"
+            ]
+          },
+          "limitationTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "preferredStyles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "balanced"
+            ]
+          },
+          "preferredWorkoutTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "strength",
+              "upper",
+              "core"
+            ]
+          },
+          "excludedWorkoutTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          }
+        },
+        "required": [
+          "primaryGoal",
+          "experienceLevel",
+          "trainingDaysPerWeek",
+          "sessionDurationMinutes",
+          "splitPreference",
+          "volumeLevel",
+          "equipmentAccess",
+          "focusAreas",
+          "limitationTags",
+          "preferredStyles",
+          "preferredWorkoutTags",
+          "excludedWorkoutTags"
+        ]
+      },
+      "RecommendationDraftStructure": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "3_day"
+          },
+          "label": {
+            "type": "string",
+            "example": "3-day split"
+          },
+          "description": {
+            "type": "string",
+            "example": "Mon / Wed / Fri"
+          },
+          "schedule": {
+            "type": "object",
+            "properties": {
+              "monday": {
+                "type": "string"
+              },
+              "tuesday": {
+                "type": "string"
+              },
+              "wednesday": {
+                "type": "string"
+              },
+              "thursday": {
+                "type": "string"
+              },
+              "friday": {
+                "type": "string"
+              },
+              "saturday": {
+                "type": "string"
+              },
+              "sunday": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "monday": "A",
+              "tuesday": "rest",
+              "wednesday": "B",
+              "thursday": "rest",
+              "friday": "C",
+              "saturday": "rest",
+              "sunday": "rest"
+            }
+          },
+          "workouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDraftStructureWorkout"
+            },
+            "minItems": 1
+          },
+          "recommended": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "description",
+          "schedule",
+          "workouts",
+          "recommended"
+        ]
+      },
+      "RecommendationDraftStructureWorkout": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "A"
+          },
+          "name": {
+            "type": "string",
+            "example": "Workout A"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "strength",
+              "upper",
+              "core"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "tags"
+        ]
+      },
+      "RecommendationDraftExerciseSlot": {
+        "type": "object",
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "example": "A:0"
+          },
+          "workout_key": {
+            "type": "string",
+            "example": "A"
+          },
+          "workout_name": {
+            "type": "string",
+            "example": "Workout A"
+          },
+          "slot_index": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 0
+          },
+          "blueprint_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "strength",
+              "upper",
+              "core"
+            ]
+          },
+          "recommended_exercise_id": {
+            "type": "string",
+            "example": "push_up"
+          },
+          "selected_exercise_id": {
+            "type": "string",
+            "example": "push_up"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDraftExerciseOption"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "slot_id",
+          "workout_key",
+          "workout_name",
+          "slot_index",
+          "blueprint_tags",
+          "recommended_exercise_id",
+          "selected_exercise_id",
+          "options"
+        ]
+      },
+      "RecommendationDraftExerciseOption": {
+        "type": "object",
+        "properties": {
+          "catalog_exercise_id": {
+            "type": "string",
+            "example": "catalog_pushups"
+          },
+          "exercise_id": {
+            "type": "string",
+            "example": "push_up"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push Up"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RecommendationDraftExerciseType"
+          },
+          "target_min": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 8
+          },
+          "target_max": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 12
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 4
+          },
+          "recommended": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "catalog_exercise_id",
+          "exercise_id",
+          "name",
+          "type",
+          "target_min",
+          "target_max",
+          "max_sets",
+          "recommended"
+        ]
+      },
+      "RecommendationDraftExerciseType": {
+        "type": "string",
+        "enum": [
+          "reps",
+          "time",
+          "cycles"
+        ]
+      },
+      "RecommendationDraftActivationContext": {
+        "type": "object",
+        "properties": {
+          "activated_program_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "program_123"
+          },
+          "activated_at": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-04-17T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          }
+        },
+        "required": [
+          "activated_program_id",
+          "activated_at"
+        ]
+      },
+      "OnboardingAnswers": {
+        "type": "object",
+        "properties": {
+          "questionnaireVersion": {
+            "type": "string",
+            "example": "onboarding-v1"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingGoal"
+            },
+            "example": [
+              "strength",
+              "general_fitness"
+            ]
+          },
+          "experienceLevel": {
+            "$ref": "#/components/schemas/ExperienceLevel"
+          },
+          "trainingDaysPerWeek": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 5,
+            "example": 3
+          },
+          "sessionDurationMinutes": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 75,
+            "example": 45
+          },
+          "equipmentAccess": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentAccess"
+            },
+            "example": [
+              "bodyweight",
+              "bands"
+            ]
+          },
+          "focusAreas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FocusArea"
+            },
+            "example": [
+              "upper_body",
+              "core"
+            ]
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LimitationTag"
+            },
+            "example": [
+              "wrist_sensitive"
+            ]
+          },
+          "preferredStyles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreferredStyle"
+            },
+            "example": [
+              "balanced",
+              "low_impact"
+            ]
+          }
+        },
+        "required": [
+          "goals",
+          "experienceLevel",
+          "trainingDaysPerWeek",
+          "sessionDurationMinutes",
+          "equipmentAccess",
+          "focusAreas",
+          "preferredStyles"
+        ]
+      },
+      "WorkoutTodayResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RestDayResponse"
+          },
+          {
+            "$ref": "#/components/schemas/WorkoutPlanResponse"
+          }
+        ]
+      },
+      "RestDayResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "rest"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "message": {
+            "type": "string",
+            "example": "Today is a rest day"
+          }
+        },
+        "required": [
+          "type",
+          "date",
+          "message"
+        ]
+      },
+      "WorkoutPlanResponse": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "type": {
+            "type": "string",
+            "example": "A"
+          },
+          "name": {
+            "type": "string",
+            "example": "Workout A"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WorkoutExerciseReps"
+                },
+                {
+                  "$ref": "#/components/schemas/WorkoutExerciseTime"
+                },
+                {
+                  "$ref": "#/components/schemas/WorkoutExerciseCycles"
+                }
+              ]
+            }
+          },
+          "program_id": {
+            "type": "string",
+            "example": "default"
+          },
+          "program_version_id": {
+            "type": "string",
+            "example": "program_123"
+          }
+        },
+        "required": [
+          "date",
+          "type",
+          "name",
+          "exercises",
+          "program_id",
+          "program_version_id"
+        ]
+      },
+      "WorkoutExerciseReps": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 2
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 3
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "reps"
+            ]
+          },
+          "reps": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sets",
+          "max_sets",
+          "type",
+          "reps"
+        ]
+      },
+      "TargetRange": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "integer",
+            "example": 8
+          },
+          "max": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ]
+      },
+      "WorkoutExerciseTime": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 2
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 3
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "time"
+            ]
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sets",
+          "max_sets",
+          "type",
+          "duration"
+        ]
+      },
+      "WorkoutExerciseCycles": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 2
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 3
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "cycles"
+            ]
+          },
+          "cycles": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sets",
+          "max_sets",
+          "type",
+          "cycles"
+        ]
+      },
+      "ProgramResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProgramDefinition"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "version_id": {
+                "type": "string",
+                "example": "program_123"
+              },
+              "source": {
+                "type": "string",
+                "example": "api"
+              },
+              "userSets": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "example": {
+                  "pushups": 2,
+                  "squats": 3
+                }
+              },
+              "progressionState": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ProgressionStateValue"
+                }
+              },
+              "generator_metadata": {
+                "$ref": "#/components/schemas/GeneratedProgramMetadata"
+              },
+              "generated_program_metadata": {
+                "$ref": "#/components/schemas/StoredGeneratedProgramMetadata"
+              },
+              "progression_events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ProgramProgressionEvent"
+                }
+              },
+              "program_runtime_state": {
+                "$ref": "#/components/schemas/ProgramRuntimeState"
+              },
+              "active_version": {
+                "$ref": "#/components/schemas/ActiveProgramVersion"
+              },
+              "current_version_changes": {
+                "$ref": "#/components/schemas/CurrentVersionChanges"
+              }
+            },
+            "required": [
+              "version_id",
+              "source",
+              "userSets",
+              "progressionState",
+              "generator_metadata",
+              "generated_program_metadata",
+              "progression_events",
+              "program_runtime_state",
+              "active_version",
+              "current_version_changes"
+            ]
+          }
+        ]
+      },
+      "ProgramSchedule": {
+        "type": "object",
+        "properties": {
+          "monday": {
+            "type": "string",
+            "example": "A"
+          },
+          "tuesday": {
+            "type": "string",
+            "example": "B"
+          },
+          "wednesday": {
+            "type": "string",
+            "example": "stretch"
+          },
+          "thursday": {
+            "type": "string",
+            "example": "A"
+          },
+          "friday": {
+            "type": "string",
+            "example": "B"
+          },
+          "saturday": {
+            "type": "string",
+            "example": "stretch"
+          },
+          "sunday": {
+            "type": "string",
+            "example": "rest"
+          }
+        },
+        "required": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ]
+      },
+      "ProgramWorkout": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Workout A"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProgramExerciseReps"
+                },
+                {
+                  "$ref": "#/components/schemas/ProgramExerciseTime"
+                },
+                {
+                  "$ref": "#/components/schemas/ProgramExerciseCycles"
+                }
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "name",
+          "exercises"
+        ]
+      },
+      "ProgramExerciseReps": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "reps"
+            ]
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 3
+          },
+          "reps": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "max_sets",
+          "reps"
+        ]
+      },
+      "ProgramExerciseTime": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "side_plank"
+          },
+          "name": {
+            "type": "string",
+            "example": "Side Plank"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "time"
+            ]
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 3
+          },
+          "duration": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "max_sets",
+          "duration"
+        ]
+      },
+      "ProgramExerciseCycles": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "breathing"
+          },
+          "name": {
+            "type": "string",
+            "example": "Breathing"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "cycles"
+            ]
+          },
+          "max_sets": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 1
+          },
+          "cycles": {
+            "$ref": "#/components/schemas/TargetRange"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "max_sets",
+          "cycles"
+        ]
+      },
+      "ProgressionStateValue": {
+        "type": "object",
+        "properties": {
+          "sets": {
+            "type": "integer",
+            "example": 2
+          },
+          "min": {
+            "type": "integer",
+            "example": 8
+          },
+          "max": {
+            "type": "integer",
+            "example": 12
+          },
+          "last_progression": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-03-27"
+          }
+        },
+        "required": [
+          "sets",
+          "min",
+          "max",
+          "last_progression"
+        ]
+      },
+      "GeneratedProgramMetadata": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "version": {
+            "type": "string",
+            "example": "generator-v1"
+          },
+          "catalog_seed_version": {
+            "type": "string",
+            "example": "catalog-v1"
+          }
+        },
+        "required": [
+          "version",
+          "catalog_seed_version"
+        ]
+      },
+      "StoredGeneratedProgramMetadata": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "generation_reason": {
+            "type": "string",
+            "example": "regenerate"
+          },
+          "profile_version": {
+            "type": "string",
+            "nullable": true,
+            "example": "profile-v1"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "input_summary": {
+            "$ref": "#/components/schemas/GeneratedProgramInputSummary"
+          }
+        },
+        "required": [
+          "generation_reason",
+          "profile_version",
+          "created_at",
+          "input_summary"
+        ]
+      },
+      "GeneratedProgramInputSummary": {
+        "type": "object",
+        "properties": {
+          "primaryGoal": {
+            "type": "string",
+            "nullable": true,
+            "example": "strength"
+          },
+          "trainingDaysPerWeek": {
+            "type": "integer",
+            "nullable": true,
+            "example": 3
+          },
+          "sessionDurationMinutes": {
+            "type": "integer",
+            "nullable": true,
+            "example": 45
+          }
+        },
+        "additionalProperties": {
+          "nullable": true
+        }
+      },
+      "ProgramProgressionEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pe_123"
+          },
+          "exercise_id": {
+            "type": "string",
+            "example": "exercise_pushups"
+          },
+          "catalog_exercise_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "catalog_pushups"
+          },
+          "exercise_key": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "exercise_name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "example": "performed above target in 2 sessions"
+          },
+          "before": {
+            "$ref": "#/components/schemas/ProgressionEventState"
+          },
+          "after": {
+            "$ref": "#/components/schemas/ProgressionEventState"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          }
+        },
+        "required": [
+          "id",
+          "exercise_id",
+          "catalog_exercise_id",
+          "exercise_key",
+          "exercise_name",
+          "direction",
+          "reason",
+          "before",
+          "after",
+          "created_at"
+        ]
+      },
+      "ProgressionEventState": {
+        "type": "object",
+        "properties": {
+          "sets": {
+            "type": "integer",
+            "example": 2
+          },
+          "min": {
+            "type": "integer",
+            "example": 8
+          },
+          "max": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "sets",
+          "min",
+          "max"
+        ]
+      },
+      "ProgramRuntimeState": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "last_session_logged_at": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-04-12T12:00:00.000Z"
+          },
+          "last_progression_run_at": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-04-16T12:00:00.000Z"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          }
+        },
+        "required": [
+          "last_session_logged_at",
+          "last_progression_run_at",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "ActiveProgramVersion": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active"
+            ]
+          },
+          "program_family_id": {
+            "type": "string",
+            "example": "program_family_123"
+          },
+          "version_number": {
+            "type": "integer",
+            "example": 3
+          },
+          "previous_version_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "program_122"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "source": {
+            "type": "string",
+            "example": "generated"
+          }
+        },
+        "required": [
+          "status",
+          "program_family_id",
+          "version_number",
+          "previous_version_id",
+          "created_at",
+          "updated_at",
+          "source"
+        ]
+      },
+      "CurrentVersionChanges": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "example": "2 schedule days were remapped (Monday, Thursday)."
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "2 schedule days were remapped (Monday, Thursday).",
+              "1 session was added (Mobility Reset)."
+            ]
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "schedule_changes": {
+                "type": "integer",
+                "example": 2
+              },
+              "workouts_added": {
+                "type": "integer",
+                "example": 1
+              },
+              "workouts_removed": {
+                "type": "integer",
+                "example": 0
+              },
+              "exercises_added": {
+                "type": "integer",
+                "example": 2
+              },
+              "exercises_removed": {
+                "type": "integer",
+                "example": 1
+              },
+              "target_changes": {
+                "type": "integer",
+                "example": 3
+              },
+              "set_cap_changes": {
+                "type": "integer",
+                "example": 1
+              },
+              "renamed": {
+                "type": "boolean",
+                "example": false
+              }
+            },
+            "required": [
+              "schedule_changes",
+              "workouts_added",
+              "workouts_removed",
+              "exercises_added",
+              "exercises_removed",
+              "target_changes",
+              "set_cap_changes",
+              "renamed"
+            ]
+          }
+        },
+        "required": [
+          "summary",
+          "highlights",
+          "stats"
+        ]
+      },
+      "ProgramDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "default"
+          },
+          "name": {
+            "type": "string",
+            "example": "Base Program"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ProgramSchedule"
+          },
+          "workouts": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProgramWorkout"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schedule",
+          "workouts"
+        ]
+      },
+      "ProgramMutationResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Program saved"
+          },
+          "program": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProgramDefinition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "version_id": {
+                    "type": "string",
+                    "example": "program_123"
+                  }
+                },
+                "required": [
+                  "version_id"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "program"
+        ]
+      },
+      "GeneratedProgramResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Program regenerated"
+          },
+          "program": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProgramDefinition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "version_id": {
+                    "type": "string",
+                    "example": "program_123"
+                  },
+                  "source": {
+                    "type": "string",
+                    "example": "generated"
+                  }
+                },
+                "required": [
+                  "version_id",
+                  "source"
+                ]
+              }
+            ]
+          },
+          "generator": {
+            "$ref": "#/components/schemas/GeneratedProgramMetadata"
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "program",
+          "generator"
+        ]
+      },
+      "RecommendationDraftStructureSelectRequest": {
+        "type": "object",
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "example": "rd_123"
+          },
+          "structure_id": {
+            "type": "string",
+            "example": "4_day"
+          }
+        },
+        "required": [
+          "draft_id",
+          "structure_id"
+        ]
+      },
+      "RecommendationDraftExerciseReplaceRequest": {
+        "type": "object",
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "example": "rd_123"
+          },
+          "slot_id": {
+            "type": "string",
+            "example": "A:0"
+          },
+          "catalog_exercise_id": {
+            "type": "string",
+            "example": "catalog_pushups"
+          }
+        },
+        "required": [
+          "draft_id",
+          "slot_id",
+          "catalog_exercise_id"
+        ]
+      },
+      "RecommendationDraftActivateResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Recommendation draft activated"
+          },
+          "program": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProgramDefinition"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "version_id": {
+                    "type": "string",
+                    "example": "program_123"
+                  },
+                  "source": {
+                    "type": "string",
+                    "example": "generated"
+                  }
+                },
+                "required": [
+                  "version_id",
+                  "source"
+                ]
+              }
+            ]
+          },
+          "generator": {
+            "$ref": "#/components/schemas/GeneratedProgramMetadata"
+          },
+          "recommendation_draft": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "rd_123"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "activated"
+                ]
+              },
+              "selected_structure_id": {
+                "type": "string",
+                "example": "3_day"
+              },
+              "activated_program_id": {
+                "type": "string",
+                "example": "program_123"
+              },
+              "activated_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              },
+              "updated_at": {
+                "type": "string",
+                "example": "2026-03-29T12:00:00.000Z",
+                "description": "UTC timestamp in ISO 8601 format."
+              }
+            },
+            "required": [
+              "id",
+              "status",
+              "selected_structure_id",
+              "activated_program_id",
+              "activated_at",
+              "updated_at"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "program",
+          "generator",
+          "recommendation_draft"
+        ]
+      },
+      "RecommendationDraftActivateRequest": {
+        "type": "object",
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "example": "rd_123"
+          }
+        },
+        "required": [
+          "draft_id"
+        ]
+      },
+      "ProgressionRunResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "progression_date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "changed": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ProgressionChange"
+                }
+              },
+              "skipped": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ProgressionSkipped"
+                }
+              }
+            },
+            "required": [
+              "changed",
+              "skipped"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "progression_date",
+          "result"
+        ]
+      },
+      "ProgressionChange": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "example": "performed above target in 2 sessions"
+          },
+          "before": {
+            "$ref": "#/components/schemas/ProgressionBounds"
+          },
+          "after": {
+            "$ref": "#/components/schemas/ProgressionBounds"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "direction",
+          "reason",
+          "before",
+          "after"
+        ]
+      },
+      "ProgressionBounds": {
+        "type": "object",
+        "properties": {
+          "sets": {
+            "type": "integer",
+            "example": 2
+          },
+          "min": {
+            "type": "integer",
+            "example": 8
+          },
+          "max": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "sets",
+          "min",
+          "max"
+        ]
+      },
+      "ProgressionSkipped": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "reason": {
+            "type": "string",
+            "example": "performance stayed within target range"
+          }
+        },
+        "required": [
+          "id",
+          "reason"
+        ]
+      },
+      "LogCreateResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LegacyLogEntry"
+          },
+          "session": {
+            "$ref": "#/components/schemas/WorkoutSessionRecord"
+          }
+        },
+        "required": [
+          "ok",
+          "date",
+          "entry",
+          "session"
+        ]
+      },
+      "LegacyLogEntry": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "workout_type": {
+            "type": "string",
+            "nullable": true,
+            "example": "A"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionLogExercise"
+            }
+          },
+          "note": {
+            "type": "string",
+            "example": "Felt strong today"
+          },
+          "unmatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "legacy-kv"
+            ]
+          },
+          "session_id": {
+            "type": "string",
+            "example": "session_123"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          }
+        },
+        "required": [
+          "date",
+          "workout_type",
+          "exercises",
+          "note",
+          "unmatched",
+          "source",
+          "session_id",
+          "created_at"
+        ]
+      },
+      "SessionLogExercise": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              10,
+              10,
+              9
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sets"
+        ]
+      },
+      "WorkoutSessionRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "session_123"
+          },
+          "sessionDate": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "workoutType": {
+            "type": "string",
+            "nullable": true,
+            "example": "A"
+          },
+          "workoutName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Workout A"
+          },
+          "note": {
+            "type": "string",
+            "example": "Felt strong today"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "legacy-kv"
+            ]
+          },
+          "rawText": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "unmatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-03-29T12:00:00.000Z",
+            "description": "UTC timestamp in ISO 8601 format."
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSessionExercise"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sessionDate",
+          "workoutType",
+          "workoutName",
+          "note",
+          "source",
+          "rawText",
+          "unmatched",
+          "createdAt",
+          "updatedAt",
+          "exercises"
+        ]
+      },
+      "WorkoutSessionExercise": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "se_123"
+          },
+          "programExerciseId": {
+            "type": "string",
+            "nullable": true,
+            "example": "exercise_123"
+          },
+          "catalogExerciseId": {
+            "type": "string",
+            "nullable": true,
+            "example": "catalog_pushups"
+          },
+          "exerciseKey": {
+            "type": "string",
+            "nullable": true,
+            "example": "pushups"
+          },
+          "exerciseName": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "exerciseType": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "reps",
+              "time",
+              "cycles",
+              null
+            ],
+            "example": "reps"
+          },
+          "matched": {
+            "type": "boolean",
+            "example": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "example": 0
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              10,
+              10,
+              9
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "programExerciseId",
+          "catalogExerciseId",
+          "exerciseKey",
+          "exerciseName",
+          "exerciseType",
+          "matched",
+          "sortOrder",
+          "sets"
+        ]
+      },
+      "JsonLogRequest": {
+        "type": "object",
+        "properties": {
+          "session_date": {
+            "type": "string",
+            "example": "2026-03-11",
+            "description": "Date string in YYYY-MM-DD format."
+          },
+          "note": {
+            "type": "string",
+            "example": "Felt strong today"
+          },
+          "workout_type": {
+            "type": "string",
+            "nullable": true,
+            "example": "A"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JsonLogExercise"
+            }
+          }
+        }
+      },
+      "JsonLogExercise": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pushups"
+          },
+          "name": {
+            "type": "string",
+            "example": "Push-ups"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              10,
+              10,
+              9
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "sets"
+        ]
+      },
+      "SessionsListResponse": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSessionRecord"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "example": 10
+          }
+        },
+        "required": [
+          "sessions",
+          "count"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/me": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "User"
+        ],
+        "summary": "Get current user product state",
+        "description": "Returns the authenticated user identity together with onboarding, profile, and active-program state.",
+        "responses": {
+          "200": {
+            "description": "Current user state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onboarding": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Get onboarding state",
+        "description": "Returns saved onboarding draft, completion state, and current normalized profile summary.",
+        "responses": {
+          "200": {
+            "description": "Current onboarding state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingStateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Save onboarding draft",
+        "description": "Persists draft onboarding answers without completing onboarding or generating a program.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingDraftSaveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid onboarding draft body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onboarding/complete": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Complete onboarding and create recommendation draft",
+        "description": "Validates onboarding answers, stores the normalized profile, marks onboarding complete, and creates the current recommendation draft without activating a program yet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingAnswers"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Onboarding completed and recommendation draft created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingCompleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid onboarding answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Catalog or user state cannot satisfy onboarding completion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workout/today": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Workout"
+        ],
+        "summary": "Get today's workout",
+        "description": "Returns the generated workout plan for the provided date or for today when no date query parameter is supplied.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "2026-03-11",
+              "description": "Optional workout date in YYYY-MM-DD format."
+            },
+            "required": false,
+            "description": "Optional workout date in YYYY-MM-DD format.",
+            "name": "date",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout plan or rest-day response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTodayResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Onboarding not completed or no active program exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/program": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Program"
+        ],
+        "summary": "Get active program",
+        "description": "Returns the active program definition together with current progression metadata and user set counts.",
+        "responses": {
+          "200": {
+            "description": "Active program.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgramResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Onboarding not completed or no active program exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Program"
+        ],
+        "summary": "Save active program",
+        "description": "Creates a new active program version and reseeds progression state from the previous version.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramDefinition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Program saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgramMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/program/reset": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Program"
+        ],
+        "summary": "Reset active program",
+        "description": "Resets the active program to the built-in default program. Requires the X-Reset-Token header.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "local-reset-token",
+              "description": "Shared reset token required to reset the active program."
+            },
+            "required": true,
+            "description": "Shared reset token required to reset the active program.",
+            "name": "X-Reset-Token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Program reset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgramMutationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid reset token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/program/regenerate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Program"
+        ],
+        "summary": "Regenerate active program from onboarding profile",
+        "description": "Uses the stored normalized profile and global exercise catalog to generate a fresh active program version without relying on frontend program composition.",
+        "responses": {
+          "200": {
+            "description": "Program regenerated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedProgramResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Onboarding not completed or no normalized profile exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendation-draft": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Recommendation Draft"
+        ],
+        "summary": "Create or refresh recommendation draft from stored profile",
+        "description": "Builds an editable recommendation draft from the stored normalized profile without activating a program.",
+        "responses": {
+          "200": {
+            "description": "Recommendation draft created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stored onboarding/profile or catalog state cannot satisfy draft creation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Recommendation Draft"
+        ],
+        "summary": "Get current recommendation draft",
+        "responses": {
+          "200": {
+            "description": "Current recommendation draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation draft not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendation-draft/structure": {
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Recommendation Draft"
+        ],
+        "summary": "Choose recommendation draft structure",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendationDraftStructureSelectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recommendation draft structure updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDraftResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid structure selection request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation draft not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Draft is stale, activated, or structure is invalid for the current draft.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendation-draft/exercise": {
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Recommendation Draft"
+        ],
+        "summary": "Replace recommendation draft exercise in a slot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendationDraftExerciseReplaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recommendation draft exercise updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDraftResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid exercise replacement request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation draft not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Draft is stale, activated, slot is missing, or exercise is not valid for the slot.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendation-draft/activate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Recommendation Draft"
+        ],
+        "summary": "Activate current recommendation draft",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendationDraftActivateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recommendation draft activated into a normal active program version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDraftActivateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid activation request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation draft not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Draft is stale or activation state is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Activation failed after partial orchestration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progression/run": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Progression"
+        ],
+        "summary": "Run progression evaluation",
+        "description": "Evaluates recent session performance and updates progression state for the active program.",
+        "responses": {
+          "200": {
+            "description": "Progression run completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressionRunResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Onboarding not completed or no active program exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/log": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Log"
+        ],
+        "summary": "Create workout log",
+        "description": "Creates a workout session from structured JSON. X-Workout-Date can override the session date.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "2026-03-11",
+              "description": "Optional workout date override in YYYY-MM-DD format."
+            },
+            "required": false,
+            "description": "Optional workout date override in YYYY-MM-DD format.",
+            "name": "X-Workout-Date",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonLogRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workout session created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or date header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Onboarding not completed, no active program exists, or a log already exists for the date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "List workout sessions",
+        "description": "Returns stored workout sessions, optionally filtered by date and limited to the requested count.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "20",
+              "description": "Optional max sessions to return. Invalid values fall back to 20."
+            },
+            "required": false,
+            "description": "Optional max sessions to return. Invalid values fall back to 20.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "2026-03-11",
+              "description": "Optional session date filter in YYYY-MM-DD format."
+            },
+            "required": false,
+            "description": "Optional session date filter in YYYY-MM-DD format.",
+            "name": "date",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date filter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get workout session",
+        "description": "Returns a full workout session record including matched exercises and set values.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "session_123",
+              "description": "Workout session identifier."
+            },
+            "required": true,
+            "description": "Workout session identifier.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutSessionRecord"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid Clerk Bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Clerk JWKS unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
