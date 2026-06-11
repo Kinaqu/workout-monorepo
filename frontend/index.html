@@ -373,116 +373,8 @@
       <!-- React root: rendered by features/history (mounted from app.js) -->
       <div id="tab-history" class="tab-content"></div>
 
-      <div id="tab-program" class="tab-content">
-        <h1 class="section-title mb-4"><span class="section-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12H16"></path><path d="M9.5 16H14"></path></svg></span><span>Plan</span></h1>
-        <div id="program-loader" class="loader" data-boneyard-loader="program-shell"></div>
-        <div id="program-error" class="error-message"></div>
-        <div id="program-content" class="hidden">
-          <div id="program-empty-state" class="card empty-state-card hidden"></div>
-          <div id="program-main" class="hidden">
-            <div class="card program-summary-card mb-4">
-              <div class="program-summary-header">
-                <div>
-                  <div class="card-title">Current plan</div>
-                  <div id="program-summary-copy" class="card-subtitle"></div>
-                </div>
-                <div id="program-summary-badge" class="program-summary-badge"></div>
-              </div>
-              <div id="program-summary-meta" class="program-summary-meta"></div>
-            </div>
-            <div class="card mb-4">
-              <div class="card-title">Week</div>
-              <div id="program-schedule"></div>
-            </div>
-            <h2 class="mb-4">Sessions</h2>
-            <div id="program-workouts"></div>
-            <details id="program-advanced-details" class="card program-advanced-shell mb-4">
-              <summary class="program-advanced-summary">
-                <span>Advanced tools</span>
-                <span class="program-advanced-meta">Compatibility only</span>
-              </summary>
-              <div class="program-advanced-content">
-                <div class="program-toolbar">
-                  <button id="program-edit-button" class="secondary-button hidden" type="button">Edit plan</button>
-                  <button id="program-regenerate-button" class="secondary-button hidden" type="button" data-action="regenerate-program">Build new plan</button>
-                  <button id="program-reset-button" class="secondary-button hidden" type="button">Reset to default</button>
-                </div>
-                <div id="program-insights" class="program-insights-grid mb-4">
-                  <section class="card program-info-card">
-                    <div class="card-title">Plan details</div>
-                    <div id="program-generation-summary" class="program-info-copy"></div>
-                    <div id="program-generation-meta" class="program-pill-row"></div>
-                  </section>
-                  <section class="card program-info-card">
-                    <div class="card-title">Progression refresh</div>
-                    <div id="program-runtime-summary" class="program-info-copy"></div>
-                    <div id="program-runtime-meta" class="program-pill-row"></div>
-                  </section>
-                </div>
-                <div class="program-detail-layout mb-4">
-                  <section class="card program-version-card">
-                    <div class="card-title">Version details</div>
-                    <div id="program-version-meta" class="program-detail-grid"></div>
-                  </section>
-                  <section class="card program-version-card">
-                    <div class="card-title">Recent changes</div>
-                    <div id="program-changes-summary" class="program-info-copy"></div>
-                    <div id="program-changes-stats" class="program-pill-row"></div>
-                    <div id="program-changes-list" class="program-change-list"></div>
-                  </section>
-                </div>
-                <section class="card program-timeline-card mb-4">
-                  <div class="program-section-header">
-                    <div>
-                      <div class="card-title">Progression timeline</div>
-                      <div class="card-subtitle">Recent progression changes for this version.</div>
-                    </div>
-                  </div>
-                  <div id="program-timeline-list" class="program-timeline-list"></div>
-                </section>
-                <div id="program-editor" class="card program-editor hidden">
-                  <div class="program-editor-header">
-                    <div>
-                      <div class="card-title">Manual editor</div>
-                      <div class="card-subtitle">Adjust the schedule, session structure, and targets before saving a new version.</div>
-                    </div>
-                    <div id="program-editor-status" class="program-editor-status"></div>
-                  </div>
-                  <div class="program-editor-grid">
-                    <label class="program-field">
-                      <span class="program-field-label">Program id</span>
-                      <input id="program-editor-id" type="text" placeholder="generated_three_day_strength">
-                    </label>
-                    <label class="program-field">
-                      <span class="program-field-label">Program name</span>
-                      <input id="program-editor-name" type="text" placeholder="Strength plan">
-                    </label>
-                  </div>
-                  <section class="program-editor-section">
-                    <div class="program-section-header">
-                      <div class="program-section-title">Week schedule</div>
-                      <div class="program-section-copy">Map each weekday to an existing session or a rest day.</div>
-                    </div>
-                    <div id="program-editor-schedule" class="program-editor-schedule"></div>
-                  </section>
-                  <section class="program-editor-section">
-                    <div class="program-section-header">
-                      <div class="program-section-title">Sessions</div>
-                      <div class="program-section-copy">Edit names, targets, and set caps. Save will create a new version.</div>
-                    </div>
-                    <div id="program-editor-workouts" class="program-editor-workouts"></div>
-                    <button id="program-add-workout-button" class="secondary-button" type="button">Add session</button>
-                  </section>
-                  <div class="program-editor-actions">
-                    <button id="program-cancel-edit-button" class="secondary-button" type="button">Cancel</button>
-                    <button id="program-save-button" type="button">Save plan</button>
-                  </div>
-                </div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </div>
+      <!-- React root: rendered by features/program (mounted from app.js) -->
+      <div id="tab-program" class="tab-content"></div>
     </div>
   </div>
 
@@ -501,21 +393,6 @@
     </div>
   </nav>
 
-  <dialog id="confirm-dialog" class="confirm-dialog">
-    <form method="dialog" class="confirm-dialog-panel">
-      <div class="confirm-dialog-kicker">Confirm action</div>
-      <div id="confirm-dialog-title" class="card-title"></div>
-      <p id="confirm-dialog-copy" class="confirm-dialog-copy"></p>
-      <label id="confirm-dialog-input-wrap" class="confirm-dialog-field hidden">
-        <span id="confirm-dialog-input-label" class="program-field-label"></span>
-        <input id="confirm-dialog-input" type="text" autocomplete="off">
-      </label>
-      <div class="confirm-dialog-actions">
-        <button id="confirm-dialog-cancel" class="secondary-button" type="button">Cancel</button>
-        <button id="confirm-dialog-confirm" type="button">Confirm</button>
-      </div>
-    </form>
-  </dialog>
 
   <dialog id="recommendation-option-dialog" class="confirm-dialog recommendation-option-dialog">
     <form method="dialog" class="confirm-dialog-panel">

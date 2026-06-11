@@ -7,7 +7,7 @@ import {
 import { ensureClerkReady } from '/clerk-bootstrap.js';
 import { createHistoryFeature } from '/features/history/index.tsx';
 import { createOnboardingFeature } from '/features/onboarding/index.js';
-import { createProgramFeature } from '/features/program/index.js';
+import { createProgramFeature } from '/features/program/index.tsx';
 import { createRecommendationFeature } from '/features/recommendation/index.js';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
 import { createTodayWorkoutFeature } from '/features/today/index.tsx';
@@ -133,7 +133,6 @@ todayWorkoutFeature = createTodayWorkoutFeature({
 });
 
 programFeature = createProgramFeature({
-  getActiveTabId,
   onEnterOnboarding: () => onboardingFeature.enter(),
   onMissingProgram: handleMissingProgram,
   onRefreshProductState: refreshProductState,
