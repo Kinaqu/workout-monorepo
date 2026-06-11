@@ -8,7 +8,7 @@ import { ensureClerkReady } from '/clerk-bootstrap.js';
 import { createHistoryFeature } from '/features/history/index.tsx';
 import { createOnboardingFeature } from '/features/onboarding/index.tsx';
 import { createProgramFeature } from '/features/program/index.tsx';
-import { createRecommendationFeature } from '/features/recommendation/index.js';
+import { createRecommendationFeature } from '/features/recommendation/index.tsx';
 import { createProfileFeature } from '/features/settings-or-profile/index.js';
 import { createTodayWorkoutFeature } from '/features/today/index.tsx';
 import { primeVisibleBoneyardLoaders } from '/shared/ui/boneyard.js';

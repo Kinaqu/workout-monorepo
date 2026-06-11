@@ -16,95 +16,8 @@
     <!-- React root: rendered by features/onboarding (mounted from app.js) -->
     <section id="onboarding-shell" class="hidden" aria-labelledby="onboarding-title"></section>
 
-    <section id="recommendation-shell" class="hidden" aria-labelledby="recommendation-title">
-      <div class="card recommendation-hero-card">
-        <h1 id="recommendation-title" class="section-title mb-4">
-          <span class="section-title-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 7h16"></path>
-              <path d="M4 12h16"></path>
-              <path d="M4 17h10"></path>
-              <path d="m16 17 2 2 4-4"></path>
-            </svg>
-          </span>
-          <span>Review your plan</span>
-        </h1>
-        <p class="onboarding-copy">Start from the recommended draft, then confirm the version you want to activate.</p>
-        <div class="recommendation-meta-row">
-          <div id="recommendation-status-badge" class="recommendation-pill is-accent">Draft</div>
-        </div>
-      </div>
-
-      <div id="recommendation-error" class="error-message"></div>
-      <section id="recommendation-recovery" class="card recommendation-recovery-card hidden">
-        <div class="card-title">Could not load your draft</div>
-        <p class="card-subtitle">Try again to reload your recommendations.</p>
-        <button id="recommendation-retry-button" class="secondary-button" type="button">Try again</button>
-      </section>
-      <div id="recommendation-loader" class="loader hidden" data-boneyard-loader="recommendation-shell"></div>
-
-      <div id="recommendation-content" class="hidden">
-        <section class="card recommendation-profile-card">
-          <div class="card-title">Built from your profile</div>
-          <div id="recommendation-profile-summary" class="recommendation-pill-row"></div>
-        </section>
-
-        <section class="card recommendation-step-card">
-          <div class="recommendation-stepper">
-            <button type="button" class="recommendation-step is-active" data-recommendation-step="structure">
-              <span class="recommendation-step-index">1</span>
-              <span>Structure</span>
-            </button>
-            <button type="button" class="recommendation-step" data-recommendation-step="exercise">
-              <span class="recommendation-step-index">2</span>
-              <span>Exercises</span>
-            </button>
-            <button type="button" class="recommendation-step" data-recommendation-step="review">
-              <span class="recommendation-step-index">3</span>
-              <span>Review</span>
-            </button>
-          </div>
-        </section>
-
-        <section id="recommendation-structure-panel" class="recommendation-panel">
-          <div class="recommendation-panel-header">
-            <div>
-              <div id="recommendation-panel-title" class="card-title">Choose your training structure</div>
-              <div class="card-subtitle">Pick the split you want to start with.</div>
-            </div>
-          </div>
-          <div id="recommendation-structures" class="recommendation-structure-list"></div>
-        </section>
-
-        <section id="recommendation-exercise-panel" class="recommendation-panel hidden">
-          <div class="recommendation-panel-header">
-            <div>
-              <div class="card-title">Tune each exercise slot</div>
-              <div id="recommendation-exercise-summary" class="card-subtitle"></div>
-            </div>
-          </div>
-          <div id="recommendation-exercises" class="recommendation-workout-list"></div>
-        </section>
-
-        <section id="recommendation-review-panel" class="recommendation-panel hidden">
-          <div class="recommendation-panel-header">
-            <div>
-              <div class="card-title">Review before activation</div>
-              <div class="card-subtitle">Check the final structure and any changed exercises.</div>
-            </div>
-          </div>
-          <div id="recommendation-review-summary" class="recommendation-review-list"></div>
-        </section>
-
-        <section class="card recommendation-actions-card">
-          <div class="recommendation-action-row">
-            <button id="recommendation-back-button" class="secondary-button hidden" type="button">Back</button>
-            <button id="recommendation-next-button" type="button">Continue to exercises</button>
-            <button id="recommendation-confirm-button" class="hidden" type="button">Activate plan</button>
-          </div>
-        </section>
-      </div>
-    </section>
+    <!-- React root: rendered by features/recommendation (mounted from app.js) -->
+    <section id="recommendation-shell" class="hidden" aria-labelledby="recommendation-title"></section>
 
     <div id="app-shell" class="hidden">
       <!-- React root: rendered by features/today (mounted from app.js) -->
@@ -134,17 +47,6 @@
   </nav>
 
 
-  <dialog id="recommendation-option-dialog" class="confirm-dialog recommendation-option-dialog">
-    <form method="dialog" class="confirm-dialog-panel">
-      <div class="confirm-dialog-kicker">Replace exercise</div>
-      <div id="recommendation-option-title" class="card-title"></div>
-      <p id="recommendation-option-copy" class="confirm-dialog-copy"></p>
-      <div id="recommendation-option-list" class="recommendation-option-list"></div>
-      <div class="confirm-dialog-actions">
-        <button id="recommendation-option-close" class="secondary-button" type="button">Close</button>
-      </div>
-    </form>
-  </dialog>
 
   <script type="module" src="/app.js"></script>
   <script src="/sw-register.js"></script>
