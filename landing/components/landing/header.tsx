@@ -34,7 +34,7 @@ export function LandingHeader() {
           href={siteConfig.ctaHref}
           className="inline-flex items-center gap-2 rounded-full bg-[#125bff] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2e72ff]"
         >
-          Join Early Access
+          {siteConfig.ctaLabel}
           <ArrowIcon />
         </Link>
       </div>

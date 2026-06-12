@@ -5,7 +5,7 @@ import { siteConfig } from "@/data/site-config";
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-white/8 bg-[#05070b] text-white">
+    <footer className="border-t border-white/8 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:px-12">
         <div className="max-w-md">
           <BrandLogo
@@ -13,8 +13,8 @@ export function LandingFooter() {
             imageClassName="h-11"
           />
           <p className="mt-5 text-base leading-7 text-white/65">
-            Kinova helps people train with structure, adapt after rough weeks,
-            and keep moving without gym-first assumptions.
+            The daily minimum is free for everyone. The progression engine —
+            adaptive weekly targets that survive rough weeks — is the product.
           </p>
         </div>
 

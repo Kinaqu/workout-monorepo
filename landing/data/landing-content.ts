@@ -1,272 +1,264 @@
 export const navLinks = [
+  { label: "Free Routine", href: "#daily-minimum" },
+  { label: "Progression", href: "#pro" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Who It's For", href: "#for-you" },
-  { label: "Early Access", href: "#early-access" },
+  { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
-export const heroHighlights = [
-  "Starts from your current level",
-  "Works at home, outdoors, or with minimal equipment",
-  "Adjusts after missed sessions or low-recovery weeks",
+export type DecisionKind = "start" | "advance" | "hold" | "regress";
+
+export type HeroDemoRow = {
+  target: string;
+  decision: { kind: DecisionKind; label: string };
+};
+
+export type HeroDemoWeek = {
+  week: number;
+  note: string;
+  rows: readonly HeroDemoRow[];
+};
+
+export const heroDemoExercises = [
+  "Push-ups",
+  "Side plank",
+  "Split squats",
 ] as const;
 
-export const trustItems = [
-  "Built for bodyweight, bands, rings, bars, and compact home setups",
-  "Structured around 20 to 45 minute sessions",
-  "Designed for beginners and returning athletes",
+// Scripted, deterministic 8-week run for the hero decision-log demo.
+// Week 5 is the honest beat: a short week bends targets without a reset.
+export const heroDemoWeeks: readonly HeroDemoWeek[] = [
+  {
+    week: 1,
+    note: "Baseline set from your profile. Nothing heroic on day one.",
+    rows: [
+      { target: "8 reps", decision: { kind: "start", label: "Start" } },
+      { target: "30s", decision: { kind: "start", label: "Start" } },
+      { target: "8 reps", decision: { kind: "start", label: "Start" } },
+    ],
+  },
+  {
+    week: 2,
+    note: "Clean sessions logged. Every target steps up.",
+    rows: [
+      { target: "9 reps", decision: { kind: "advance", label: "Advance +1" } },
+      { target: "32s", decision: { kind: "advance", label: "Advance +2s" } },
+      { target: "9 reps", decision: { kind: "advance", label: "Advance +1" } },
+    ],
+  },
+  {
+    week: 3,
+    note: "Split squats felt heavy — one target holds, two move.",
+    rows: [
+      { target: "10 reps", decision: { kind: "advance", label: "Advance +1" } },
+      { target: "35s", decision: { kind: "advance", label: "Advance +3s" } },
+      { target: "9 reps", decision: { kind: "hold", label: "Hold" } },
+    ],
+  },
+  {
+    week: 4,
+    note: "Push-ups stay put while form catches up.",
+    rows: [
+      { target: "10 reps", decision: { kind: "hold", label: "Hold" } },
+      { target: "38s", decision: { kind: "advance", label: "Advance +3s" } },
+      { target: "10 reps", decision: { kind: "advance", label: "Advance +1" } },
+    ],
+  },
+  {
+    week: 5,
+    note: "Short week logged. Targets bend — the direction doesn't.",
+    rows: [
+      { target: "9 reps", decision: { kind: "regress", label: "Regress −1" } },
+      { target: "38s", decision: { kind: "hold", label: "Hold" } },
+      { target: "10 reps", decision: { kind: "hold", label: "Hold" } },
+    ],
+  },
+  {
+    week: 6,
+    note: "Back on route. The regression cost nothing.",
+    rows: [
+      { target: "10 reps", decision: { kind: "advance", label: "Advance +1" } },
+      { target: "40s", decision: { kind: "advance", label: "Advance +2s" } },
+      { target: "11 reps", decision: { kind: "advance", label: "Advance +1" } },
+    ],
+  },
+  {
+    week: 7,
+    note: "Two up, one holds. Progress without roulette.",
+    rows: [
+      { target: "11 reps", decision: { kind: "advance", label: "Advance +1" } },
+      { target: "42s", decision: { kind: "advance", label: "Advance +2s" } },
+      { target: "11 reps", decision: { kind: "hold", label: "Hold" } },
+    ],
+  },
+  {
+    week: 8,
+    note: "Eight weeks: +4 push-ups, +15s plank. No reset needed.",
+    rows: [
+      { target: "12 reps", decision: { kind: "advance", label: "Advance +1" } },
+      { target: "45s", decision: { kind: "advance", label: "Advance +3s" } },
+      { target: "12 reps", decision: { kind: "advance", label: "Advance +1" } },
+    ],
+  },
+];
+
+export const catalogTicker = [
+  "Push-ups · 8–12",
+  "Bodyweight squats · 12–15",
+  "Dips · 10–15",
+  "Bulgarian split squats · 8–12",
+  "Side plank · 30–45s",
+  "Hollow body hold · 20–40s",
+  "Dead bug · 12–16",
+  "Bird dog · 10–14",
+  "Single-leg balance · 40–60s",
+  "Mobility day",
 ] as const;
 
-export const trustStats = [
-  {
-    label: "Session length",
-    value: "20 to 45 minutes",
-    detail: "Short enough for weekdays, structured enough to matter.",
-  },
-  {
-    label: "Setup fit",
-    value: "Home, park, or minimal gear",
-    detail: "No gym-first assumptions in the core plan.",
-  },
-  {
-    label: "Plan response",
-    value: "Adjust when needed",
-    detail: "The next workout changes when your week changes.",
-  },
+export const maintenanceRoutine = [
+  { name: "Push-ups", dose: "10 reps" },
+  { name: "Bodyweight squats", dose: "10 reps" },
+  { name: "Dips", dose: "10 reps" },
+  { name: "Plank", dose: "30 seconds" },
+] as const;
+
+export const proLedger = {
+  weekCount: 8,
+  rows: [
+    {
+      name: "Push-ups",
+      values: ["8", "9", "10", "10", "9", "10", "11", "12"],
+    },
+    {
+      name: "Side plank",
+      values: ["30s", "32s", "35s", "38s", "38s", "40s", "42s", "45s"],
+    },
+    {
+      name: "Split squats",
+      values: ["8", "9", "9", "10", "10", "11", "11", "12"],
+    },
+  ],
+  marks: [
+    { week: 4, kind: "hold", label: "Hold" },
+    { week: 5, kind: "regress", label: "Regress — short week" },
+    { week: 8, kind: "advance", label: "Advance" },
+  ],
+  caption: "Week 5 was rough. The plan bent. The direction didn't.",
+} as const;
+
+export const proPillars = [
+  { label: "Signal", value: "Your logged sessions" },
+  { label: "Decision", value: "Advance · hold · regress" },
+  { label: "Output", value: "Next week's exact targets" },
+] as const;
+
+export const proTracks = [
+  "Push-up milestones",
+  "Plank endurance",
+  "Lower-body strength",
 ] as const;
 
 export const flowSteps = [
   {
     number: "01",
-    title: "Start with a quick setup",
-    description:
-      "Tell Kinova your level, goal, available equipment, schedule, and any movement limits.",
-    detailLabel: "Example input",
-    detailValue: "Beginner, 3x per week, pull-up goal, bands + floor space",
+    title: "Profile in",
+    description: "Set your level, gear, schedule, and movement limits.",
   },
   {
     number: "02",
-    title: "Get a plan that fits this week",
-    description:
-      "Kinova maps a week of focused sessions around your actual capacity instead of an ideal routine.",
-    detailLabel: "Week view",
-    detailValue: "Pull, lower body, mobility reset, optional outdoor conditioning",
+    title: "Week out",
+    description: "Get this week's plan, built for your actual capacity.",
   },
   {
     number: "03",
-    title: "Train and log how it felt",
-    description:
-      "Complete the workout and note what felt smooth, heavy, or incomplete so the plan stays useful.",
-    detailLabel: "Workout note",
-    detailValue: "Grip fatigue high, core strong, finished in 31 minutes",
+    title: "Signal back",
+    description: "Train, then log how it actually went.",
   },
   {
     number: "04",
-    title: "Get the next workout adjusted",
-    description:
-      "Strong sessions move you forward. Rough weeks trigger smarter regressions without breaking momentum.",
-    detailLabel: "Plan update",
-    detailValue: "Volume trimmed, progression path preserved, next workout still clear",
+    title: "Targets adjust",
+    description: "Advance, hold, or regress — next week is already written.",
   },
 ] as const;
 
-export const featureCards = [
-  {
-    title: "Progression that meets the day",
-    body: "Kinova raises difficulty when workouts are going well and scales back when recovery, consistency, or form says it should.",
-    eyebrow: "Adaptive engine",
-    accent: "from-[#125bff]/30 via-[#125bff]/10 to-transparent",
-    span: "lg:col-span-2 lg:row-span-2",
-    bullets: [
-      "Advance, hold, or regress with purpose",
-      "Protects consistency after rough sessions",
-    ],
-  },
-  {
-    title: "A real weekly structure",
-    body: "Every session has a job inside the week, so users stop guessing what to do next.",
-    eyebrow: "Weekly plan",
-    accent: "from-white/14 via-white/6 to-transparent",
-    span: "lg:col-span-2",
-    bullets: ["Clear training split", "No workout roulette"],
-  },
-  {
-    title: "Constraint-aware by default",
-    body: "Small spaces, simple tools, and uneven schedules are built into the plan from the start.",
-    eyebrow: "Practical fit",
-    accent: "from-[#8ab4ff]/25 via-[#8ab4ff]/8 to-transparent",
-    span: "lg:col-span-1",
-    bullets: ["Minimal-equipment friendly", "Short-session ready"],
-  },
-  {
-    title: "Useful feedback, not noise",
-    body: "A few honest workout notes are enough to keep the plan moving in the right direction.",
-    eyebrow: "Feedback loop",
-    accent: "from-[#7cf2c8]/18 via-[#7cf2c8]/5 to-transparent",
-    span: "lg:col-span-1",
-    bullets: ["Logs what matters", "Keeps the next step clear"],
-  },
-] as const;
+export type PricingTier = {
+  name: string;
+  tagline: string;
+  priceLabel: string;
+  badge?: string;
+  description: string;
+  points: readonly string[];
+  ctaLabel: string;
+  ctaHref: string;
+  footnote?: string;
+  highlighted: boolean;
+};
 
-export const comparisonRows = [
+export const pricingTiers: readonly PricingTier[] = [
   {
-    generic: "Random workouts picked session by session",
-    kinova: "One weekly plan shaped around your current level and goal",
-  },
-  {
-    generic: "Gym-first defaults",
-    kinova: "Home, park, bodyweight, and minimal-equipment ready",
-  },
-  {
-    generic: "A rough week breaks the rhythm",
-    kinova: "The plan adjusts and keeps momentum alive",
-  },
-  {
-    generic: "Progression feels unclear",
-    kinova: "Each next workout reflects performance and readiness",
-  },
-] as const;
-
-export const audienceCards = [
-  {
-    title: "Beginners",
+    name: "Free",
+    tagline: "The Daily Minimum",
+    priceLabel: "Free, forever",
     description:
-      "Start from progressions you can actually complete instead of plans that overshoot day one.",
-  },
-  {
-    title: "Returning after a break",
-    description:
-      "Rebuild with structure that respects your current capacity instead of your old numbers.",
-  },
-  {
-    title: "Home training users",
-    description:
-      "Use bodyweight, bands, a pull-up bar, or a compact setup without losing plan quality.",
-  },
-  {
-    title: "Outdoor and calisthenics users",
-    description:
-      "Train with bars, rings, and park sessions while still following a progression-based weekly plan.",
-  },
-] as const;
-
-export const progressionStates = [
-  {
-    title: "Move forward when you're ready",
-    description:
-      "Good form, stable volume, and strong workout feedback unlock the next progression step.",
-  },
-  {
-    title: "Hold or scale back when needed",
-    description:
-      "Kinova can reduce load or complexity without making the user feel like the whole week was lost.",
-  },
-  {
-    title: "Protect momentum after imperfect weeks",
-    description:
-      "Schedule breaks and uneven recovery change the plan, not the overall direction.",
-  },
-] as const;
-
-export const outcomeCards = [
-  {
-    title: "Training feels easier to stick to",
-    body: "The plan fits the week you actually have, so consistency stops feeling fragile.",
-  },
-  {
-    title: "Progression stops feeling random",
-    body: "Users can see why a session moved forward, stayed steady, or scaled back.",
-  },
-  {
-    title: "Confidence grows session by session",
-    body: "Better fit means less second-guessing and more useful reps over time.",
-  },
-] as const;
-
-export const testimonials = [
-  {
-    quote:
-      "The biggest change is that a rough week no longer breaks the plan. I still know what to do next.",
-    name: "Pilot user",
-    role: "Returning to training",
-  },
-  {
-    quote:
-      "Small apartment, bands, pull-up bar, 30 minutes. It still feels like a real program instead of a compromise.",
-    name: "Early access applicant",
-    role: "Home training setup",
-  },
-  {
-    quote:
-      "The logic is clear. It adapts without turning every session into a negotiation.",
-    name: "Coach review",
-    role: "Movement and progression feedback",
-  },
-] as const;
-
-export const methodologyPoints = [
-  "Assessment-led planning before week one starts",
-  "Progression tied to readiness and workout feedback",
-  "Movement quality, strength, and consistency treated as one system",
-  "Designed for limited time and limited equipment",
-] as const;
-
-export const pricingTiers = [
-  {
-    name: "Early Access",
-    price: "Free",
-    description:
-      "Join the first Kinova group and help shape the adaptive planning experience from the start.",
+      "One fixed routine to hold your baseline on the days nothing else happens.",
     points: [
-      "Access to the early planning flow",
-      "Product updates as new capabilities ship",
-      "Direct feedback channel with the Kinova team",
+      "The fixed daily routine: push-ups, squats, dips, plank",
+      "Daily check-off and streak",
+      "Same targets every day — maintenance, not progression",
     ],
-    highlighted: true,
-  },
-  {
-    name: "What to expect",
-    price: "Small batch onboarding",
-    description:
-      "Apply once, share your setup, and get a clear follow-up instead of disappearing into a generic waitlist.",
-    points: [
-      "We review goal, setup, and current fit",
-      "You get a clear next step by email",
-      "New users are invited in small batches",
-    ],
+    ctaLabel: "Start free",
+    ctaHref: "/early-access",
     highlighted: false,
   },
-] as const;
+  {
+    name: "Pro",
+    tagline: "The Progression Engine",
+    priceLabel: "Founding pricing soon",
+    badge: "Early access",
+    description:
+      "An adaptive week that moves with how training actually goes.",
+    points: [
+      "Adaptive weekly plan built from your level, gear, and schedule",
+      "Advance / hold / regress decision after every logged session",
+      "Goal plans for specific milestones",
+      "Direct feedback line with the team",
+    ],
+    ctaLabel: "Get Pro early access",
+    ctaHref: "/early-access?plan=pro",
+    footnote: "Free while in early access. Founding members lock the launch price.",
+    highlighted: true,
+  },
+];
 
 export const faqs = [
   {
-    question: "Is Kinova for complete beginners?",
+    question: "What do I get for free?",
     answer:
-      "Yes. The fit check places you at a realistic starting point so the plan begins with work you can handle.",
+      "The daily minimum: ten push-ups, ten squats, ten dips, and a plank, with a daily check-off and streak. It keeps your baseline. It does not get harder.",
   },
   {
-    question: "Do I need a full gym?",
+    question: "What does Pro actually do?",
     answer:
-      "No. Kinova is designed for bodyweight, minimal equipment, and simple home or outdoor setups.",
+      "Pro builds your week from your level, gear, and schedule, then adjusts after every logged session. If push-ups feel solid at 8, next week asks for 9 — and an eight-week block can take you from 8 to 12.",
+  },
+  {
+    question: "How much will Pro cost?",
+    answer:
+      "There is no price yet. Early access is free, and founding pricing is announced to the waitlist before launch — members lock it in.",
   },
   {
     question: "What happens after a rough week?",
     answer:
-      "The plan adapts. Kinova can hold or scale back the next step without erasing momentum.",
+      "The engine holds or regresses your targets instead of pretending the week didn't happen. The direction stays; only the next step changes.",
   },
   {
-    question: "How long are sessions?",
+    question: "Do I need a gym, or experience?",
     answer:
-      "Most sessions are built to land in a practical 20 to 45 minute range.",
+      "No. Everything is built for bodyweight and minimal gear, and targets start where you are — eight push-ups is a fine week one.",
   },
   {
-    question: "Is this replacing a coach?",
+    question: "What happens after I apply?",
     answer:
-      "No. Kinova is an adaptive planning system for people who want structure and a clear next step.",
-  },
-  {
-    question: "What happens after I request access?",
-    answer:
-      "You share your training context, the team reviews fit, and new spots open in small batches.",
+      "You share your training context, the team reviews fit, and new spots open in small batches with a clear email follow-up.",
   },
 ] as const;
