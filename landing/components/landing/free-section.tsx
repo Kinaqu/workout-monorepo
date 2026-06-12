@@ -4,11 +4,11 @@ import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "./icons";
 import { SectionHeading } from "./section-heading";
 
-/* Deliberately the stillest card in the deck: maintenance is static, so the
-   free offer gets receipt typography and no kinetic treatment. */
+/* Deliberately the stillest section on the page: maintenance is static, so
+   the free offer gets receipt typography and no kinetic treatment. */
 export function FreeSection() {
   return (
-    <section id="daily-minimum" className="my-auto text-white">
+    <section id="daily-minimum" className="relative text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-center lg:gap-20">
           <div>
@@ -19,9 +19,7 @@ export function FreeSection() {
               description="One fixed routine. Ten push-ups, ten squats, ten dips, a plank. Five minutes to keep your baseline on the days nothing else happens."
             />
             <p className="mt-7 text-base leading-7 text-white/52">
-              It never gets harder. That&apos;s the point — and the limit.
-              Maintenance keeps you here; moving forward is a different
-              machine.
+              It never gets harder — that&apos;s the point, and the limit.
             </p>
             <Link
               href={siteConfig.ctaHref}
