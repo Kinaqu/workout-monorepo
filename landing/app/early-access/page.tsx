@@ -3,7 +3,16 @@ import { BrandLogo } from "@/components/brand-logo";
 import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "@/components/landing/icons";
 
-export default function EarlyAccessPage() {
+type EarlyAccessPageProps = {
+  searchParams: Promise<{ plan?: string | string[] }>;
+};
+
+export default async function EarlyAccessPage({
+  searchParams,
+}: EarlyAccessPageProps) {
+  const { plan } = await searchParams;
+  const isPro = plan === "pro";
+
   return (
     <main className="min-h-screen bg-[#05070b] text-white">
       <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
@@ -25,14 +34,15 @@ export default function EarlyAccessPage() {
           />
 
           <p className="mt-8 text-xs tracking-[0.28em] text-[#8ab4ff] uppercase">
-            Request Access
+            {isPro ? "Pro Waitlist" : "Request Access"}
           </p>
           <h1 className="mt-5 font-display text-4xl leading-tight font-semibold tracking-[-0.05em] sm:text-5xl">
             Tell Kinova how you train now.
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
-            Share your goal, setup, and routine. We use it to check fit and
-            invite new users in small batches.
+            {isPro
+              ? "You're applying for Pro early access — the progression engine. Share your goal, setup, and routine; founding pricing news goes to this list first."
+              : "Share your goal, setup, and routine. We use it to check fit and invite new users in small batches."}
           </p>
 
           <div className="mt-8 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 text-sm text-white/72 sm:grid-cols-3">
@@ -115,6 +125,26 @@ export default function EarlyAccessPage() {
                 />
               </label>
             </div>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white/78">
+                Interest
+              </span>
+              <select
+                name="interest"
+                defaultValue={
+                  isPro
+                    ? "Pro — progression engine (waitlist)"
+                    : "Free daily minimum"
+                }
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none transition focus:border-[#125bff]"
+              >
+                <option className="bg-[#08111f]">Free daily minimum</option>
+                <option className="bg-[#08111f]">
+                  Pro — progression engine (waitlist)
+                </option>
+              </select>
+            </label>
 
             <label className="grid gap-2">
               <span className="text-sm font-medium text-white/78">

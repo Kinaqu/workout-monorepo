@@ -13,8 +13,8 @@ export function LandingFooter() {
             imageClassName="h-11"
           />
           <p className="mt-5 text-base leading-7 text-white/65">
-            Kinova helps people train with structure, adapt after rough weeks,
-            and keep moving without gym-first assumptions.
+            The daily minimum is free for everyone. The progression engine —
+            adaptive weekly targets that survive rough weeks — is the product.
           </p>
         </div>
 

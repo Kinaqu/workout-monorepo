@@ -1,24 +1,24 @@
-import { AudienceSection } from "@/components/landing/audience-section";
+import { CatalogMarquee } from "@/components/landing/catalog-marquee";
 import { FaqSection } from "@/components/landing/faq-section";
-import { FeatureGridSection } from "@/components/landing/feature-grid-section";
+import { FinalCtaSection } from "@/components/landing/final-cta-section";
 import { LandingFooter } from "@/components/landing/footer";
+import { FreeSection } from "@/components/landing/free-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { PricingSection } from "@/components/landing/pricing-section";
-import { ProofSection } from "@/components/landing/proof-section";
-import { TrustBar } from "@/components/landing/trust-bar";
+import { ProSection } from "@/components/landing/pro-section";
 
 export default function Home() {
   return (
     <main className="bg-[#05070b] text-white">
       <HeroSection />
-      <TrustBar />
+      <CatalogMarquee />
+      <FreeSection />
+      <ProSection />
       <HowItWorksSection />
-      <AudienceSection />
-      <FeatureGridSection />
-      <ProofSection />
       <PricingSection />
       <FaqSection />
+      <FinalCtaSection />
       <LandingFooter />
     </main>
   );

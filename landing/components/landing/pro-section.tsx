@@ -1,0 +1,210 @@
+import Link from "next/link";
+import { Fragment, type CSSProperties } from "react";
+import { proLedger, proPillars, proTracks } from "@/data/landing-content";
+import { siteConfig } from "@/data/site-config";
+import { ArrowIcon } from "./icons";
+import { Reveal } from "./reveal";
+import { SectionHeading } from "./section-heading";
+
+type MarkKind = (typeof proLedger.marks)[number]["kind"];
+
+const markChipStyles: Record<MarkKind, string> = {
+  advance: "border-[#125bff]/45 bg-[#125bff]/14 text-[#9fbeff]",
+  hold: "border-white/14 bg-white/[0.05] text-white/65",
+  regress: "border-[#f5a97f]/40 bg-[#f5a97f]/12 text-[#f5b894]",
+};
+
+const markColumnTints: Record<MarkKind, string> = {
+  advance: "bg-[#125bff]/[0.09]",
+  hold: "bg-white/[0.04]",
+  regress: "bg-[#f5a97f]/[0.06]",
+};
+
+const markGlyphs: Record<MarkKind, string> = {
+  advance: "▲",
+  hold: "▶",
+  regress: "▼",
+};
+
+const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+
+export function ProSection() {
+  const weekNumbers = Array.from(
+    { length: proLedger.weekCount },
+    (_, index) => index + 1,
+  );
+  const marksByWeek = new Map<number, (typeof proLedger.marks)[number]>(
+    proLedger.marks.map((mark) => [mark.week, mark]),
+  );
+
+  return (
+    <section
+      id="pro"
+      className="relative overflow-hidden border-y border-white/8 bg-[linear-gradient(180deg,_#08111f,_#0b1626_55%,_#08111f)] text-white"
+    >
+      <div className="absolute -top-32 right-[-8rem] h-80 w-80 rounded-full bg-[#125bff]/14 blur-3xl" />
+      <div className="relative mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <Reveal>
+          <SectionHeading
+            inverse
+            eyebrow="Kinova Pro · The progression engine"
+            title="Targets that move. Eight weeks, one rough patch, no reset."
+            description="Log each session. The engine decides — advance, hold, or regress — and writes next week's targets."
+          />
+        </Reveal>
+
+        <Reveal stagger className="mt-10 grid gap-4 sm:grid-cols-3">
+          {proPillars.map((pillar, index) => (
+            <div
+              key={pillar.label}
+              className="rv rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-5"
+              style={delay(index * 90)}
+            >
+              <p className="text-[0.68rem] tracking-[0.24em] text-[#8ab4ff] uppercase">
+                {pillar.label}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-white/82">
+                {pillar.value}
+              </p>
+            </div>
+          ))}
+        </Reveal>
+
+        <Reveal stagger className="mt-12">
+          <div className="rounded-[2rem] border border-white/12 bg-[#0a1322]/85 p-6 sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs tracking-[0.24em] text-white/45 uppercase">
+                Eight weeks of engine output
+              </p>
+              <p className="text-xs text-white/40">
+                Sample block · beginner profile
+              </p>
+            </div>
+            <div
+              className="draw-x mt-5 h-px w-full bg-[linear-gradient(90deg,_rgba(18,91,255,0.8),_rgba(255,255,255,0.12))]"
+              style={delay(150)}
+            />
+
+            <div className="mt-4 overflow-x-auto pb-1">
+              <div className="grid min-w-[640px] grid-cols-[minmax(120px,1.3fr)_repeat(8,minmax(0,1fr))]">
+                <div />
+                {weekNumbers.map((week, column) => {
+                  const mark = marksByWeek.get(week);
+                  return (
+                    <div
+                      key={`head-${week}`}
+                      className={`rv flex items-center justify-center px-1 py-3 ${
+                        mark ? markColumnTints[mark.kind] : ""
+                      }`}
+                      style={delay(220 + column * 55)}
+                    >
+                      {mark ? (
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold tracking-[0.08em] uppercase ${markChipStyles[mark.kind]}`}
+                        >
+                          <span aria-hidden="true">
+                            {markGlyphs[mark.kind]}
+                          </span>
+                          W{week}
+                        </span>
+                      ) : (
+                        <span className="text-[0.68rem] tracking-[0.18em] text-white/40 uppercase">
+                          W{week}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {proLedger.rows.map((row, rowIndex) => {
+                  const isLastRow = rowIndex === proLedger.rows.length - 1;
+                  const rowBorder = isLastRow
+                    ? ""
+                    : "border-b border-white/8";
+                  return (
+                    <Fragment key={row.name}>
+                      <div
+                        className={`rv flex items-center py-3 pr-3 text-sm font-medium text-white/85 ${rowBorder}`}
+                        style={delay(420 + rowIndex * 130)}
+                      >
+                        {row.name}
+                      </div>
+                      {row.values.map((value, column) => {
+                        const week = column + 1;
+                        const mark = marksByWeek.get(week);
+                        const isFinalWeek = week === proLedger.weekCount;
+                        return (
+                          <div
+                            key={`${row.name}-${week}`}
+                            className={`rv flex items-center justify-center py-3 font-display text-sm tabular-nums ${rowBorder} ${
+                              mark ? markColumnTints[mark.kind] : ""
+                            } ${
+                              isFinalWeek
+                                ? "font-semibold text-white"
+                                : "text-white/65"
+                            }`}
+                            style={delay(420 + rowIndex * 130 + column * 45)}
+                          >
+                            {value}
+                          </div>
+                        );
+                      })}
+                    </Fragment>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+              {proLedger.marks.map((mark, index) => (
+                <span
+                  key={`legend-${mark.week}`}
+                  className={`rv inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${markChipStyles[mark.kind]}`}
+                  style={delay(980 + index * 110)}
+                >
+                  <span aria-hidden="true">{markGlyphs[mark.kind]}</span>
+                  W{mark.week} · {mark.label}
+                </span>
+              ))}
+            </div>
+
+            <p
+              className="rv mt-5 font-display text-lg font-semibold tracking-[-0.02em] text-white/90"
+              style={delay(1300)}
+            >
+              {proLedger.caption}
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2.5 text-sm">
+            <span className="text-xs tracking-[0.24em] text-white/45 uppercase">
+              Goal plans
+            </span>
+            {proTracks.map((track) => (
+              <span
+                key={track}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm text-white/70"
+              >
+                {track}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <Link
+              href={siteConfig.proCtaHref}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-4 text-sm font-semibold text-[#05070b] transition hover:-translate-y-0.5 hover:bg-[#dbe7ff]"
+            >
+              {siteConfig.proCtaLabel}
+              <ArrowIcon />
+            </Link>
+            <p className="max-w-56 text-sm leading-6 text-white/50">
+              No price yet — founding pricing announced before launch.
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}

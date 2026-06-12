@@ -1,44 +1,41 @@
+import { type CSSProperties } from "react";
 import { flowSteps } from "@/data/landing-content";
+import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
+
+const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="bg-white text-[#05070b]">
+    <section id="how-it-works" className="bg-[#05070b] text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
-        <SectionHeading
-          eyebrow="How It Works"
-          title="From fit check to next step in four moves."
-          description="Kinova keeps the loop simple: place the user correctly, map the week, log the signal, and adapt the route."
-        />
+        <Reveal>
+          <SectionHeading
+            inverse
+            eyebrow="How it works · 20–45 minute sessions"
+            title="Profile in. Week out. Signal back."
+          />
+        </Reveal>
 
-        <div className="mt-14 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
-          {flowSteps.map((step) => (
-            <article
+        <Reveal stagger className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {flowSteps.map((step, index) => (
+            <div
               key={step.number}
-              className="rounded-[2rem] border border-[#dbe4f2] bg-[#f7faff] p-6 shadow-[0_24px_70px_rgba(18,91,255,0.06)]"
+              className="rv rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-6"
+              style={delay(index * 110)}
             >
-              <div className="flex items-start justify-between gap-4">
-                <p className="text-xs font-semibold tracking-[0.28em] text-[#125bff] uppercase">
-                  {step.number}
-                </p>
-              </div>
-              <h3 className="mt-5 font-display text-2xl leading-tight font-semibold tracking-[-0.04em]">
+              <p className="text-xs font-semibold tracking-[0.28em] text-[#8ab4ff] uppercase">
+                {step.number}
+              </p>
+              <h3 className="mt-4 font-display text-xl font-semibold tracking-[-0.03em] text-white">
                 {step.title}
               </h3>
-              <p className="mt-4 text-base leading-7 text-[#526072]">
+              <p className="mt-3 text-sm leading-6 text-white/65">
                 {step.description}
               </p>
-              <div className="mt-6 rounded-[1.4rem] border border-[#dbe4f2] bg-white p-4">
-                <p className="text-[0.68rem] tracking-[0.24em] text-[#125bff] uppercase">
-                  {step.detailLabel}
-                </p>
-                <p className="mt-3 text-sm leading-6 font-medium text-[#1d2837]">
-                  {step.detailValue}
-                </p>
-              </div>
-            </article>
+            </div>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );

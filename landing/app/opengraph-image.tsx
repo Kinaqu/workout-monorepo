@@ -96,16 +96,18 @@ export default function Image() {
             <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
               <div
                 style={{
-                  fontSize: 72,
-                  lineHeight: 1,
+                  fontSize: 64,
+                  lineHeight: 1.04,
                   letterSpacing: "-0.06em",
                   fontWeight: 700,
                   display: "flex",
                   flexDirection: "column",
                 }}
               >
-                <span>Adaptive training</span>
-                <span>for your real level.</span>
+                <span>The daily minimum is free.</span>
+                <span style={{ color: "#8ab4ff" }}>
+                  Progression is the product.
+                </span>
               </div>
               <div
                 style={{
@@ -115,9 +117,8 @@ export default function Image() {
                   maxWidth: 620,
                 }}
               >
-                Home, outdoors, or minimal equipment. Structured weekly plans
-                that adjust with performance, recovery, and real-life
-                constraints.
+                A free daily routine holds your baseline. Kinova Pro writes
+                next week&apos;s targets — advance, hold, or regress.
               </div>
             </div>
             <div
@@ -128,9 +129,9 @@ export default function Image() {
               }}
             >
               {[
-                "Adaptive weekly structure",
-                "Recovery-aware progression",
-                "Built for real schedules",
+                "Free daily minimum",
+                "Adaptive weekly targets",
+                "Advance · Hold · Regress",
               ].map((item) => (
                 <div
                   key={item}
@@ -182,7 +183,7 @@ export default function Image() {
                 color: "rgba(255,255,255,0.5)",
               }}
             >
-              Week 04 active
+              Kinova Pro · Week 1 → 8
             </div>
             <div
               style={{
@@ -191,7 +192,7 @@ export default function Image() {
                 fontWeight: 700,
               }}
             >
-              Beginner pull strength track
+              The progression engine
             </div>
             <div
               style={{
@@ -202,19 +203,19 @@ export default function Image() {
               }}
             >
               {[
-                "Assessment: home setup + bands + pull-up bar",
-                "Today: assisted pull-up ladder + core block",
-                "Adaptive update: volume reduced, streak protected",
+                "Push-ups: 8 → 12 reps",
+                "Side plank: 30s → 45s",
+                "Week 5: regress — direction kept",
               ].map((item, index) => (
                 <div
                   key={item}
                   style={{
                     borderRadius: 24,
                     border:
-                      index === 1
+                      index === 2
                         ? `1px solid ${brand.accentBorder}`
                         : "1px solid rgba(255,255,255,0.08)",
-                    background: index === 1 ? brand.accentSoftBg : "rgba(255,255,255,0.04)",
+                    background: index === 2 ? brand.accentSoftBg : "rgba(255,255,255,0.04)",
                     padding: "18px 18px",
                     fontSize: 20,
                     lineHeight: 1.35,
