@@ -82,9 +82,10 @@ function TierCardBody({ tier }: { tier: PricingTier }) {
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="my-auto text-[#05070b]">
+    <section id="pricing" className="relative text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
         <SectionHeading
+          inverse
           eyebrow="Pricing"
           title={
             <>
@@ -109,7 +110,7 @@ export function PricingSection() {
             ) : (
               <article
                 key={tier.name}
-                className="rounded-[2rem] border border-[#dbe4f2] bg-white p-6 sm:p-7"
+                className="rounded-[2rem] border border-[#dbe4f2] bg-white p-6 text-[#05070b] sm:p-7"
               >
                 <TierCardBody tier={tier} />
               </article>

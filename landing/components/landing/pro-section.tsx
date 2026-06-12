@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Fragment, type CSSProperties } from "react";
-import { proLedger, proPillars, proTracks } from "@/data/landing-content";
+import { proLedger } from "@/data/landing-content";
 import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "./icons";
 import { Reveal } from "./reveal";
@@ -46,23 +46,6 @@ export function ProSection() {
           title="Targets that move. Eight weeks, one rough patch, no reset."
           description="Log each session. The engine decides — advance, hold, or regress — and writes next week's targets."
         />
-
-        <Reveal stagger className="mt-10 grid gap-4 sm:grid-cols-3">
-          {proPillars.map((pillar, index) => (
-            <div
-              key={pillar.label}
-              className="rv rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-5"
-              style={delay(index * 90)}
-            >
-              <p className="text-[0.68rem] tracking-[0.24em] text-[#8ab4ff] uppercase">
-                {pillar.label}
-              </p>
-              <p className="mt-3 text-sm leading-6 text-white/82">
-                {pillar.value}
-              </p>
-            </div>
-          ))}
-        </Reveal>
 
         <Reveal stagger className="mt-12">
           <div className="rounded-[2rem] border border-white/12 bg-white/[0.04] p-6 sm:p-8">
@@ -171,20 +154,7 @@ export function ProSection() {
           </div>
         </Reveal>
 
-        <div className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2.5 text-sm">
-            <span className="text-xs tracking-[0.24em] text-white/45 uppercase">
-              Goal plans
-            </span>
-            {proTracks.map((track) => (
-              <span
-                key={track}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm text-white/70"
-              >
-                {track}
-              </span>
-            ))}
-          </div>
+        <div className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-end">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Link
               href={siteConfig.proCtaHref}

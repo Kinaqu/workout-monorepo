@@ -23,6 +23,8 @@
 }
 
 html {
+  /* Dark UA chrome (scrollbars, form controls) — the page is dark-only. */
+  color-scheme: dark;
   scroll-behavior: smooth;
 }
 
@@ -46,7 +48,7 @@ body {
 }
 
 /* ===== Backdrop stage =====
-   One fixed scene behind the whole deck. Orbs are pre-soft radial gradients
+   One fixed scene behind the whole page. Orbs are pre-soft radial gradients
    (no blur filter anywhere); the inner core breathes on a time loop, the
    outer wrapper evolves with page scroll where scroll-driven animations are
    supported. */
@@ -159,159 +161,153 @@ body {
   }
 }
 
-/* ===== Card deck =====
-   Read-then-pin geometry: each item carries a 100svh spacer (::after) that
-   the next item's negative margin cancels, so page height and flow positions
-   match plain stacking. A card pins at top = 100svh - ownHeight, i.e. only
-   once fully read, and stays pinned for exactly 100svh of scroll while the
-   next card slides over it. */
-.deck {
+/* ===== Cinematic hero =====
+   Skeuomorphic materials from the reference, retuned onto Kinova tokens so
+   the hero sits in the same dark/glass world as the rest of the page. The
+   motion is GSAP-driven (see cinematic-hero.tsx); these are static surfaces.
+   The hero renders fully visible by default; GSAP only sets its cinematic
+   initial state on desktop with motion, so no-JS / reduced-motion / mobile
+   all see a readable, settled composition. */
+.cine-card {
   position: relative;
-  z-index: 1;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0c1b3a 0%, #08111f 55%, #05070b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 60px 160px -20px rgba(5, 7, 11, 0.75),
+    0 20px 50px -20px rgba(5, 7, 11, 0.7),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 6px rgba(5, 7, 11, 0.7);
 }
 
-.deck-item + .deck-item {
-  margin-top: -100svh;
-}
-
-.deck-item:not(:last-child)::after {
-  content: "";
-  display: block;
-  height: 100svh;
-}
-
-.deck-card {
-  position: sticky;
-  /* The pin point (100svh − own height) is measured by the DeckPins island:
-     percentage insets on sticky elements resolve against the scrollport, so
-     it cannot be expressed in pure CSS. Without JS: auto → no pin, the page
-     scrolls normally and stays fully readable. */
-  top: var(--deck-top, auto);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  isolation: isolate; /* inner z-indexes (header pill) stay inside the card */
-  overflow: clip; /* radius clipping; unlike hidden, keeps inner sticky
-                     elements bound to the viewport scrollport */
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 0;
-  border-radius: 1.75rem 1.75rem 0 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 140px),
-    rgba(8, 13, 24, 0.6);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 -28px 80px rgba(5, 7, 11, 0.5);
-}
-
-.deck-card::before {
+.cine-card::before {
   content: "";
   position: absolute;
   top: 0;
-  left: 1.75rem;
-  right: 1.75rem;
+  left: 8%;
+  right: 8%;
   height: 1px;
   z-index: 6;
   background: linear-gradient(90deg, transparent, rgba(138, 180, 255, 0.55), transparent);
+  pointer-events: none;
 }
 
-.deck-item:last-child .deck-card {
-  position: relative; /* tail of the deck scrolls out normally */
-  top: auto;
+.cine-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  opacity: 0.45;
 }
 
-/* Pricing: the single solid light card — the decision moment. */
-.deck-card--solid {
-  background: #f4f8ff;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.deck-card--solid::before {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-}
-
-/* Dim veil over a card while the next one covers it (opacity only). */
-.deck-veil {
+/* Mouse-tracked sheen + film grain are decorative; only paint them once JS
+   has mounted (`.cine-js`) and only on desktop with motion allowed. */
+.cine-sheen {
   position: absolute;
   inset: 0;
   z-index: 5;
   border-radius: inherit;
-  background: #05070b;
-  opacity: 0;
   pointer-events: none;
+  background: radial-gradient(
+    440px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(138, 180, 255, 0.1),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .deck-card:not(.deck-card--solid) {
-    background: rgba(7, 11, 19, 0.94);
+.cine-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: overlay;
+  background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23n)"/></svg>');
+}
+
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .cine-js .cine-grain {
+    opacity: 0.05;
+  }
+
+  .cine-js .cine-sheen {
+    opacity: 1;
   }
 }
 
-@media (max-width: 768px) {
-  /* No viewport-sized blur on mobile GPUs. */
-  .deck-card:not(.deck-card--solid) {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: rgba(7, 11, 19, 0.9);
-  }
+.cine-bezel {
+  background: linear-gradient(145deg, #1a1f2b, #05070b);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.06),
+    0 40px 90px -15px rgba(5, 7, 11, 0.8),
+    0 12px 24px -8px rgba(5, 7, 11, 0.7);
 }
 
-/* ===== Scroll-driven enhancement (Chromium / Safari 26; Firefox keeps the
-   plain cover + breathing sky) ===== */
-@supports (animation-timeline: scroll()) {
-  .deck-item {
-    view-timeline: --deck-item block;
+.cine-screen {
+  background: #070d16;
+  box-shadow: inset 0 0 18px rgba(5, 7, 11, 0.9);
+}
+
+.cine-badge {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 18px 50px rgba(5, 7, 11, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+/* Progress ring: rotate so the stroke starts at 12 o'clock; dash values are
+   set per-instance inline (circumference) so the component controls the fill. */
+.cine-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-linecap: round;
+}
+
+/* Tactile store badge buttons (App Store / Google Play). */
+.cine-store-badge {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    0 10px 30px rgba(5, 7, 11, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition:
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    background 0.3s ease;
+}
+
+.cine-store-badge:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+}
+
+/* Headline and store CTA share the top zone on the cinematic desktop so they
+   can cross-fade in place. This condition mirrors the GSAP matchMedia query
+   exactly: every other state (mobile, reduced motion, no-JS) keeps them in
+   readable vertical flow with both visible. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .cine-js .cine-top {
+    min-height: 210px;
   }
 
-  /* The timeline subject is the item (it never sticks, so its geometry is
-     linear). Covered phase in exit-range terms: from (100% − 200svh) to
-     (100% − 100svh) of the item height — for an exactly-viewport card this
-     is exit 0% → 50%. */
-  .deck-item:not(:last-child) .deck-card {
-    animation-name: deck-file-away;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: --deck-item;
-    animation-range: exit calc(100% - 200svh) exit calc(100% - 100svh);
-    transform-origin: 50% calc(100% - 50svh); /* center of the visible part */
-  }
-
-  .deck-item:not(:last-child) .deck-veil {
-    animation-name: deck-veil-dim;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: --deck-item;
-    animation-range: exit calc(100% - 200svh) exit calc(100% - 100svh);
-  }
-
-  .stage-orb--a {
-    animation-name: stage-orb-a-evolve;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: scroll(root);
-  }
-
-  .stage-orb--b {
-    animation-name: stage-orb-b-evolve;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: scroll(root);
-  }
-
-  .stage-orb--c {
-    animation-name: stage-orb-c-evolve;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: scroll(root);
-  }
-
-  .stage-grid {
-    animation-name: stage-grid-parallax;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: scroll(root);
+  .cine-js .cine-top .cine-headline,
+  .cine-js .cine-top .cine-cta {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -320,12 +316,6 @@ body {
    animation is skipped (no JS needed, reduced motion safe, zero CLS). */
 .hero-enter {
   animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
-/* Retriggered via React key remount on each value change in the hero demo. */
-.value-swap {
-  display: inline-block;
-  animation: value-swap 0.32s ease-out;
 }
 
 /* In-view reveals. Server HTML never hides content: the Reveal island adds
@@ -372,50 +362,6 @@ body {
   transition-delay: var(--d, 0ms);
 }
 
-.blue-orb {
-  animation: orb-shift 12s ease-in-out infinite;
-}
-
-.marquee-shell {
-  position: relative;
-  overflow: hidden;
-}
-
-.marquee-shell::before,
-.marquee-shell::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 14%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.marquee-shell::before {
-  left: 0;
-  background: linear-gradient(90deg, var(--marquee-fade, #08111f) 0%, transparent 100%);
-}
-
-.marquee-shell::after {
-  right: 0;
-  background: linear-gradient(270deg, var(--marquee-fade, #08111f) 0%, transparent 100%);
-}
-
-.marquee-track {
-  display: flex;
-  width: max-content;
-  gap: 1rem;
-  padding-inline: 1.25rem;
-  animation: marquee-scroll 36s linear infinite;
-}
-
-@media (hover: hover) {
-  .marquee-shell:hover .marquee-track {
-    animation-play-state: paused;
-  }
-}
-
 /* Traveling highlight on the Pro pricing card: a conic gradient painted once
    on an oversized pseudo-element, rotated via transform behind a masked inner
    panel. The background itself never animates. */
@@ -444,18 +390,45 @@ summary::-webkit-details-marker {
   display: none;
 }
 
+/* ===== Scroll-driven enhancement (Chromium / Safari 26; Firefox keeps the
+   breathing sky) ===== */
+@supports (animation-timeline: scroll()) {
+  .stage-orb--a {
+    animation-name: stage-orb-a-evolve;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+  }
+
+  .stage-orb--b {
+    animation-name: stage-orb-b-evolve;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+  }
+
+  .stage-orb--c {
+    animation-name: stage-orb-c-evolve;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+  }
+
+  .stage-grid {
+    animation-name: stage-grid-parallax;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
   .hero-enter,
-  .value-swap,
-  .blue-orb,
-  .marquee-track,
   .border-spin::before,
-  .deck-card,
-  .deck-veil,
   .stage-orb--a,
   .stage-orb--b,
   .stage-orb--c,
@@ -466,6 +439,19 @@ summary::-webkit-details-marker {
 
   .stage-glow {
     display: none !important;
+  }
+
+  /* GSAP skips the cinematic timeline under reduced motion; this is the
+     belt-and-suspenders so nothing is left mid-transform/blur. */
+  .cine-headline,
+  .cine-card,
+  .cine-phone,
+  .cine-cta,
+  .cine-badge,
+  .cine-side {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
   }
 
   /* Safety net on top of the JS-side no-ops in the client islands. */
@@ -489,34 +475,6 @@ summary::-webkit-details-marker {
   }
 }
 
-@keyframes value-swap {
-  from {
-    opacity: 0;
-    transform: translateY(0.45em);
-  }
-}
-
-@keyframes orb-shift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(10px, -12px, 0) scale(1.08);
-  }
-}
-
-@keyframes marquee-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @keyframes border-rotate {
   to {
     transform: rotate(1turn);
@@ -533,19 +491,7 @@ summary::-webkit-details-marker {
   }
 }
 
-@keyframes deck-file-away {
-  to {
-    transform: scale(0.95);
-  }
-}
-
-@keyframes deck-veil-dim {
-  to {
-    opacity: 0.5;
-  }
-}
-
-/* Page-region marks (hero ~0-15%, free ~15-32%, Pro ~32-58%, pricing ~58-72%,
+/* Page-region marks (hero ~0-18%, free ~18-34%, Pro ~34-58%, pricing ~58-72%,
    tail ~72-100%) — aesthetic, tuned against screenshots. */
 @keyframes stage-orb-a-evolve {
   0% {

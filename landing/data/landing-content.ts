@@ -1,7 +1,6 @@
 export const navLinks = [
   { label: "Free Routine", href: "#daily-minimum" },
   { label: "Progression", href: "#pro" },
-  { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;
@@ -102,19 +101,6 @@ export const heroDemoWeeks: readonly HeroDemoWeek[] = [
   },
 ];
 
-export const catalogTicker = [
-  "Push-ups · 8–12",
-  "Bodyweight squats · 12–15",
-  "Dips · 10–15",
-  "Bulgarian split squats · 8–12",
-  "Side plank · 30–45s",
-  "Hollow body hold · 20–40s",
-  "Dead bug · 12–16",
-  "Bird dog · 10–14",
-  "Single-leg balance · 40–60s",
-  "Mobility day",
-] as const;
-
 export const maintenanceRoutine = [
   { name: "Push-ups", dose: "10 reps" },
   { name: "Bodyweight squats", dose: "10 reps" },
@@ -145,41 +131,6 @@ export const proLedger = {
   ],
   caption: "Week 5 was rough. The plan bent. The direction didn't.",
 } as const;
-
-export const proPillars = [
-  { label: "Signal", value: "Your logged sessions" },
-  { label: "Decision", value: "Advance · hold · regress" },
-  { label: "Output", value: "Next week's exact targets" },
-] as const;
-
-export const proTracks = [
-  "Push-up milestones",
-  "Plank endurance",
-  "Lower-body strength",
-] as const;
-
-export const flowSteps = [
-  {
-    number: "01",
-    title: "Profile in",
-    description: "Set your level, gear, schedule, and movement limits.",
-  },
-  {
-    number: "02",
-    title: "Week out",
-    description: "Get this week's plan, built for your actual capacity.",
-  },
-  {
-    number: "03",
-    title: "Signal back",
-    description: "Train, then log how it actually went.",
-  },
-  {
-    number: "04",
-    title: "Targets adjust",
-    description: "Advance, hold, or regress — next week is already written.",
-  },
-] as const;
 
 export type PricingTier = {
   name: string;
@@ -250,15 +201,5 @@ export const faqs = [
     question: "What happens after a rough week?",
     answer:
       "The engine holds or regresses your targets instead of pretending the week didn't happen. The direction stays; only the next step changes.",
-  },
-  {
-    question: "Do I need a gym, or experience?",
-    answer:
-      "No. Everything is built for bodyweight and minimal gear, and targets start where you are — eight push-ups is a fine week one.",
-  },
-  {
-    question: "What happens after I apply?",
-    answer:
-      "You share your training context, the team reviews fit, and new spots open in small batches with a clear email follow-up.",
   },
 ] as const;
