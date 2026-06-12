@@ -3,15 +3,11 @@ import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "./icons";
 import { LandingHeader } from "./header";
 import { HeroDemo } from "./hero-demo";
-import { PointerGlow } from "./pointer-glow";
 
 export function HeroSection() {
   return (
-    <section className="hero-grid relative overflow-hidden border-b border-white/8">
-      <div className="hero-radial absolute inset-0" />
-      <div className="hero-sheen absolute inset-x-0 top-0 h-px" />
-      <PointerGlow />
-      <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-6 sm:px-8 lg:px-12 lg:pb-28">
+    <section className="relative">
+      <div className="relative mx-auto max-w-7xl px-6 pb-12 pt-6 sm:px-8 lg:px-12 lg:pb-16">
         <LandingHeader />
 
         <div className="hero-enter inline-flex items-center gap-3 rounded-full border border-[#125bff]/20 bg-[#125bff]/10 px-4 py-2 text-xs font-semibold tracking-[0.22em] text-[#9fbeff] uppercase">

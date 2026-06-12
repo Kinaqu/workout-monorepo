@@ -5,7 +5,7 @@ import { siteConfig } from "@/data/site-config";
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-white/8 bg-[#05070b] text-white">
+    <footer className="border-t border-white/8 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:px-12">
         <div className="max-w-md">
           <BrandLogo

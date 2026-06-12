@@ -4,7 +4,7 @@ export function CatalogMarquee() {
   return (
     <section
       aria-label="Exercise catalog sample"
-      className="border-b border-white/8 bg-[#08111f] py-5 text-white"
+      className="bg-[#08111f] py-5 text-white"
     >
       <div className="marquee-shell">
         <div className="marquee-track">

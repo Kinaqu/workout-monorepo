@@ -2,17 +2,16 @@ import Link from "next/link";
 import { maintenanceRoutine } from "@/data/landing-content";
 import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "./icons";
-import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
 
-/* Deliberately the stillest section on the page: maintenance is static,
-   so the free offer gets receipt typography and no kinetic treatment. */
+/* Deliberately the stillest card in the deck: maintenance is static, so the
+   free offer gets receipt typography and no kinetic treatment. */
 export function FreeSection() {
   return (
-    <section id="daily-minimum" className="bg-[#05070b] text-white">
+    <section id="daily-minimum" className="my-auto text-white">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-center lg:gap-20">
-          <Reveal>
+          <div>
             <SectionHeading
               inverse
               eyebrow="Free · Every day"
@@ -31,9 +30,9 @@ export function FreeSection() {
               Start free
               <ArrowIcon />
             </Link>
-          </Reveal>
+          </div>
 
-          <Reveal delay={120}>
+          <div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-7">
               <p className="text-xs tracking-[0.24em] text-white/42 uppercase">
                 The routine · fixed
@@ -62,7 +61,7 @@ export function FreeSection() {
                 <span className="font-semibold text-white/80">≈ 5 minutes</span>
               </div>
             </div>
-          </Reveal>
+          </div>
         </div>
       </div>
     </section>

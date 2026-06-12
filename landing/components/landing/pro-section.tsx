@@ -38,20 +38,14 @@ export function ProSection() {
   );
 
   return (
-    <section
-      id="pro"
-      className="relative overflow-hidden border-y border-white/8 bg-[linear-gradient(180deg,_#08111f,_#0b1626_55%,_#08111f)] text-white"
-    >
-      <div className="absolute -top-32 right-[-8rem] h-80 w-80 rounded-full bg-[#125bff]/14 blur-3xl" />
+    <section id="pro" className="relative text-white">
       <div className="relative mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-32">
-        <Reveal>
-          <SectionHeading
-            inverse
-            eyebrow="Kinova Pro · The progression engine"
-            title="Targets that move. Eight weeks, one rough patch, no reset."
-            description="Log each session. The engine decides — advance, hold, or regress — and writes next week's targets."
-          />
-        </Reveal>
+        <SectionHeading
+          inverse
+          eyebrow="Kinova Pro · The progression engine"
+          title="Targets that move. Eight weeks, one rough patch, no reset."
+          description="Log each session. The engine decides — advance, hold, or regress — and writes next week's targets."
+        />
 
         <Reveal stagger className="mt-10 grid gap-4 sm:grid-cols-3">
           {proPillars.map((pillar, index) => (
@@ -71,7 +65,7 @@ export function ProSection() {
         </Reveal>
 
         <Reveal stagger className="mt-12">
-          <div className="rounded-[2rem] border border-white/12 bg-[#0a1322]/85 p-6 sm:p-8">
+          <div className="rounded-[2rem] border border-white/12 bg-white/[0.04] p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs tracking-[0.24em] text-white/45 uppercase">
                 Eight weeks of engine output
@@ -177,7 +171,7 @@ export function ProSection() {
           </div>
         </Reveal>
 
-        <Reveal className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2.5 text-sm">
             <span className="text-xs tracking-[0.24em] text-white/45 uppercase">
               Goal plans
@@ -203,7 +197,7 @@ export function ProSection() {
               No price yet — founding pricing announced before launch.
             </p>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

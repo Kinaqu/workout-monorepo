@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "./icons";
-import { Reveal } from "./reveal";
 
 export function FinalCtaSection() {
   return (
-    <section className="bg-[linear-gradient(180deg,_#09111d,_#05070b)] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-[linear-gradient(135deg,_rgba(18,91,255,0.26),_rgba(255,255,255,0.04)_38%,_rgba(255,255,255,0.02)_100%)] px-6 py-12 shadow-[0_40px_120px_rgba(5,7,11,0.55)] sm:px-10 lg:px-14 lg:py-16">
+    <section className="text-white">
+      <div className="mx-auto max-w-7xl px-6 pb-24 sm:px-8 lg:px-12">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-[linear-gradient(135deg,_rgba(18,91,255,0.26),_rgba(255,255,255,0.04)_38%,_rgba(255,255,255,0.02)_100%)] px-6 py-12 shadow-[0_40px_120px_rgba(5,7,11,0.55)] sm:px-10 lg:px-14 lg:py-16">
             <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#125bff]/28 blur-3xl" />
             <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div className="max-w-3xl">
@@ -41,8 +39,7 @@ export function FinalCtaSection() {
                 </Link>
               </div>
             </div>
-          </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

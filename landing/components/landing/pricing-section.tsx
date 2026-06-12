@@ -1,11 +1,7 @@
 import Link from "next/link";
-import { type CSSProperties } from "react";
 import { pricingTiers, type PricingTier } from "@/data/landing-content";
 import { ArrowIcon, CheckIcon } from "./icons";
-import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
-
-const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
 function TierCardBody({ tier }: { tier: PricingTier }) {
   const dark = tier.highlighted;
@@ -86,28 +82,25 @@ function TierCardBody({ tier }: { tier: PricingTier }) {
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="bg-[#f4f8ff] text-[#05070b]">
+    <section id="pricing" className="my-auto text-[#05070b]">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
-        <Reveal>
-          <SectionHeading
-            eyebrow="Pricing"
-            title={
-              <>
-                Free holds the line.{" "}
-                <span className="whitespace-nowrap">Pro moves it.</span>
-              </>
-            }
-            description="The daily minimum is free for everyone, forever. The progression engine is what you pay for — once it has a price."
-          />
-        </Reveal>
+        <SectionHeading
+          eyebrow="Pricing"
+          title={
+            <>
+              Free holds the line.{" "}
+              <span className="whitespace-nowrap">Pro moves it.</span>
+            </>
+          }
+          description="The daily minimum is free for everyone, forever. The progression engine is what you pay for — once it has a price."
+        />
 
-        <Reveal stagger className="mt-14 grid items-stretch gap-5 lg:grid-cols-2">
-          {pricingTiers.map((tier, index) =>
+        <div className="mt-14 grid items-stretch gap-5 lg:grid-cols-2">
+          {pricingTiers.map((tier) =>
             tier.highlighted ? (
               <div
                 key={tier.name}
-                className="rv border-spin rounded-[2rem] bg-[#23355c] p-px"
-                style={delay(index * 140)}
+                className="border-spin rounded-[2rem] bg-[#23355c] p-px"
               >
                 <article className="relative h-full rounded-[calc(2rem-1px)] bg-[#08111f] p-6 text-white sm:p-7">
                   <TierCardBody tier={tier} />
@@ -116,14 +109,13 @@ export function PricingSection() {
             ) : (
               <article
                 key={tier.name}
-                className="rv rounded-[2rem] border border-[#dbe4f2] bg-white p-6 sm:p-7"
-                style={delay(index * 140)}
+                className="rounded-[2rem] border border-[#dbe4f2] bg-white p-6 sm:p-7"
               >
                 <TierCardBody tier={tier} />
               </article>
             ),
           )}
-        </Reveal>
+        </div>
       </div>
     </section>
   );

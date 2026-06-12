@@ -7,15 +7,18 @@ const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="bg-[#05070b] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
-        <Reveal>
-          <SectionHeading
-            inverse
-            eyebrow="How it works · 20–45 minute sessions"
-            title="Profile in. Week out. Signal back."
-          />
-        </Reveal>
+    // scroll-margin keeps the anchor inside the Pro card's reading phase:
+    // without it the hash lands in the deck's pin window, already covered.
+    <section
+      id="how-it-works"
+      className="scroll-mt-[calc(100svh-29rem)] text-white"
+    >
+      <div className="mx-auto max-w-7xl px-6 pb-24 sm:px-8 lg:px-12 lg:pb-28">
+        <SectionHeading
+          inverse
+          eyebrow="How it works · 20–45 minute sessions"
+          title="Profile in. Week out. Signal back."
+        />
 
         <Reveal stagger className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {flowSteps.map((step, index) => (
