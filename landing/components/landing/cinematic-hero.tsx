@@ -111,8 +111,9 @@ export function CinematicHero() {
             .to(
               headline,
               {
+                // No filter: blur here — animating a gaussian blur re-renders
+                // every scrubbed frame and was the main source of hero jank.
                 autoAlpha: 0,
-                filter: "blur(8px)",
                 scale: 1.04,
                 duration: 1.6,
                 ease: "power2.in",
@@ -168,6 +169,17 @@ export function CinematicHero() {
             duration: 0.6,
             ease: "power3",
           });
+          // Cache the card rect; only re-measure when layout could have changed
+          // (resize / scroll), not on every pointer frame — a getBoundingClientRect
+          // per move forces a synchronous layout and added to the scrub jank.
+          let cardRect = card.getBoundingClientRect();
+          let rectDirty = false;
+          const markDirty = () => {
+            rectDirty = true;
+          };
+          window.addEventListener("resize", markDirty);
+          window.addEventListener("scroll", markDirty, { passive: true });
+
           let frame = 0;
           let px = 0;
           let py = 0;
@@ -177,16 +189,19 @@ export function CinematicHero() {
             if (frame) return;
             frame = requestAnimationFrame(() => {
               frame = 0;
+              if (rectDirty) {
+                cardRect = card.getBoundingClientRect();
+                rectDirty = false;
+              }
               rotY((px / window.innerWidth - 0.5) * 20);
               rotX(-(py / window.innerHeight - 0.5) * 20);
-              const r = card.getBoundingClientRect();
               card.style.setProperty(
                 "--mouse-x",
-                `${((px - r.left) / r.width) * 100}%`,
+                `${((px - cardRect.left) / cardRect.width) * 100}%`,
               );
               card.style.setProperty(
                 "--mouse-y",
-                `${((py - r.top) / r.height) * 100}%`,
+                `${((py - cardRect.top) / cardRect.height) * 100}%`,
               );
             });
           };
@@ -194,6 +209,8 @@ export function CinematicHero() {
 
           return () => {
             window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("resize", markDirty);
+            window.removeEventListener("scroll", markDirty);
             if (frame) cancelAnimationFrame(frame);
           };
         },

@@ -135,20 +135,25 @@ export const proLedger = {
 export type PricingTier = {
   name: string;
   tagline: string;
-  priceLabel: string;
+  /** USD; 0 = free. priceAnnual is the full yearly charge. */
+  priceMonthly: number;
+  priceAnnual: number;
   badge?: string;
   description: string;
+  /** "Everything in Free, plus" — shown above this tier's added features. */
+  includes?: string;
   points: readonly string[];
   highlighted: boolean;
 };
 
-// Pricing lives in the app — these tiers are a compact reminder of what each
-// plan adds, not a checkout. No numbers are shown until the apps ship.
+// Tiers are cumulative: each adds to the one before it. Subscriptions are billed
+// through the App Store / Google Play; the section shows a monthly/annual toggle.
 export const pricingTiers: readonly PricingTier[] = [
   {
     name: "Free",
     tagline: "Stay in shape",
-    priceLabel: "Free, forever",
+    priceMonthly: 0,
+    priceAnnual: 0,
     description:
       "Generated daily workouts that keep your baseline on the days nothing else happens.",
     points: [
@@ -161,10 +166,12 @@ export const pricingTiers: readonly PricingTier[] = [
   {
     name: "Pro",
     tagline: "The progression engine",
-    priceLabel: "In the app",
+    priceMonthly: 6.99,
+    priceAnnual: 49.99,
     badge: "Recommended",
     description:
       "An adaptive week that moves with how training actually goes.",
+    includes: "Everything in Free, plus",
     points: [
       "Adaptive weekly plans from your level, gear, and schedule",
       "Advance / hold / regress after every logged session",
@@ -175,9 +182,11 @@ export const pricingTiers: readonly PricingTier[] = [
   {
     name: "Premium",
     tagline: "Personal AI coach",
-    priceLabel: "In the app",
+    priceMonthly: 12.99,
+    priceAnnual: 99.99,
     description:
       "A personal AI that trains alongside you — watching sessions and reading your notes.",
+    includes: "Everything in Pro, plus",
     points: [
       "AI that reviews your sessions and notes, and adapts faster",
       "Explains why each target changed and how to nail it",
@@ -201,7 +210,7 @@ export const faqs = [
   {
     question: "How much does it cost?",
     answer:
-      "Pricing lives in the app. Free stays free, forever — Pro and Premium pricing is shown in-app and announced at launch.",
+      "Free stays free, forever. Pro is $6.99/mo ($49.99/yr) and Premium is $12.99/mo ($99.99/yr) — paying yearly saves up to 40%. Subscriptions are billed and managed through the App Store or Google Play.",
   },
   {
     question: "What happens after a rough week?",
