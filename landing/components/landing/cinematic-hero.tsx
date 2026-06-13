@@ -236,36 +236,29 @@ export function CinematicHero() {
         ref={stageRef}
         className="relative flex min-h-[100svh] flex-col items-center justify-center gap-[2svh] px-6 pb-10 pt-6 sm:px-8 lg:px-12"
       >
-        {/* Top zone: headline + CTA. In flow by default (both readable for
-            no-JS / mobile / reduced motion); cross-faded in place on the
-            cinematic desktop. */}
-        <div className="cine-top relative flex w-full max-w-6xl flex-col items-center">
-          {/* Headline — the LCP, visible from SSR; fades as the card takes over */}
-          <div className="cine-headline w-full text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#125bff]/25 bg-[#125bff]/10 px-4 py-2 text-xs font-semibold tracking-[0.22em] text-[#9fbeff] uppercase">
-              The training app · iOS &amp; Android soon
-            </span>
-            <h1 className="mt-6 font-display text-5xl leading-[0.95] font-semibold tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
-              The daily minimum is free.
-              <br />
-              <span className="text-[#8ab4ff]">Progression is the product.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">
-              A free daily routine holds your baseline. Kinova Pro writes next
-              week&apos;s targets — advance, hold, or regress.
-            </p>
-          </div>
-
-          {/* Store CTA — visible from SSR; emphasized at the end of the scrub */}
-          <div className="cine-cta mt-8 flex w-full justify-center">
-            <StoreBadges />
-          </div>
+        {/* Headline — the LCP, visible from SSR. On the cinematic desktop it
+            overlays the stage and cross-fades out as the card takes over, so the
+            card + CTA centre with only a small gap on top; on mobile / reduced
+            motion it stays in flow above the CTA. */}
+        <div className="cine-headline order-1 w-full max-w-6xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#125bff]/25 bg-[#125bff]/10 px-4 py-2 text-xs font-semibold tracking-[0.22em] text-[#9fbeff] uppercase">
+            The training app · iOS &amp; Android soon
+          </span>
+          <h1 className="mt-6 font-display text-5xl leading-[0.95] font-semibold tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
+            The daily minimum is free.
+            <br />
+            <span className="text-[#8ab4ff]">Progression is the product.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">
+            A free daily routine holds your baseline. Kinova Pro writes next
+            week&apos;s targets — advance, hold, or regress.
+          </p>
         </div>
 
         {/* The premium card: side copy · phone · wordmark. Height follows the
             phone (no fixed clamp) so the phone is never clipped; vertical
             padding gives it breathing room inside the card. */}
-        <div className="cine-card relative w-[92vw] max-w-6xl rounded-[2.25rem] px-6 py-6 sm:rounded-[2.5rem] sm:px-10 lg:py-6">
+        <div className="cine-card order-3 relative w-[92vw] max-w-6xl rounded-[2.25rem] px-6 py-6 sm:rounded-[2.5rem] sm:px-10 md:order-2 lg:py-6">
           <div className="cine-grid" aria-hidden="true" />
           <div className="cine-sheen" aria-hidden="true" />
           <div className="cine-grain" aria-hidden="true" />
@@ -292,6 +285,12 @@ export function CinematicHero() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Store CTA — the primary action, revealed just below the phone at the
+            end of the scrub. On mobile it sits high, right under the headline. */}
+        <div className="cine-cta order-2 flex w-full justify-center md:order-3">
+          <StoreBadges />
         </div>
       </section>
     </div>

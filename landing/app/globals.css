@@ -315,17 +315,14 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-/* Headline and store CTA share the top zone on the cinematic desktop so they
-   can cross-fade in place. This condition mirrors the GSAP matchMedia query
-   exactly: every other state (mobile, reduced motion, no-JS) keeps them in
-   readable vertical flow with both visible. */
+/* On the cinematic desktop the headline overlays the whole stage and cross-
+   fades out as the card takes over, so the card and the store CTA beneath it
+   centre on screen with only a small gap on top — the badges land right under
+   the phone. This mirrors the GSAP matchMedia query exactly; every other state
+   (mobile, reduced motion, no-JS) keeps the headline, card, and CTA in readable
+   vertical flow. */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .cine-js .cine-top {
-    min-height: 134px;
-  }
-
-  .cine-js .cine-top .cine-headline,
-  .cine-js .cine-top .cine-cta {
+  .cine-js .cine-headline {
     position: absolute;
     inset: 0;
     margin: 0;

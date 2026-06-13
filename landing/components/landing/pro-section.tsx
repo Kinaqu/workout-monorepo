@@ -62,7 +62,10 @@ export function ProSection() {
               style={delay(150)}
             />
 
-            <div className="mt-4 overflow-x-auto pb-1">
+            {/* overflow-y-hidden is load-bearing: overflow-x-auto alone makes
+                the cross-axis compute to `auto`, so the reveal's translateY
+                briefly triggers a vertical scrollbar on load. */}
+            <div className="mt-4 overflow-x-auto overflow-y-hidden pb-1">
               <div className="grid min-w-[640px] grid-cols-[minmax(120px,1.3fr)_repeat(8,minmax(0,1fr))]">
                 <div />
                 {weekNumbers.map((week, column) => {
