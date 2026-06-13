@@ -235,17 +235,27 @@ body {
   z-index: 7;
   pointer-events: none;
   opacity: 0;
-  mix-blend-mode: overlay;
+  /* No mix-blend-mode — blend modes force a repaint of the whole card region
+     every frame while the card scales/fades. A faint normal-blend grain is
+     effectively as subtle and far cheaper. */
   background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23n)"/></svg>');
 }
 
 @media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
   .cine-js .cine-grain {
-    opacity: 0.05;
+    opacity: 0.04;
   }
 
   .cine-js .cine-sheen {
     opacity: 1;
+  }
+
+  /* Promote the heavy animated layers onto the compositor so the card's large
+     box-shadow and the 3D phone paint once and only transform during the scrub
+     (instead of repainting every frame). */
+  .cine-js .cine-card,
+  .cine-js .cine-phone-tilt {
+    will-change: transform;
   }
 }
 
@@ -274,9 +284,10 @@ body {
 
 .cine-badge {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  /* Static frosted fill instead of backdrop-filter: blur — the live blur was
+     re-rendered every frame as these badges revealed and rode the pointer tilt,
+     a major source of hero jank. */
+  background: linear-gradient(135deg, rgba(28, 40, 66, 0.92), rgba(11, 17, 30, 0.92));
   box-shadow:
     0 18px 50px rgba(5, 7, 11, 0.5),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
