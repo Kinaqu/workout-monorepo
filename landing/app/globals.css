@@ -26,12 +26,19 @@ html {
   /* Dark UA chrome (scrollbars, form controls) — the page is dark-only. */
   color-scheme: dark;
   scroll-behavior: smooth;
+  /* Reserve the scrollbar gutter so the vertical bar can't flash in/out and
+     shift layout when the GSAP pin spacer changes document height on refresh. */
+  scrollbar-gutter: stable;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
+  /* Hero 3D transforms and the oversized wordmark must never produce a
+     horizontal scrollbar. `clip` (not `hidden`) keeps the window as the scroll
+     container, so the position:fixed GSAP pin and backdrop are unaffected. */
+  overflow-x: clip;
 }
 
 * {
@@ -255,6 +262,16 @@ body {
   box-shadow: inset 0 0 18px rgba(5, 7, 11, 0.9);
 }
 
+/* The phone's height is set by its fixed-size inner content (~560px), not its
+   width — so on short laptop viewports it would run past the fold. `zoom`
+   shrinks it crisply (and shrinks the layout box, unlike transform: scale) so
+   the whole composition fits one screen. Tall screens keep it full size. */
+@media (min-width: 768px) and (max-height: 880px) {
+  .cine-phone {
+    zoom: 0.82;
+  }
+}
+
 .cine-badge {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
@@ -273,21 +290,29 @@ body {
   stroke-linecap: round;
 }
 
-/* Tactile store badge buttons (App Store / Google Play). */
+/* Store badge buttons (App Store / Google Play) — the page's primary CTA.
+   Solid, elevated, and lit with a brand-blue glow so they read as the heaviest
+   element on the dark stage and pull focus over everything else. */
 .cine-store-badge {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(138, 180, 255, 0.38);
+  background: linear-gradient(180deg, #101d3b 0%, #070d18 100%);
   box-shadow:
-    0 10px 30px rgba(5, 7, 11, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 22px 55px -14px rgba(18, 91, 255, 0.5),
+    0 8px 20px -8px rgba(5, 7, 11, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition:
     transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-    background 0.3s ease;
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .cine-store-badge:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  transform: translateY(-3px);
+  border-color: rgba(138, 180, 255, 0.65);
+  box-shadow:
+    0 30px 70px -12px rgba(18, 91, 255, 0.62),
+    0 10px 24px -8px rgba(5, 7, 11, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* Headline and store CTA share the top zone on the cinematic desktop so they
@@ -296,7 +321,7 @@ body {
    readable vertical flow with both visible. */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .cine-js .cine-top {
-    min-height: 210px;
+    min-height: 134px;
   }
 
   .cine-js .cine-top .cine-headline,
@@ -362,30 +387,6 @@ body {
   transition-delay: var(--d, 0ms);
 }
 
-/* Traveling highlight on the Pro pricing card: a conic gradient painted once
-   on an oversized pseudo-element, rotated via transform behind a masked inner
-   panel. The background itself never animates. */
-.border-spin {
-  position: relative;
-  overflow: hidden;
-}
-
-.border-spin::before {
-  content: "";
-  position: absolute;
-  inset: -150%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    transparent 110deg,
-    rgba(46, 114, 255, 0.85) 170deg,
-    rgba(138, 180, 255, 0.95) 192deg,
-    transparent 260deg,
-    transparent 360deg
-  );
-  animation: border-rotate 7s linear infinite;
-}
-
 summary::-webkit-details-marker {
   display: none;
 }
@@ -428,7 +429,6 @@ summary::-webkit-details-marker {
   }
 
   .hero-enter,
-  .border-spin::before,
   .stage-orb--a,
   .stage-orb--b,
   .stage-orb--c,
@@ -472,12 +472,6 @@ summary::-webkit-details-marker {
   from {
     opacity: 0;
     transform: translateY(22px);
-  }
-}
-
-@keyframes border-rotate {
-  to {
-    transform: rotate(1turn);
   }
 }
 

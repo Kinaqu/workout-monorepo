@@ -47,10 +47,12 @@ export function CinematicHero() {
           );
 
           // Initial cinematic state (headline stays visible = the LCP open).
+          // Gentle offsets — large scale/rotation read as the card/phone
+          // "lurching" on scroll, which the user flagged.
           gsap.set(card, {
             autoAlpha: 0,
-            scale: 0.78,
-            yPercent: 10,
+            scale: 0.88,
+            yPercent: 6,
             transformOrigin: "50% 60%",
           });
           gsap.set(tiltWrap, {
@@ -59,8 +61,8 @@ export function CinematicHero() {
           });
           gsap.set(phone, {
             autoAlpha: 0,
-            rotationY: 34,
-            rotationX: 10,
+            rotationY: 20,
+            rotationX: 6,
             transformPerspective: 1000,
             transformOrigin: "50% 50%",
           });
@@ -75,9 +77,13 @@ export function CinematicHero() {
 
           const tl = gsap.timeline({
             scrollTrigger: {
-              trigger: root,
+              // Trigger on the stage (not root): root includes the sticky
+              // header above the stage, so pinning off root engaged the pin
+              // ~120px early and jumped. Pinning when the stage top reaches the
+              // top is the clean handoff.
+              trigger: stageRef.current,
               start: "top top",
-              end: "+=4500",
+              end: "+=2600",
               pin: stageRef.current,
               scrub: 1,
               anticipatePin: 1,
@@ -85,7 +91,7 @@ export function CinematicHero() {
             },
           });
 
-          tl.to({}, { duration: 0.8 })
+          tl.to({}, { duration: 0.3 })
             .to(
               card,
               { autoAlpha: 1, scale: 1, yPercent: 0, duration: 2, ease: "power2.out" },
@@ -150,9 +156,8 @@ export function CinematicHero() {
             )
             .to(sideL, { autoAlpha: 1, x: 0, duration: 1.2, ease: "power3.out" }, "-=1")
             .to(sideR, { autoAlpha: 1, x: 0, duration: 1.2, ease: "expo.out" }, "<")
-            .to({}, { duration: 1 })
-            .to(cta, { autoAlpha: 1, scale: 1, y: 0, duration: 1.4, ease: "power2.out" })
-            .to(card, { scale: 0.97, duration: 1.4, ease: "power1.inOut" }, "<");
+            .to({}, { duration: 0.6 })
+            .to(cta, { autoAlpha: 1, scale: 1, y: 0, duration: 1.4, ease: "power2.out" });
 
           // Pointer: tilt the phone + move the card sheen (rAF-throttled).
           const rotY = gsap.quickTo(tiltWrap, "rotationY", {
@@ -229,7 +234,7 @@ export function CinematicHero() {
 
       <section
         ref={stageRef}
-        className="relative flex min-h-[100svh] flex-col items-center justify-center gap-[3svh] px-6 pb-10 pt-6 sm:px-8 lg:px-12"
+        className="relative flex min-h-[100svh] flex-col items-center justify-center gap-[2svh] px-6 pb-10 pt-6 sm:px-8 lg:px-12"
       >
         {/* Top zone: headline + CTA. In flow by default (both readable for
             no-JS / mobile / reduced motion); cross-faded in place on the
@@ -257,8 +262,10 @@ export function CinematicHero() {
           </div>
         </div>
 
-        {/* The premium card: side copy · phone · wordmark */}
-        <div className="cine-card relative w-[92vw] max-w-6xl rounded-[2.25rem] px-6 py-6 sm:rounded-[2.5rem] sm:px-10 lg:h-[clamp(380px,54svh,540px)] lg:py-0">
+        {/* The premium card: side copy · phone · wordmark. Height follows the
+            phone (no fixed clamp) so the phone is never clipped; vertical
+            padding gives it breathing room inside the card. */}
+        <div className="cine-card relative w-[92vw] max-w-6xl rounded-[2.25rem] px-6 py-6 sm:rounded-[2.5rem] sm:px-10 lg:py-6">
           <div className="cine-grid" aria-hidden="true" />
           <div className="cine-sheen" aria-hidden="true" />
           <div className="cine-grain" aria-hidden="true" />
@@ -280,7 +287,7 @@ export function CinematicHero() {
             </div>
 
             <div className="cine-side cine-side--r order-2 flex justify-center lg:order-3 lg:justify-end">
-              <span className="font-display text-5xl font-black tracking-tight text-white/90 uppercase lg:text-7xl xl:text-8xl">
+              <span className="max-w-full font-display text-5xl font-black tracking-tight text-white/90 uppercase lg:text-6xl xl:text-7xl">
                 Kinova
               </span>
             </div>

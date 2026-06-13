@@ -1,82 +1,47 @@
-import Link from "next/link";
 import { pricingTiers, type PricingTier } from "@/data/landing-content";
-import { ArrowIcon, CheckIcon } from "./icons";
+import { CheckIcon } from "./icons";
 import { SectionHeading } from "./section-heading";
 
-function TierCardBody({ tier }: { tier: PricingTier }) {
-  const dark = tier.highlighted;
+/* Quiet, informational tier comparison. Pricing is chosen inside the app, so
+   there are no per-tier checkout buttons here — the download badges are the CTA.
+   All three cards share the dark surface; Pro carries a subtle brand tint. */
+function TierCard({ tier }: { tier: PricingTier }) {
   return (
-    <>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p
-            className={`text-xs tracking-[0.26em] uppercase ${
-              dark ? "text-[#8ab4ff]" : "text-[#125bff]"
-            }`}
-          >
-            {tier.name} · {tier.tagline}
-          </p>
-          <h3 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em]">
-            {tier.priceLabel}
-          </h3>
-        </div>
-        {tier.badge ? (
-          <span className="rounded-full border border-[#125bff]/30 bg-[#125bff]/12 px-3 py-1 text-xs font-semibold text-[#9fbeff]">
-            {tier.badge}
-          </span>
-        ) : null}
-      </div>
-      <p
-        className={`mt-5 text-base leading-7 ${
-          dark ? "text-white/72" : "text-[#526072]"
-        }`}
-      >
-        {tier.description}
+    <article
+      className={`relative flex h-full flex-col rounded-[1.75rem] border p-6 sm:p-7 ${
+        tier.highlighted
+          ? "border-[#125bff]/40 bg-[#0c1830]"
+          : "border-white/10 bg-white/[0.03]"
+      }`}
+    >
+      {tier.badge ? (
+        <span className="absolute top-6 right-5 rounded-full border border-[#125bff]/30 bg-[#125bff]/12 px-3 py-1 text-[0.65rem] font-semibold tracking-[0.08em] text-[#9fbeff] uppercase">
+          {tier.badge}
+        </span>
+      ) : null}
+
+      <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
+        {tier.name} · {tier.tagline}
       </p>
-      <div className="mt-6 space-y-3">
+      <h3 className="mt-3 font-display text-2xl font-semibold tracking-[-0.03em] text-white">
+        {tier.priceLabel}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-white/60">{tier.description}</p>
+
+      <ul className="mt-5 space-y-3 border-t border-white/8 pt-5">
         {tier.points.map((point) => (
-          <div
+          <li
             key={point}
-            className={`inline-flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
-              dark
-                ? "border-white/8 bg-white/[0.04] text-white/82"
-                : "border-[#dbe4f2] bg-[#f8fbff] text-[#243041]"
-            }`}
+            className="flex items-start gap-2.5 text-sm leading-6 text-white/75"
           >
-            <span
-              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                dark
-                  ? "border border-white/10 bg-white/[0.05] text-[#8ab4ff]"
-                  : "bg-[#125bff] text-white"
-              }`}
-            >
+            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[#8ab4ff]">
               <CheckIcon />
             </span>
             {point}
-          </div>
+          </li>
         ))}
-      </div>
-      <Link
-        href={tier.ctaHref}
-        className={`mt-7 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
-          dark
-            ? "bg-white text-[#05070b] hover:bg-[#dbe7ff]"
-            : "border border-[#c6d4ea] bg-white text-[#05070b] hover:bg-[#eef4ff]"
-        }`}
-      >
-        {tier.ctaLabel}
-        <ArrowIcon />
-      </Link>
-      {tier.footnote ? (
-        <p
-          className={`mt-4 text-sm leading-6 ${
-            dark ? "text-white/50" : "text-[#7a8698]"
-          }`}
-        >
-          {tier.footnote}
-        </p>
-      ) : null}
-    </>
+      </ul>
+    </article>
   );
 }
 
@@ -86,36 +51,15 @@ export function PricingSection() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-12 lg:py-28">
         <SectionHeading
           inverse
-          eyebrow="Pricing"
-          title={
-            <>
-              Free holds the line.{" "}
-              <span className="whitespace-nowrap">Pro moves it.</span>
-            </>
-          }
-          description="The daily minimum is free for everyone, forever. The progression engine is what you pay for — once it has a price."
+          eyebrow="Plans"
+          title="Three plans. Choose inside the app."
+          description="Everyone gets a free daily routine. Pro adds the progression engine; Premium adds a personal AI coach. Pricing lives in the app — download to pick yours."
         />
 
-        <div className="mt-14 grid items-stretch gap-5 lg:grid-cols-2">
-          {pricingTiers.map((tier) =>
-            tier.highlighted ? (
-              <div
-                key={tier.name}
-                className="border-spin rounded-[2rem] bg-[#23355c] p-px"
-              >
-                <article className="relative h-full rounded-[calc(2rem-1px)] bg-[#08111f] p-6 text-white sm:p-7">
-                  <TierCardBody tier={tier} />
-                </article>
-              </div>
-            ) : (
-              <article
-                key={tier.name}
-                className="rounded-[2rem] border border-[#dbe4f2] bg-white p-6 text-[#05070b] sm:p-7"
-              >
-                <TierCardBody tier={tier} />
-              </article>
-            ),
-          )}
+        <div className="mt-12 grid items-stretch gap-4 sm:gap-5 lg:grid-cols-3">
+          {pricingTiers.map((tier) => (
+            <TierCard key={tier.name} tier={tier} />
+          ))}
         </div>
       </div>
     </section>

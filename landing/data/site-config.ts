@@ -9,9 +9,11 @@ export const siteConfig = {
   email: "team@kinova.app",
   socialHandle: "@kinovamove",
   ctaHref: "/early-access",
-  ctaLabel: "Join early access",
-  proCtaHref: "/early-access?plan=pro",
-  proCtaLabel: "Get Pro early access",
+  ctaLabel: "Get the app",
+  // No real store listings exist yet — the badges read "coming soon" and route
+  // to the early-access waitlist until the iOS/Android apps ship.
+  appStoreHref: "/early-access",
+  playStoreHref: "/early-access",
 } as const;
 
 export const siteUrl = new URL(siteConfig.siteUrl);
