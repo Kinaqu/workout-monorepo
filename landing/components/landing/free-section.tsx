@@ -16,7 +16,7 @@ export function FreeSection() {
               inverse
               eyebrow="Free · Every day"
               title="The daily minimum."
-              description="One fixed routine. Ten push-ups, ten squats, ten dips, a plank. Five minutes to keep your baseline on the days nothing else happens."
+              description="A short daily routine, generated to keep your baseline — push-ups, squats, dips, a plank. Five minutes on the days nothing else happens."
             />
             <p className="mt-7 text-base leading-7 text-white/52">
               It never gets harder — that&apos;s the point, and the limit.
@@ -25,7 +25,7 @@ export function FreeSection() {
               href={siteConfig.ctaHref}
               className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white underline decoration-white/25 underline-offset-8 transition hover:decoration-white"
             >
-              Start free
+              Get the app
               <ArrowIcon />
             </Link>
           </div>
@@ -33,7 +33,7 @@ export function FreeSection() {
           <div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-7">
               <p className="text-xs tracking-[0.24em] text-white/42 uppercase">
-                The routine · fixed
+                A sample day
               </p>
               <ul className="mt-4 divide-y divide-white/8">
                 {maintenanceRoutine.map((item) => (
@@ -55,7 +55,7 @@ export function FreeSection() {
                 ))}
               </ul>
               <div className="mt-4 flex items-center justify-between border-t border-white/12 pt-4 text-sm">
-                <span className="text-white/45">Every day. Same numbers.</span>
+                <span className="text-white/45">Every day. Same effort.</span>
                 <span className="font-semibold text-white/80">≈ 5 minutes</span>
               </div>
             </div>

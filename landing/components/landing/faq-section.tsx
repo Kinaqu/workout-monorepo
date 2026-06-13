@@ -9,7 +9,7 @@ export function FaqSection() {
           inverse
           eyebrow="FAQ"
           title="The questions that decide it."
-          description="Short answers on what's free, what Pro does, and what happens after you apply."
+          description="Short answers on what's free, what Pro and Premium add, and what happens after a rough week."
         />
 
         <div className="mt-14 grid gap-4">

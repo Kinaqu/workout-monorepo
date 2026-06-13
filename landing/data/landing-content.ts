@@ -1,7 +1,7 @@
 export const navLinks = [
   { label: "Free Routine", href: "#daily-minimum" },
   { label: "Progression", href: "#pro" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Plans", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
@@ -139,45 +139,51 @@ export type PricingTier = {
   badge?: string;
   description: string;
   points: readonly string[];
-  ctaLabel: string;
-  ctaHref: string;
-  footnote?: string;
   highlighted: boolean;
 };
 
+// Pricing lives in the app — these tiers are a compact reminder of what each
+// plan adds, not a checkout. No numbers are shown until the apps ship.
 export const pricingTiers: readonly PricingTier[] = [
   {
     name: "Free",
-    tagline: "The Daily Minimum",
+    tagline: "Stay in shape",
     priceLabel: "Free, forever",
     description:
-      "One fixed routine to hold your baseline on the days nothing else happens.",
+      "Generated daily workouts that keep your baseline on the days nothing else happens.",
     points: [
-      "The fixed daily routine: push-ups, squats, dips, plank",
-      "Daily check-off and streak",
-      "Same targets every day — maintenance, not progression",
+      "Daily workouts generated to maintain your form",
+      "Check-off, streak, and a light daily reminder",
+      "Maintenance, not progression — steady every day",
     ],
-    ctaLabel: "Start free",
-    ctaHref: "/early-access",
     highlighted: false,
   },
   {
     name: "Pro",
-    tagline: "The Progression Engine",
-    priceLabel: "Founding pricing soon",
-    badge: "Early access",
+    tagline: "The progression engine",
+    priceLabel: "In the app",
+    badge: "Recommended",
     description:
       "An adaptive week that moves with how training actually goes.",
     points: [
-      "Adaptive weekly plan built from your level, gear, and schedule",
-      "Advance / hold / regress decision after every logged session",
-      "Goal plans for specific milestones",
-      "Direct feedback line with the team",
+      "Adaptive weekly plans from your level, gear, and schedule",
+      "Advance / hold / regress after every logged session",
+      "Progress tracking across the whole block",
     ],
-    ctaLabel: "Get Pro early access",
-    ctaHref: "/early-access?plan=pro",
-    footnote: "Free while in early access. Founding members lock the launch price.",
     highlighted: true,
+  },
+  {
+    name: "Premium",
+    tagline: "Personal AI coach",
+    priceLabel: "In the app",
+    description:
+      "A personal AI that trains alongside you — watching sessions and reading your notes.",
+    points: [
+      "AI that reviews your sessions and notes, and adapts faster",
+      "Explains why each target changed and how to nail it",
+      "Form guidance so every rep is done right",
+    ],
+    highlighted: false,
   },
 ];
 
@@ -185,17 +191,17 @@ export const faqs = [
   {
     question: "What do I get for free?",
     answer:
-      "The daily minimum: ten push-ups, ten squats, ten dips, and a plank, with a daily check-off and streak. It keeps your baseline. It does not get harder.",
+      "Generated daily workouts that keep your baseline — short sessions with a check-off, a streak, and a light daily reminder. It holds your form. It does not get harder.",
   },
   {
-    question: "What does Pro actually do?",
+    question: "What do Pro and Premium add?",
     answer:
-      "Pro builds your week from your level, gear, and schedule, then adjusts after every logged session. If push-ups feel solid at 8, next week asks for 9 — and an eight-week block can take you from 8 to 12.",
+      "Pro builds and adapts your week from your level, gear, and schedule, then advances, holds, or regresses after every logged session. Premium adds a personal AI coach that reviews your sessions and notes, explains every change, and guides your form.",
   },
   {
-    question: "How much will Pro cost?",
+    question: "How much does it cost?",
     answer:
-      "There is no price yet. Early access is free, and founding pricing is announced to the waitlist before launch — members lock it in.",
+      "Pricing lives in the app. Free stays free, forever — Pro and Premium pricing is shown in-app and announced at launch.",
   },
   {
     question: "What happens after a rough week?",

@@ -1,5 +1,6 @@
 import { BackdropStage } from "@/components/landing/backdrop-stage";
 import { CinematicHero } from "@/components/landing/cinematic-hero";
+import { DownloadSection } from "@/components/landing/download-section";
 import { FaqSection } from "@/components/landing/faq-section";
 import { LandingFooter } from "@/components/landing/footer";
 import { FreeSection } from "@/components/landing/free-section";
@@ -15,6 +16,7 @@ export default function Home() {
       <ProSection />
       <PricingSection />
       <FaqSection />
+      <DownloadSection />
       <LandingFooter />
     </main>
   );

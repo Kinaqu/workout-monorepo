@@ -22,7 +22,7 @@ const sidePlank = proLedger.rows[1];
    mobile see. */
 export function PhoneMockup() {
   return (
-    <div className="cine-phone relative mx-auto w-[260px] max-w-full">
+    <div className="cine-phone relative mx-auto w-[230px] max-w-full">
       {/* floating glass badges */}
       <div className="cine-float cine-badge absolute -left-10 top-10 z-30 hidden rounded-2xl px-4 py-3 sm:block">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-[#9fbeff]">

@@ -3,16 +3,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { siteConfig } from "@/data/site-config";
 import { ArrowIcon } from "@/components/landing/icons";
 
-type EarlyAccessPageProps = {
-  searchParams: Promise<{ plan?: string | string[] }>;
-};
-
-export default async function EarlyAccessPage({
-  searchParams,
-}: EarlyAccessPageProps) {
-  const { plan } = await searchParams;
-  const isPro = plan === "pro";
-
+export default function EarlyAccessPage() {
   return (
     <main className="min-h-screen bg-[#05070b] text-white">
       <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
@@ -28,21 +19,21 @@ export default async function EarlyAccessPage({
 
         <div className="mt-10 rounded-[2.5rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(8,17,31,0.96),_rgba(5,7,11,0.98))] p-7 shadow-[0_30px_120px_rgba(5,7,11,0.48)] sm:p-10">
           <BrandLogo
-            subtitle="Early access application"
+            subtitle="Coming soon"
             imageClassName="h-12"
             titleClassName="text-base"
           />
 
           <p className="mt-8 text-xs tracking-[0.28em] text-[#8ab4ff] uppercase">
-            {isPro ? "Pro Waitlist" : "Request Access"}
+            Get notified
           </p>
           <h1 className="mt-5 font-display text-4xl leading-tight font-semibold tracking-[-0.05em] sm:text-5xl">
             Tell Kinova how you train now.
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
-            {isPro
-              ? "You're applying for Pro early access — the progression engine. Share your goal, setup, and routine; founding pricing news goes to this list first."
-              : "Share your goal, setup, and routine. We use it to check fit and invite new users in small batches."}
+            Kinova is coming to the App Store and Google Play. Join the list and
+            we&apos;ll tell you the moment it&apos;s live — share your goal,
+            setup, and routine so your first plan fits.
           </p>
 
           <div className="mt-8 grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 text-sm text-white/72 sm:grid-cols-3">
@@ -62,7 +53,7 @@ export default async function EarlyAccessPage({
               <p className="text-xs tracking-[0.22em] text-[#8ab4ff] uppercase">
                 03
               </p>
-              <p className="mt-2">You get a clear follow-up by email.</p>
+              <p className="mt-2">We email you the moment Kinova is live.</p>
             </div>
           </div>
 
@@ -132,17 +123,12 @@ export default async function EarlyAccessPage({
               </span>
               <select
                 name="interest"
-                defaultValue={
-                  isPro
-                    ? "Pro — progression engine (waitlist)"
-                    : "Free daily minimum"
-                }
+                defaultValue="Free daily minimum"
                 className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none transition focus:border-[#125bff]"
               >
                 <option className="bg-[#08111f]">Free daily minimum</option>
-                <option className="bg-[#08111f]">
-                  Pro — progression engine (waitlist)
-                </option>
+                <option className="bg-[#08111f]">Pro — progression engine</option>
+                <option className="bg-[#08111f]">Premium — AI coach</option>
               </select>
             </label>
 

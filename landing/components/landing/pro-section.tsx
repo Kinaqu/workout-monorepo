@@ -62,7 +62,10 @@ export function ProSection() {
               style={delay(150)}
             />
 
-            <div className="mt-4 overflow-x-auto pb-1">
+            {/* overflow-y-hidden is load-bearing: overflow-x-auto alone makes
+                the cross-axis compute to `auto`, so the reveal's translateY
+                briefly triggers a vertical scrollbar on load. */}
+            <div className="mt-4 overflow-x-auto overflow-y-hidden pb-1">
               <div className="grid min-w-[640px] grid-cols-[minmax(120px,1.3fr)_repeat(8,minmax(0,1fr))]">
                 <div />
                 {weekNumbers.map((week, column) => {
@@ -154,19 +157,14 @@ export function ProSection() {
           </div>
         </Reveal>
 
-        <div className="mt-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-end">
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <Link
-              href={siteConfig.proCtaHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-4 text-sm font-semibold text-[#05070b] transition hover:-translate-y-0.5 hover:bg-[#dbe7ff]"
-            >
-              {siteConfig.proCtaLabel}
-              <ArrowIcon />
-            </Link>
-            <p className="max-w-56 text-sm leading-6 text-white/50">
-              No price yet — founding pricing announced before launch.
-            </p>
-          </div>
+        <div className="mt-10 flex justify-start lg:justify-end">
+          <Link
+            href={siteConfig.ctaHref}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white underline decoration-white/25 underline-offset-8 transition hover:decoration-white"
+          >
+            Get the app
+            <ArrowIcon />
+          </Link>
         </div>
       </div>
     </section>
