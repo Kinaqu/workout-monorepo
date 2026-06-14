@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { router, type Href } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/components/ui/AppText';
@@ -23,7 +24,8 @@ const GOALS = [
   { id: 'mobility', label: 'Mobility' },
 ];
 
-// Temporary component showcase — replaced by the real routes in Phase 4.
+// Temporary component showcase + entry to the Today screen — replaced by the
+// real routes/navigation in task #8.
 export default function Index() {
   const [note, setNote] = useState('');
   const [reps, setReps] = useState('');
@@ -36,6 +38,7 @@ export default function Index() {
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="display">Kinova</AppText>
         <AppText variant="secondary">Design system — component showcase</AppText>
+        <Button title="Open Today screen" onPress={() => router.push('/today' as Href)} />
 
         <Card style={styles.card}>
           <AppText variant="title">Inputs</AppText>

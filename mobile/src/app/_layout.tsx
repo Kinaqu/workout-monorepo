@@ -5,7 +5,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { QueryClientProvider } from '@tanstack/react-query';
 
+import { queryClient } from '@/lib/query/client';
 import { darkTheme } from '@/theme/tokens';
 
 void SplashScreen.preventAutoHideAsync();
@@ -34,7 +36,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -42,6 +44,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: darkTheme.colors.background },
         }}
       />
-    </>
+    </QueryClientProvider>
   );
 }
