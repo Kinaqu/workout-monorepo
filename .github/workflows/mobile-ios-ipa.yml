@@ -10,6 +10,9 @@ name: mobile iOS dev-client IPA (unsigned, for AltStore)
 # from the Actions tab (workflow_dispatch).
 
 on:
+  push:
+    tags:
+      - 'ios-build-*'
   workflow_dispatch:
 
 jobs:
