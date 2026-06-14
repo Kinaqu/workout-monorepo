@@ -1,14 +1,22 @@
 import '@/theme/unistyles';
 
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { router, Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { QueryClientProvider } from '@tanstack/react-query';
 
+import { setAuthRedirectHandler, setTokenProvider } from '@/lib/api/client';
 import { queryClient } from '@/lib/query/client';
 import { darkTheme } from '@/theme/tokens';
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+
+// On a 401 the API client asks us to bounce to sign-in (web used window.location).
+setAuthRedirectHandler(() => router.replace('/login'));
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -36,14 +44,41 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: darkTheme.colors.background },
-        }}
-      />
-    </QueryClientProvider>
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="light" />
+        <RootNavigator />
+      </QueryClientProvider>
+    </ClerkProvider>
+  );
+}
+
+function RootNavigator() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const segments = useSegments();
+  const navRouter = useRouter();
+
+  // Feed the API client a fresh Clerk token getter. Done during render so it is
+  // set before any child screen fires its first request.
+  setTokenProvider((options) => getToken(options ?? undefined));
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    if (!isSignedIn && !inAuthGroup) {
+      navRouter.replace('/login');
+    } else if (isSignedIn && inAuthGroup) {
+      navRouter.replace('/');
+    }
+  }, [isLoaded, isSignedIn, segments, navRouter]);
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: darkTheme.colors.background },
+      }}
+    />
   );
 }
