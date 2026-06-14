@@ -1,20 +1,50 @@
-import { View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
+import { createProgramController } from '@/features/program';
+import { ProgramTab } from '@/features/program/ProgramTab';
+import { api } from '@/lib/api/client';
+import { refreshLifecycle } from '@/lib/lifecycle-nav';
+import { setMe, updateMeLifecycle } from '@/lib/product-state';
+import { queryKeys } from '@/lib/query/keys';
 
-// Stub — real port lands in Step 5 (features/program).
+// Program tab route. After a rebuild, refreshLifecycle re-runs the lifecycle
+// gate (an active program now exists → Today shows the freshly built workout).
 export default function ProgramScreen() {
+  const [controller] = useState(() =>
+    createProgramController({
+      onEnterOnboarding: () => router.replace('/onboarding'),
+      onMissingProgram: () => updateMeLifecycle({ has_active_program: false }),
+      onRefreshProductState: refreshLifecycle,
+    })
+  );
+
+  const meQuery = useQuery({ queryKey: queryKeys.me, queryFn: () => api.getMe() });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (meQuery.data) setMe(meQuery.data);
+      void controller.load();
+    }, [meQuery.data, controller])
+  );
+
   return (
     <Screen>
-      <View style={styles.content}>
-        <EmptyState title="Plan" message="Coming soon." />
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <ProgramTab {...controller.props} />
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  content: { flex: 1, padding: theme.space.xl, justifyContent: 'center' },
+  content: {
+    padding: theme.space.xl,
+    paddingBottom: theme.space.xxl * 2,
+    gap: theme.space.md,
+  },
 }));
