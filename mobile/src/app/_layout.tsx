@@ -7,10 +7,11 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
 import { setAuthRedirectHandler, setTokenProvider } from '@/lib/api/client';
 import { queryClient } from '@/lib/query/client';
+import { queryPersister } from '@/lib/query/persister';
 import { darkTheme } from '@/theme/tokens';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
@@ -45,10 +46,18 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: queryPersister,
+          maxAge: 1000 * 60 * 60 * 24,
+          // Online-only writes: don't persist/replay mutations, only query data.
+          dehydrateOptions: { shouldDehydrateMutation: () => false },
+        }}
+      >
         <StatusBar style="light" />
         <RootNavigator />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </ClerkProvider>
   );
 }
