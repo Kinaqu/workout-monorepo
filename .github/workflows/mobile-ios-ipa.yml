@@ -1,0 +1,87 @@
+name: mobile iOS dev-client IPA (unsigned, for AltStore)
+
+# Builds an UNSIGNED iOS development-client .ipa on a free GitHub macOS runner,
+# so it can be side-loaded onto a physical iPhone via AltStore (which re-signs
+# it with a free Apple ID). No Mac and no paid Apple Developer account needed.
+#
+# It is a dev-client (Debug) build: JS is NOT embedded — the app loads it from
+# your local Metro (`npx expo start --dev-client --tunnel`). So you only rerun
+# this workflow when NATIVE deps change, not for JS changes. Run it on demand
+# from the Actions tab (workflow_dispatch).
+
+on:
+  push:
+    tags:
+      - 'ios-build-*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Prebuild iOS native project (Expo CNG)
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: mobile/ios
+        run: pod install
+        env:
+          LANG: en_US.UTF-8
+
+      - name: Build unsigned dev-client (.app)
+        working-directory: mobile/ios
+        run: |
+          set -eo pipefail
+          WORKSPACE=$(ls -d *.xcworkspace | head -n1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "Workspace=$WORKSPACE  Scheme=$SCHEME"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package unsigned .ipa
+        working-directory: mobile/ios
+        run: |
+          set -eo pipefail
+          APP=$(ls -d build/Build/Products/Debug-iphoneos/*.app | head -n1)
+          NAME=$(basename "$APP" .app)
+          echo "Packaging $APP"
+          rm -rf Payload "$NAME-devclient-unsigned.ipa"
+          mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qry "$NAME-devclient-unsigned.ipa" Payload
+          ls -lh *.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kinova-ios-devclient-unsigned-ipa
+          path: mobile/ios/*.ipa
+          if-no-files-found: error
