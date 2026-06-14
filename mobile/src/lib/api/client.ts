@@ -1,0 +1,247 @@
+import { buildApiUrl, API_BASE_URL } from './config';
+import { ApiError, AuthRedirectError } from './errors';
+import type {
+  ApiClient,
+  ApiErrorPayload,
+  GeneratedProgramResponse,
+  JsonLogRequest,
+  LogCreateResponse,
+  MeResponse,
+  RecommendationDraftActivateRequest,
+  RecommendationDraftActivateResponse,
+  RecommendationDraftExerciseReplaceRequest,
+  RecommendationDraftResponse,
+  RecommendationDraftStructureSelectRequest,
+  OnboardingAnswers,
+  OnboardingDraft,
+  OnboardingCompleteResponse,
+  OnboardingDraftSaveResponse,
+  OnboardingStateResponse,
+  ProgramDefinition,
+  ProgramMutationResponse,
+  ProgramResponse,
+  ProgressionRunResponse,
+  SessionsListResponse,
+  WorkoutSessionRecord,
+  WorkoutTodayResponse,
+} from './contracts';
+
+interface ClerkTokenOptions {
+  skipCache?: boolean;
+}
+
+// The web app read window.Clerk + window.location directly. On native we inject
+// the token getter (Clerk Expo's useAuth().getToken) and the auth-redirect
+// handler (Expo Router navigation) once, from the root layout. Until wired,
+// requests are unauthenticated and a 401 simply surfaces as an AuthRedirectError.
+type TokenProvider = (options?: ClerkTokenOptions) => Promise<string | null>;
+let tokenProvider: TokenProvider = async () => null;
+export function setTokenProvider(provider: TokenProvider): void {
+  tokenProvider = provider;
+}
+
+type AuthRedirectHandler = () => void;
+let authRedirectHandler: AuthRedirectHandler = () => {};
+export function setAuthRedirectHandler(handler: AuthRedirectHandler): void {
+  authRedirectHandler = handler;
+}
+
+interface RequestOptions extends Omit<RequestInit, 'body'> {
+  body?: BodyInit | null;
+  authToken?: string | null;
+  authTokenOptions?: ClerkTokenOptions;
+  noAuth?: boolean;
+  __retriedWithFreshToken?: boolean;
+}
+
+async function resolveAuthToken(options?: ClerkTokenOptions): Promise<string | null> {
+  try {
+    const token = await tokenProvider(options);
+    if (token) {
+      return token;
+    }
+  } catch (error) {
+    console.warn('Unable to resolve Clerk token.', error);
+  }
+
+  return null;
+}
+
+function getErrorMessage(data: ApiErrorPayload, fallbackStatus: number): string {
+  const message =
+    typeof data?.message === 'string' && data.message.trim()
+      ? data.message.trim()
+      : typeof data?.error === 'string' && data.error.trim()
+        ? data.error.trim()
+        : '';
+
+  const detail = typeof data?.detail === 'string' && data.detail.trim() ? data.detail.trim() : '';
+  if (message && detail && detail !== message) {
+    return `${message}: ${detail}`;
+  }
+  if (message) {
+    return message;
+  }
+  if (detail) {
+    return detail;
+  }
+
+  return `API Error: ${fallbackStatus}`;
+}
+
+function isExpiredSession(response: Response): boolean {
+  return response.status === 401;
+}
+
+export function startAuthSessionFlow(message = 'Session expired. Please sign in again.'): never {
+  authRedirectHandler();
+  throw new AuthRedirectError(message);
+}
+
+async function request<TResponse>(endpoint: string, options: RequestOptions = {}): Promise<TResponse> {
+  const headers = new Headers(options.headers);
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const token = options.authToken ?? (await resolveAuthToken(options.authTokenOptions));
+  if (token && !options.noAuth) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const config: RequestInit = {
+    ...options,
+    headers,
+  };
+
+  try {
+    const response = await fetch(buildApiUrl(endpoint), config);
+    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+    if (!contentType.includes('application/json')) {
+      const message = contentType.includes('text/html')
+        ? 'Expected JSON API response but received HTML. Check the API base URL configuration.'
+        : `Expected JSON API response but received ${contentType || 'an unknown content type'}.`;
+
+      throw new ApiError(message, response.status, {
+        error: message,
+      });
+    }
+
+    const data = (await response.json().catch(() => ({}))) as ApiErrorPayload;
+
+    if (isExpiredSession(response) && !options.noAuth) {
+      if (!options.__retriedWithFreshToken) {
+        const freshToken = await resolveAuthToken({ skipCache: true });
+        if (freshToken) {
+          return request<TResponse>(endpoint, {
+            ...options,
+            __retriedWithFreshToken: true,
+            authToken: freshToken,
+            authTokenOptions: { skipCache: true },
+          });
+        }
+      }
+
+      startAuthSessionFlow(getErrorMessage(data, response.status));
+    }
+
+    if (!response.ok) {
+      throw new ApiError(getErrorMessage(data, response.status), response.status, data);
+    }
+
+    return data as TResponse;
+  } catch (error) {
+    if (!(error instanceof AuthRedirectError) && !(error instanceof ApiError)) {
+      console.error('API request failed:', error);
+    }
+    throw error;
+  }
+}
+
+export { API_BASE_URL };
+
+function buildQueryString(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    search.set(key, String(value));
+  });
+
+  const query = search.toString();
+  return query ? `?${query}` : '';
+}
+
+export const api: ApiClient = {
+  getMe: () => request<MeResponse>('/me'),
+  getOnboarding: () => request<OnboardingStateResponse>('/onboarding'),
+  saveOnboardingDraft: (payload: OnboardingDraft) =>
+    request<OnboardingDraftSaveResponse>('/onboarding', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  completeOnboarding: (payload: OnboardingAnswers) =>
+    request<OnboardingCompleteResponse>('/onboarding/complete', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getRecommendationDraft: () => request<RecommendationDraftResponse>('/recommendation-draft'),
+  createRecommendationDraft: () =>
+    request<RecommendationDraftResponse>('/recommendation-draft', {
+      method: 'POST',
+    }),
+  selectRecommendationStructure: (payload: RecommendationDraftStructureSelectRequest) =>
+    request<RecommendationDraftResponse>('/recommendation-draft/structure', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  replaceRecommendationExercise: (payload: RecommendationDraftExerciseReplaceRequest) =>
+    request<RecommendationDraftResponse>('/recommendation-draft/exercise', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  activateRecommendationDraft: (payload: RecommendationDraftActivateRequest) =>
+    request<RecommendationDraftActivateResponse>('/recommendation-draft/activate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  getTodayWorkout: (date?: string) =>
+    request<WorkoutTodayResponse>(`/workout/today${buildQueryString({ date })}`),
+  logWorkout: (payload: JsonLogRequest, date?: string) => {
+    const headers = new Headers();
+    if (date) {
+      headers.set('X-Workout-Date', date);
+    }
+
+    return request<LogCreateResponse>('/log', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers,
+    });
+  },
+  listSessions: (options = {}) =>
+    request<SessionsListResponse>(
+      `/sessions${buildQueryString({
+        date: options.date,
+        limit: options.limit,
+      })}`
+    ),
+  getSession: (id: string) => request<WorkoutSessionRecord>(`/sessions/${id}`),
+  getProgram: () => request<ProgramResponse>('/program'),
+  saveProgram: (payload: ProgramDefinition) =>
+    request<ProgramMutationResponse>('/program', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  resetProgram: (resetToken: string) => {
+    const headers = new Headers();
+    headers.set('X-Reset-Token', resetToken);
+
+    return request<ProgramMutationResponse>('/program/reset', {
+      method: 'POST',
+      headers,
+    });
+  },
+  regenerateProgram: () => request<GeneratedProgramResponse>('/program/regenerate', { method: 'POST' }),
+  runProgression: () => request<ProgressionRunResponse>('/progression/run', { method: 'POST' }),
+};
