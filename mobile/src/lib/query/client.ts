@@ -9,6 +9,9 @@ export const queryClient = new QueryClient({
       retry: false,
       refetchOnWindowFocus: false,
       staleTime: 30_000,
+      // gcTime must be >= the persist maxAge (app/_layout.tsx) so restored
+      // on-disk entries are not garbage-collected right after rehydration.
+      gcTime: 1000 * 60 * 60 * 24,
     },
     mutations: {
       retry: false,

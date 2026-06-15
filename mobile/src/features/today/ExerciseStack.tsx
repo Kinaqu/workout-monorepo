@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
+import * as Haptics from 'expo-haptics';
 
 import { AppText } from '@/components/ui/AppText';
 import { Field } from '@/components/ui/Field';
@@ -103,6 +104,7 @@ export function ExerciseStack({
 
     const filled = values[exerciseIndex].every((value) => value.trim() !== '');
     if (!filled) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setInvalidIndex(exerciseIndex);
       triggerShake();
       setTimeout(() => setInvalidIndex((current) => (current === exerciseIndex ? null : current)), 1400);
@@ -110,10 +112,12 @@ export function ExerciseStack({
     }
 
     if (exerciseIndex < plan.exercises.length - 1) {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setActiveIndex(exerciseIndex + 1);
       return;
     }
 
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onSave(
       plan.exercises.map((exercise, index) => ({
         id: exercise.id,
