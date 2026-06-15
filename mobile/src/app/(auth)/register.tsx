@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
 import { Screen } from '@/components/ui/Screen';
 import { clerkErrorMessage } from '@/lib/clerk-errors';
+import { OAuthButtons } from '@/features/auth/OAuthButtons';
 
 export default function Register() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -106,6 +107,15 @@ export default function Register() {
           )}
         </Card>
 
+        {!pending ? (
+          <>
+            <View style={styles.divider}>
+              <AppText variant="muted">or</AppText>
+            </View>
+            <OAuthButtons />
+          </>
+        ) : null}
+
         <View style={styles.footer}>
           <AppText variant="secondary">Already have an account? </AppText>
           <Link href="/login">
@@ -129,6 +139,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   error: {
     color: theme.colors.error,
+  },
+  divider: {
+    alignItems: 'center',
+    marginVertical: theme.space.xs,
   },
   footer: {
     flexDirection: 'row',

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
 import { Screen } from '@/components/ui/Screen';
 import { clerkErrorMessage } from '@/lib/clerk-errors';
+import { OAuthButtons } from '@/features/auth/OAuthButtons';
 
 export default function Login() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -67,6 +68,11 @@ export default function Login() {
           />
         </Card>
 
+        <View style={styles.divider}>
+          <AppText variant="muted">or</AppText>
+        </View>
+        <OAuthButtons />
+
         <View style={styles.footer}>
           <AppText variant="secondary">New here? </AppText>
           <Link href="/register">
@@ -90,6 +96,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   error: {
     color: theme.colors.error,
+  },
+  divider: {
+    alignItems: 'center',
+    marginVertical: theme.space.xs,
   },
   footer: {
     flexDirection: 'row',
